@@ -337,22 +337,22 @@ const Index = () => {
                 image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=580",
                 ingredients: "Potatoes, eggs, bell peppers, onions"
               }
-            ].map((item, index) => (
+            ].map((recipeItem, index) => (
               <motion.div
                 key={index}
-                variants={item}
+                variants={item} // This is the correct usage - apply animation variants
                 className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white"
               >
                 <div className="h-52 overflow-hidden">
                   <img 
-                    src={item.image} 
-                    alt={item.title} 
+                    src={recipeItem.image} 
+                    alt={recipeItem.title} 
                     className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-800">{item.title}</h3>
-                  <p className="text-gray-600 text-sm">{item.ingredients}</p>
+                  <h3 className="text-xl font-semibold mb-2 text-gray-800">{recipeItem.title}</h3>
+                  <p className="text-gray-600 text-sm">{recipeItem.ingredients}</p>
                 </div>
               </motion.div>
             ))}
