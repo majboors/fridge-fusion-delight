@@ -95,96 +95,9 @@ const Index = () => {
     try {
       toast({
         title: "Processing your ingredients",
-        description: "Our AI is analyzing your fridge contents..."
+        description: "Our AI is analyzing your fridge contents... This may take up to 30 seconds."
       });
       
-      // Since we're having issues with the real API, let's use mock data for now
-      // This will simulate a successful API call while we troubleshoot
-      setTimeout(() => {
-        const mockApiResponse: ApiResponse = {
-          fridge_contents: {
-            ingredients: [
-              "milk",
-              "cheese",
-              "yogurt",
-              "eggs",
-              "carrots",
-              "lettuce",
-              "strawberries",
-              "tomatoes",
-              "lemon",
-              "bell peppers",
-              "oranges",
-              "apples",
-              "green vegetables",
-              "drinks",
-              "ice pops",
-              "dessert jars"
-            ]
-          },
-          recipe: {
-            cards: [
-              {
-                card: 1,
-                content: "Colorful Veggie & Fruit Salad"
-              },
-              {
-                card: 2,
-                content: "Chop lettuce, bell peppers, carrots, and green vegetables."
-              },
-              {
-                card: 3,
-                content: "Dice tomatoes and set aside."
-              },
-              {
-                card: 4,
-                content: "Slice strawberries, apples, and oranges."
-              },
-              {
-                card: 5,
-                content: "Mix all vegetables in a large bowl."
-              },
-              {
-                card: 6,
-                content: "Add the fruits to the vegetable mix."
-              },
-              {
-                card: 7,
-                content: "In a bowl, whisk yogurt and lemon juice."
-              },
-              {
-                card: 8,
-                content: "Pour yogurt dressing over the salad and toss."
-              },
-              {
-                card: 9,
-                content: "Top with cheese and serve chilled."
-              },
-              {
-                card: 10,
-                content: "Enjoy with a soda and ice pops for dessert."
-              },
-              {
-                card: 11,
-                content: "Enjoy your meal! 😊"
-              }
-            ],
-            recipe_image: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?q=80&w=1964&auto=format&fit=crop"
-          }
-        };
-        
-        setRecipeData(mockApiResponse);
-        setShowFlashcards(true);
-        setIsLoading(false);
-        
-        toast({
-          title: "Recipe generated!",
-          description: "Check out your personalized recipe cards."
-        });
-      }, 2000);
-      
-      // The actual API call would be something like this (but it's failing currently):
-      /*
       // Create FormData object to send to the API
       const formData = new FormData();
       
@@ -202,6 +115,7 @@ const Index = () => {
         }
       }
       
+      console.log("Sending request to API...");
       // Send request to the API
       const response = await fetch('https://mealplan.techrealm.online/api/recipe', {
         method: 'POST',
@@ -209,13 +123,20 @@ const Index = () => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API error:", errorData);
-        throw new Error(errorData.error || 'Failed to generate recipe');
+        let errorMessage = 'Failed to generate recipe';
+        try {
+          const errorData = await response.json();
+          console.error("API error:", errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          console.error("Error parsing error response:", e);
+        }
+        throw new Error(errorMessage);
       }
       
+      console.log("API response received, parsing...");
       const data: ApiResponse = await response.json();
-      console.log("API response:", data);
+      console.log("API response parsed:", data);
       
       setRecipeData(data);
       setShowFlashcards(true);
@@ -224,7 +145,6 @@ const Index = () => {
         title: "Recipe generated!",
         description: "Check out your personalized recipe cards."
       });
-      */
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       toast({
@@ -458,7 +378,7 @@ const Index = () => {
                 className="w-full py-6 text-lg font-medium bg-amber-600 hover:bg-amber-700 text-white"
               >
                 {isLoading ? (
-                  "Processing your ingredients..."
+                  "Processing your ingredients... (This may take 30+ seconds)"
                 ) : (
                   <span className="flex items-center justify-center">
                     Generate Recipes <ChevronRightIcon className="ml-2" />
