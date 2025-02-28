@@ -11,15 +11,37 @@ import {
   UtensilsCrossed, 
   ChevronRight, 
   Globe, 
-  FileImage
+  FileImage,
+  ChevronLeft,
+  ChevronRight as ChevronRightIcon,
+  X
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Define types for API response
+interface RecipeCard {
+  card: number;
+  content: string;
+}
+
+interface ApiResponse {
+  fridge_contents: {
+    ingredients: string[];
+  };
+  recipe: {
+    cards: RecipeCard[];
+    recipe_image: string;
+  };
+}
 
 const Index = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [recipeData, setRecipeData] = useState<ApiResponse | null>(null);
+  const [showFlashcards, setShowFlashcards] = useState(false);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -41,6 +63,23 @@ const Index = () => {
     setPreviewUrl("https://www.cameronskitchen.com.au/app/uploads/2020/11/The-Importance-of-Healthy-High-Quality-Ingredients-In-Your-Diet.jpeg");
   };
 
+  const handleNextCard = () => {
+    if (recipeData && currentCardIndex < recipeData.recipe.cards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+    }
+  };
+
+  const handlePrevCard = () => {
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(currentCardIndex - 1);
+    }
+  };
+
+  const closeFlashcards = () => {
+    setShowFlashcards(false);
+    setCurrentCardIndex(0);
+  };
+
   const handleSubmit = async () => {
     if (!file && !previewUrl) {
       toast({
@@ -59,14 +98,37 @@ const Index = () => {
         description: "Our AI is analyzing your fridge contents..."
       });
       
-      // For demo purposes, we'll just simulate an API call
+      // For demo purposes, we'll simulate an API call
       // In production, you would use the actual API endpoint
+      
+      // Simulate API call with mock data
       setTimeout(() => {
+        // This is mock data that mimics the API response format
+        const mockApiResponse: ApiResponse = {
+          fridge_contents: {
+            ingredients: ["chicken breast", "broccoli", "rice", "garlic", "soy sauce"]
+          },
+          recipe: {
+            cards: [
+              { card: 1, content: "Chicken & Broccoli Stir Fry" },
+              { card: 2, content: "Dice chicken breast into small cubes. Wash and cut broccoli into florets." },
+              { card: 3, content: "Heat oil in a pan and add minced garlic. Cook until fragrant." },
+              { card: 4, content: "Add chicken and cook until golden brown on all sides." },
+              { card: 5, content: "Add broccoli and stir fry for 2-3 minutes until tender-crisp." },
+              { card: 6, content: "Add soy sauce and stir well. Serve hot over steamed rice." }
+            ],
+            recipe_image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=580"
+          }
+        };
+        
+        setRecipeData(mockApiResponse);
+        setShowFlashcards(true);
+        setIsLoading(false);
+        
         toast({
           title: "Recipe generated!",
-          description: "Check out your personalized recipe below."
+          description: "Check out your personalized recipe cards."
         });
-        setIsLoading(false);
       }, 2000);
       
       // Actual API implementation would look like:
@@ -74,6 +136,12 @@ const Index = () => {
       const formData = new FormData();
       if (file) {
         formData.append('image', file);
+      } else if (previewUrl) {
+        // For demo image, we would need to fetch it and convert to a file
+        // This is a simplified example
+        const response = await fetch(previewUrl);
+        const blob = await response.blob();
+        formData.append('image', blob, 'demo-image.jpg');
       }
       
       const response = await fetch('https://mealplan.techrealm.online/api/recipe', {
@@ -85,8 +153,15 @@ const Index = () => {
         throw new Error('Failed to generate recipe');
       }
       
-      const data = await response.json();
-      // Handle the response data
+      const data: ApiResponse = await response.json();
+      setRecipeData(data);
+      setShowFlashcards(true);
+      setIsLoading(false);
+      
+      toast({
+        title: "Recipe generated!",
+        description: "Check out your personalized recipe cards."
+      });
       */
     } catch (error) {
       toast({
@@ -94,7 +169,6 @@ const Index = () => {
         description: "Failed to process your image. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -116,6 +190,107 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+      {/* Flashcard Modal */}
+      <AnimatePresence>
+        {showFlashcards && recipeData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="bg-white w-full max-w-3xl rounded-2xl overflow-hidden relative"
+            >
+              <div className="flex justify-end p-4 absolute top-0 right-0 z-10">
+                <button
+                  onClick={closeFlashcards}
+                  className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
+                >
+                  <X className="h-6 w-6 text-gray-700" />
+                </button>
+              </div>
+              
+              <div className="grid md:grid-cols-2 h-full">
+                {/* First card always shows the recipe image */}
+                {currentCardIndex === 0 && (
+                  <div className="h-full max-h-96 md:max-h-full overflow-hidden">
+                    <img 
+                      src={recipeData.recipe.recipe_image}
+                      alt="Recipe" 
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                )}
+                
+                {/* For subsequent cards, show ingredients on the left */}
+                {currentCardIndex > 0 && (
+                  <div className="bg-amber-50 p-6 flex flex-col justify-center">
+                    <h4 className="text-lg font-medium text-amber-800 mb-4">Ingredients:</h4>
+                    <ul className="list-disc pl-5 space-y-2">
+                      {recipeData.fridge_contents.ingredients.map((ingredient, i) => (
+                        <li key={i} className="text-gray-700">{ingredient}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {/* Recipe card content */}
+                <div className="p-8 flex flex-col justify-center">
+                  <div className="mb-4">
+                    <span className="text-xs font-medium text-amber-600">
+                      Card {currentCardIndex + 1} of {recipeData.recipe.cards.length}
+                    </span>
+                  </div>
+                  
+                  <h3 className={`text-2xl font-bold text-gray-800 mb-4 ${currentCardIndex === 0 ? "text-center" : ""}`}>
+                    {recipeData.recipe.cards[currentCardIndex].content}
+                  </h3>
+                  
+                  {currentCardIndex === 0 && (
+                    <p className="text-gray-600 text-center mb-4">
+                      Ready to cook? Swipe through the cards to see the recipe steps.
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-4 flex justify-between items-center">
+                <Button
+                  onClick={handlePrevCard}
+                  disabled={currentCardIndex === 0}
+                  variant="outline"
+                  className={`${currentCardIndex === 0 ? 'opacity-50' : ''}`}
+                >
+                  <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+                </Button>
+                
+                <div className="flex space-x-1">
+                  {recipeData.recipe.cards.map((_, index) => (
+                    <div 
+                      key={index}
+                      className={`w-2 h-2 rounded-full ${index === currentCardIndex ? 'bg-amber-600' : 'bg-gray-300'}`}
+                    />
+                  ))}
+                </div>
+                
+                <Button
+                  onClick={handleNextCard}
+                  disabled={currentCardIndex === recipeData.recipe.cards.length - 1}
+                  variant="outline"
+                  className={`${currentCardIndex === recipeData.recipe.cards.length - 1 ? 'opacity-50' : ''}`}
+                >
+                  Next <ChevronRightIcon className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2070')] bg-cover bg-center opacity-5"></div>
@@ -222,7 +397,7 @@ const Index = () => {
                   "Processing your ingredients..."
                 ) : (
                   <span className="flex items-center justify-center">
-                    Generate Recipes <ChevronRight className="ml-2" />
+                    Generate Recipes <ChevronRightIcon className="ml-2" />
                   </span>
                 )}
               </Button>
