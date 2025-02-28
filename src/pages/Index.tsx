@@ -98,77 +98,53 @@ const Index = () => {
         description: "Our AI is analyzing your fridge contents..."
       });
       
-      // For demo purposes, we'll simulate an API call
-      // In production, you would use the actual API endpoint
-      
-      // Simulate API call with mock data
-      setTimeout(() => {
-        // This is mock data that mimics the API response format
-        const mockApiResponse: ApiResponse = {
-          fridge_contents: {
-            ingredients: ["chicken breast", "broccoli", "rice", "garlic", "soy sauce"]
-          },
-          recipe: {
-            cards: [
-              { card: 1, content: "Chicken & Broccoli Stir Fry" },
-              { card: 2, content: "Dice chicken breast into small cubes. Wash and cut broccoli into florets." },
-              { card: 3, content: "Heat oil in a pan and add minced garlic. Cook until fragrant." },
-              { card: 4, content: "Add chicken and cook until golden brown on all sides." },
-              { card: 5, content: "Add broccoli and stir fry for 2-3 minutes until tender-crisp." },
-              { card: 6, content: "Add soy sauce and stir well. Serve hot over steamed rice." }
-            ],
-            recipe_image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=580"
-          }
-        };
-        
-        setRecipeData(mockApiResponse);
-        setShowFlashcards(true);
-        setIsLoading(false);
-        
-        toast({
-          title: "Recipe generated!",
-          description: "Check out your personalized recipe cards."
-        });
-      }, 2000);
-      
-      // Actual API implementation would look like:
-      /*
+      // Create FormData object to send to the API
       const formData = new FormData();
+      
       if (file) {
         formData.append('image', file);
       } else if (previewUrl) {
-        // For demo image, we would need to fetch it and convert to a file
-        // This is a simplified example
-        const response = await fetch(previewUrl);
-        const blob = await response.blob();
-        formData.append('image', blob, 'demo-image.jpg');
+        // For demo image, we need to fetch it and convert to a file
+        try {
+          const response = await fetch(previewUrl);
+          const blob = await response.blob();
+          formData.append('image', blob, 'demo-image.jpg');
+        } catch (error) {
+          console.error("Error converting demo image to blob:", error);
+          throw new Error("Failed to process demo image");
+        }
       }
       
+      // Send request to the API
       const response = await fetch('https://mealplan.techrealm.online/api/recipe', {
         method: 'POST',
         body: formData,
       });
       
       if (!response.ok) {
-        throw new Error('Failed to generate recipe');
+        const errorData = await response.json();
+        console.error("API error:", errorData);
+        throw new Error(errorData.error || 'Failed to generate recipe');
       }
       
       const data: ApiResponse = await response.json();
+      console.log("API response:", data);
+      
       setRecipeData(data);
       setShowFlashcards(true);
-      setIsLoading(false);
       
       toast({
         title: "Recipe generated!",
         description: "Check out your personalized recipe cards."
       });
-      */
     } catch (error) {
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Error",
-        description: "Failed to process your image. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to process your image. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -515,7 +491,7 @@ const Index = () => {
             ].map((recipeItem, index) => (
               <motion.div
                 key={index}
-                variants={item} // This is the correct usage - apply animation variants
+                variants={item}
                 className="rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white"
               >
                 <div className="h-52 overflow-hidden">
