@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Define types for API response
 interface RecipeCard {
   card: number;
   content: string;
@@ -42,6 +40,14 @@ const Index = () => {
   const [recipeData, setRecipeData] = useState<ApiResponse | null>(null);
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [hasUsedFreeGeneration, setHasUsedFreeGeneration] = useState(false);
+
+  useEffect(() => {
+    const hasUsed = localStorage.getItem('hasUsedFreeGeneration');
+    if (hasUsed) {
+      setHasUsedFreeGeneration(true);
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -90,6 +96,19 @@ const Index = () => {
       return;
     }
 
+    if (hasUsedFreeGeneration) {
+      toast({
+        title: "Free trial used",
+        description: "Please upgrade to our Starter Package for unlimited recipe generations.",
+        variant: "destructive",
+      });
+      const pricingSection = document.getElementById('pricing');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -98,13 +117,11 @@ const Index = () => {
         description: "Our AI is analyzing your fridge contents... This may take up to 30 seconds."
       });
       
-      // Create FormData object to send to the API
       const formData = new FormData();
       
       if (file) {
         formData.append('image', file);
       } else if (previewUrl) {
-        // For demo image, we need to fetch it and convert to a file
         try {
           const response = await fetch(previewUrl);
           const blob = await response.blob();
@@ -116,7 +133,6 @@ const Index = () => {
       }
       
       console.log("Sending request to API...");
-      // Send request to the API
       const response = await fetch('https://mealplan.techrealm.online/api/recipe', {
         method: 'POST',
         body: formData,
@@ -145,6 +161,10 @@ const Index = () => {
         title: "Recipe generated!",
         description: "Check out your personalized recipe cards."
       });
+      
+      // Set the flag after successful generation
+      localStorage.setItem('hasUsedFreeGeneration', 'true');
+      setHasUsedFreeGeneration(true);
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       toast({
@@ -154,6 +174,13 @@ const Index = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -174,7 +201,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-      {/* Flashcard Modal */}
+      <div className="fixed top-0 right-0 p-4 z-50">
+        <Button 
+          onClick={scrollToPricing}
+          variant="outline"
+          className="bg-white"
+        >
+          Pricing
+        </Button>
+      </div>
+
       <AnimatePresence>
         {showFlashcards && recipeData && (
           <motion.div
@@ -199,7 +235,6 @@ const Index = () => {
               </div>
               
               <div className="grid md:grid-cols-2 h-full">
-                {/* First card always shows the recipe image */}
                 {currentCardIndex === 0 && (
                   <div className="h-full max-h-96 md:max-h-full overflow-hidden">
                     <img 
@@ -210,7 +245,6 @@ const Index = () => {
                   </div>
                 )}
                 
-                {/* For subsequent cards, show ingredients on the left */}
                 {currentCardIndex > 0 && (
                   <div className="bg-amber-50 p-6 flex flex-col justify-center">
                     <h4 className="text-lg font-medium text-amber-800 mb-4">Ingredients:</h4>
@@ -222,7 +256,6 @@ const Index = () => {
                   </div>
                 )}
                 
-                {/* Recipe card content */}
                 <div className="p-8 flex flex-col justify-center">
                   <div className="mb-4">
                     <span className="text-xs font-medium text-amber-600">
@@ -275,7 +308,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2070')] bg-cover bg-center opacity-5"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -390,7 +422,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -449,7 +480,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Popular Creations Section */}
       <section className="py-24 bg-amber-50">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -519,7 +549,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Cultural Cuisine Section */}
       <section className="py-24 bg-gradient-to-br from-white to-amber-50">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -642,7 +671,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
       <section className="py-20 bg-amber-600 text-white">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -663,7 +691,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="py-12 bg-gray-900 text-gray-400">
         <div className="container mx-auto px-4">
           <div className="text-center">
@@ -687,3 +714,4 @@ const Index = () => {
 };
 
 export default Index;
+
