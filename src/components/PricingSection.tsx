@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
@@ -18,7 +17,7 @@ export const PricingSection = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 5141.5 // 14 USD in AED (approximately)
+          amount: 5141 // Updated amount
         }),
       });
 
