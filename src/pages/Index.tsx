@@ -691,6 +691,8 @@ const Index = () => {
         </div>
       </section>
 
+      <PricingSection />
+
       <footer className="py-12 bg-gray-900 text-gray-400">
         <div className="container mx-auto px-4">
           <div className="text-center">
@@ -714,3 +716,4 @@ const Index = () => {
 };
 
 export default Index;
+
