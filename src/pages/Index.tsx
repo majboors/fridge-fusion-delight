@@ -16,6 +16,7 @@ import {
   X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PricingSection } from "@/components/PricingSection";
 
 interface RecipeCard {
   card: number;
@@ -162,7 +163,6 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
-      // Set the flag after successful generation
       localStorage.setItem('hasUsedFreeGeneration', 'true');
       setHasUsedFreeGeneration(true);
     } catch (error) {
@@ -714,4 +714,3 @@ const Index = () => {
 };
 
 export default Index;
-

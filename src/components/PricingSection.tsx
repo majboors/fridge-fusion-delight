@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
@@ -17,7 +18,7 @@ export const PricingSection = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 5141 // Updated amount
+          amount: 5141 // Amount in AED
         }),
       });
 
@@ -26,12 +27,16 @@ export const PricingSection = () => {
       }
 
       const data = await response.json();
-      if (data.payment_link) {
-        window.location.href = data.payment_link;
+      console.log('Payment response:', data);
+      
+      if (data.payment_url) {
+        // Redirect to the correct payment URL from the response
+        window.location.href = data.payment_url;
       } else {
-        throw new Error('No payment link received');
+        throw new Error('No payment URL received');
       }
     } catch (error) {
+      console.error('Payment error:', error);
       toast({
         title: "Error",
         description: "Failed to initiate payment. Please try again.",
