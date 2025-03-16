@@ -125,7 +125,7 @@ const Index = () => {
     if (hasUsedFreeGeneration && !hasActiveSubscription) {
       toast({
         title: "Free trial used",
-        description: "Please upgrade to our Starter Package for unlimited recipe generations.",
+        description: "You've already used your free recipe generation. Please upgrade to our Starter Package for unlimited generations.",
         variant: "destructive",
       });
       const pricingSection = document.getElementById('pricing');
@@ -190,6 +190,7 @@ const Index = () => {
       
       if (!hasUsedFreeGeneration) {
         try {
+          console.log("Recording free recipe generation for user:", user.id);
           const { error } = await supabase
             .from('user_subscriptions')
             .upsert({
@@ -201,6 +202,7 @@ const Index = () => {
           if (error) {
             console.error("Error recording recipe generation:", error);
           } else {
+            console.log("Successfully recorded free recipe generation");
             setHasUsedFreeGeneration(true);
           }
         } catch (error) {

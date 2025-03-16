@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -22,9 +23,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasUsedFreeGeneration, setHasUsedFreeGeneration] = useState(false);
 
   useEffect(() => {
-    const storedHasUsed = localStorage.getItem('hasUsedFreeGeneration');
-    if (storedHasUsed) {
-      setHasUsedFreeGeneration(true);
+    // For non-logged in users, check local storage
+    if (!user) {
+      const storedHasUsed = localStorage.getItem('hasUsedFreeGeneration');
+      if (storedHasUsed) {
+        setHasUsedFreeGeneration(true);
+      }
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -49,6 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           checkGenerationUsage(session.user.id);
         } else {
           setHasActiveSubscription(false);
+          
+          // Reset trial usage status on logout if needed
+          // We don't reset here to preserve the trial usage status across sessions
         }
         
         setLoading(false);
@@ -88,6 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkGenerationUsage = async (userId: string) => {
     try {
+      // Reset the local state when checking for a logged-in user
+      setHasUsedFreeGeneration(false);
+      
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select('*')
@@ -100,8 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data && data.is_subscribed === false) {
+        console.log("User has used their free generation");
         setHasUsedFreeGeneration(true);
-        localStorage.setItem('hasUsedFreeGeneration', 'true');
+      } else {
+        console.log("User has not used their free generation or is subscribed");
       }
     } catch (error) {
       console.error('Error in checkGenerationUsage:', error);
