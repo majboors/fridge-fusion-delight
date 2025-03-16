@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +29,8 @@ export const PricingSection = () => {
 
     setIsLoading(true);
     try {
+      const fallbackUrl = `${window.location.origin}/payment-fallback`;
+      
       const response = await fetch('https://pay.techrealm.pk/create-payment', {
         method: 'POST',
         headers: {
@@ -38,6 +39,10 @@ export const PricingSection = () => {
         body: JSON.stringify({
           amount: 5141, // Amount in AED
           redirection_url: window.location.origin + "/payment-callback",
+          fallback_url: fallbackUrl,
+          metadata: {
+            user_id: user.id
+          }
         }),
       });
 
@@ -49,7 +54,6 @@ export const PricingSection = () => {
       console.log('Payment response:', data);
       
       if (data.payment_url) {
-        // Redirect to the payment URL
         window.location.href = data.payment_url;
       } else {
         throw new Error('No payment URL received');

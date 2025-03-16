@@ -1,41 +1,36 @@
 
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { PremiumIndicator } from "@/components/PremiumIndicator";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+import ApiTesting from "./pages/ApiTesting";
 import Dashboard from "./pages/Dashboard";
 import PaymentCallback from "./pages/PaymentCallback";
-import ApiTesting from "./pages/ApiTesting";
-import NotFound from "./pages/NotFound";
+import PaymentFallback from "./pages/PaymentFallback";
+import "./App.css";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <PremiumIndicator />
-        <BrowserRouter>
+        <Router>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/payment-callback" element={<PaymentCallback />} />
+            <Route path="/payment-fallback" element={<PaymentFallback />} />
             <Route path="/api-testing" element={<ApiTesting />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
+        </Router>
+        <Toaster />
       </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </ThemeProvider>
+  );
+}
 
 export default App;
