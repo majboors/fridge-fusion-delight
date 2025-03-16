@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +52,10 @@ const Index = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!checkAuthAndProceed(() => {})) {
+      return;
+    }
+    
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
@@ -65,6 +68,10 @@ const Index = () => {
   };
 
   const handleDemoImage = () => {
+    if (!checkAuthAndProceed(() => {})) {
+      return;
+    }
+    
     toast({
       title: "Demo image selected",
       description: "We've loaded a sample image for you to try."
@@ -111,12 +118,10 @@ const Index = () => {
       return;
     }
 
-    // Check if user is logged in
     if (!checkAuthAndProceed(() => {})) {
       return;
     }
 
-    // Check if the user has used their free generation and doesn't have a subscription
     if (hasUsedFreeGeneration && !hasActiveSubscription) {
       toast({
         title: "Free trial used",
@@ -183,15 +188,13 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
-      // If this is the first free generation, record it by updating user_subscriptions
       if (!hasUsedFreeGeneration) {
         try {
-          // Update the user_subscriptions table to mark free generation as used
           const { error } = await supabase
             .from('user_subscriptions')
             .upsert({
               user_id: user.id,
-              is_subscribed: false,  // They used the free trial but aren't subscribed
+              is_subscribed: false,
               updated_at: new Date().toISOString()
             });
           
@@ -450,6 +453,16 @@ const Index = () => {
                       <Label 
                         htmlFor="fridge-photo" 
                         className="w-full h-full flex flex-col items-center justify-center cursor-pointer"
+                        onClick={(e) => {
+                          if (!user) {
+                            e.preventDefault();
+                            toast({
+                              title: "Authentication required",
+                              description: "Please sign in to upload your fridge photo.",
+                            });
+                            navigate("/auth");
+                          }
+                        }}
                       >
                         <Upload className="h-10 w-10 text-amber-500 mb-3" />
                         <span className="text-gray-800 font-medium">
@@ -771,7 +784,6 @@ const Index = () => {
             <Button 
               className="bg-white text-amber-600 hover:bg-amber-50 hover:text-amber-700 text-lg py-6 px-8"
               onClick={() => {
-                // Check auth before allowing the user to proceed
                 if (checkAuthAndProceed(() => {})) {
                   const fileInput = document.getElementById('fridge-photo');
                   if (fileInput) {
