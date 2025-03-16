@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -23,13 +22,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasUsedFreeGeneration, setHasUsedFreeGeneration] = useState(false);
 
   useEffect(() => {
-    // Load from localStorage on initial mount
     const storedHasUsed = localStorage.getItem('hasUsedFreeGeneration');
     if (storedHasUsed) {
       setHasUsedFreeGeneration(true);
     }
 
-    // Check if the user is authenticated
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -42,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -80,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data && data.is_active && new Date(data.expires_at) > new Date()) {
         setHasActiveSubscription(true);
+        console.log('User has active subscription until:', data.expires_at);
       } else {
         setHasActiveSubscription(false);
       }
@@ -91,8 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkGenerationUsage = async (userId: string) => {
     try {
-      // Instead of directly querying recipe_generations, 
-      // use the user_subscriptions table to track a flag/count
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select('*')
@@ -104,7 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if the user has any record with a flag or counter indicating free generation was used
       if (data && data.is_subscribed === false) {
         setHasUsedFreeGeneration(true);
         localStorage.setItem('hasUsedFreeGeneration', 'true');
