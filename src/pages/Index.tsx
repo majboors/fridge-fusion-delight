@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -382,6 +383,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
+      {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2070')] bg-cover bg-center opacity-5"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -529,6 +531,7 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Process Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -587,6 +590,7 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Fan Favorites Section */}
       <section className="py-24 bg-amber-50">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -656,6 +660,7 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Global Flavors Section */}
       <section className="py-24 bg-gradient-to-br from-white to-amber-50">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -778,9 +783,30 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-amber-600 text-white">
         <div className="container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-3 py-1 bg-amber-800 text-white rounded-full text-sm font-medium mb-4">
+              Unlock Premium Features
+            </span>
+            <h2 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
+            <p className="text-xl text-amber-100 max-w-2xl mx-auto">
+              Get unlimited recipe generations and exclusive features with our premium plans.
+            </p>
+          </motion.div>
+          
+          <PricingSection />
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Index;
