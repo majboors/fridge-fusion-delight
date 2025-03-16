@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { 
   Upload, 
   Camera, 
@@ -17,7 +18,9 @@ import {
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
   X,
-  User
+  User,
+  Crown,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PricingSection } from "@/components/PricingSection";
@@ -45,7 +48,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [recipeData, setRecipeData] = useState<ApiResponse | null>(null);
+  const [recipeData, setRecipeData] = useState<any | null>(null);
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
@@ -162,7 +165,7 @@ const Index = () => {
       }
       
       console.log("API response received, parsing...");
-      const data: ApiResponse = await response.json();
+      const data = await response.json();
       console.log("API response parsed:", data);
       
       setRecipeData(data);
@@ -175,17 +178,21 @@ const Index = () => {
       
       // If this is the first free generation, record it in the database
       if (!hasUsedFreeGeneration) {
-        // Record the generation in the database
-        const { error } = await supabase
-          .from('recipe_generations')
-          .insert({
-            user_id: user.id
-          });
-        
-        if (error) {
+        try {
+          // Record the generation in the database
+          const { error } = await supabase
+            .from('recipe_generations')
+            .insert({
+              user_id: user.id
+            });
+          
+          if (error) {
+            console.error("Error recording recipe generation:", error);
+          } else {
+            setHasUsedFreeGeneration(true);
+          }
+        } catch (error) {
           console.error("Error recording recipe generation:", error);
-        } else {
-          setHasUsedFreeGeneration(true);
         }
       }
     } catch (error) {
@@ -229,10 +236,13 @@ const Index = () => {
           <Button 
             onClick={() => navigate("/dashboard")}
             variant="outline"
-            className="bg-white"
+            className={`bg-white flex items-center ${hasActiveSubscription ? 'border-purple-300' : ''}`}
           >
-            <User className="mr-2 h-4 w-4" />
-            Dashboard
+            {hasActiveSubscription && (
+              <Crown className="mr-1 h-4 w-4 text-purple-600" />
+            )}
+            <User className="mr-1 h-4 w-4" />
+            {hasActiveSubscription ? 'Premium Dashboard' : 'Dashboard'}
           </Button>
         ) : (
           <Button 
@@ -361,6 +371,11 @@ const Index = () => {
           >
             <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-4">
               Introducing Fridge-to-Feast
+              {hasActiveSubscription && (
+                <span className="ml-2 inline-flex items-center bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs">
+                  <Crown className="h-3 w-3 mr-1" /> Premium
+                </span>
+              )}
             </span>
             
             <motion.h1 
@@ -370,6 +385,11 @@ const Index = () => {
               className="text-5xl md:text-6xl font-bold tracking-tight text-gray-900 mb-6"
             >
               Transform Your <span className="text-amber-600">Fridge Contents</span> Into Delicious Meals
+              {hasActiveSubscription && (
+                <span className="inline-block ml-2">
+                  <Sparkles className="h-8 w-8 inline text-purple-500" />
+                </span>
+              )}
             </motion.h1>
             
             <motion.p 
@@ -380,14 +400,27 @@ const Index = () => {
             >
               Upload a photo of what's in your fridge, and our AI will generate personalized recipes 
               tailored to the ingredients you already have. No waste, endless possibilities.
+              {hasActiveSubscription && (
+                <span className="ml-1 text-purple-600 font-medium"> Enjoy your premium access!</span>
+              )}
             </motion.p>
             
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }} 
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="bg-white rounded-2xl shadow-xl p-8 max-w-3xl mx-auto"
+              className={`bg-white rounded-2xl shadow-xl p-8 max-w-3xl mx-auto ${hasActiveSubscription ? 'border-2 border-purple-200' : ''}`}
             >
+              {hasActiveSubscription && (
+                <div className="mb-4 -mt-2 flex justify-center">
+                  <Badge className="bg-purple-600 flex items-center gap-1 py-1 px-3">
+                    <Crown className="h-3.5 w-3.5" />
+                    <span>Premium Access</span>
+                    <span className="bg-white text-purple-600 text-xs rounded-full px-1.5 ml-1">Unlimited</span>
+                  </Badge>
+                </div>
+              )}
+              
               <div className="text-left mb-6">
                 <h3 className="text-2xl font-semibold text-gray-800">Upload your fridge photo</h3>
                 <p className="text-gray-500">JPEG or PNG, up to 20MB</p>

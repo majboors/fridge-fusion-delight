@@ -3,146 +3,152 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 
 export default function PaymentCallback() {
-  const [processing, setProcessing] = useState(true);
-  const [success, setSuccess] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const processPayment = async () => {
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to complete this process.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
 
+    const verifyPayment = async () => {
       try {
-        // Parse URL query parameters
-        const params = new URLSearchParams(location.search);
-        const isSuccess = params.get('success') === 'true';
-        const paymentId = params.get('id');
-        const message = params.get('data.message');
-        const txnResponseCode = params.get('txn_response_code');
-        const amount = params.get('amount_cents');
+        const queryParams = new URLSearchParams(location.search);
+        const success = queryParams.get("success") === "true";
+        const paymentId = queryParams.get("id");
 
-        // Reject if not successful
-        if (!isSuccess || message !== 'Approved' || txnResponseCode !== 'APPROVED') {
-          setSuccess(false);
-          setProcessing(false);
-          toast({
-            title: "Payment Failed",
-            description: "Your payment could not be processed. Please try again.",
-            variant: "destructive",
-          });
+        if (!success || !paymentId) {
+          setIsSuccess(false);
+          setError("Payment was not successful. Please try again.");
+          setIsLoading(false);
           return;
         }
 
-        // Create record of the payment
-        const { data: paymentData, error: paymentError } = await supabase
-          .from('payments')
-          .insert({
-            user_id: user.id,
-            amount: Number(amount) / 100, // Convert cents to currency
-            currency: 'AED',
-            payment_id: paymentId,
-            success: true,
-            transaction_data: Object.fromEntries(params.entries())
-          })
-          .select('id')
-          .single();
-
-        if (paymentError) {
-          throw paymentError;
-        }
-
-        // Set expiration date to 30 days from now
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 30);
-
-        // Create or update subscription
-        const { error: subscriptionError } = await supabase
-          .from('subscriptions')
-          .upsert({
-            user_id: user.id,
-            status: 'active',
-            payment_id: paymentId,
-            expires_at: expiryDate.toISOString(),
-            subscription_id: paymentData?.id
-          });
-
-        if (subscriptionError) {
-          throw subscriptionError;
-        }
-
-        // Success
-        setSuccess(true);
-        toast({
-          title: "Payment Successful",
-          description: "Your subscription is now active!",
+        // Call the Supabase Edge Function to verify and record the payment
+        const { data, error } = await supabase.functions.invoke("verify-payment", {
+          body: { paymentId, userId: user.id },
         });
+
+        if (error) {
+          console.error("Error verifying payment:", error);
+          setIsSuccess(false);
+          setError("Error verifying payment. Please contact support.");
+          setIsLoading(false);
+          return;
+        }
+
+        if (data.success) {
+          try {
+            // Record the payment in the database
+            await supabase
+              .from('payments')
+              .insert({
+                user_id: user.id,
+                payment_id: paymentId,
+                amount: 14,
+                currency: 'USD',
+                success: true,
+                transaction_data: data
+              });
+    
+            setIsSuccess(true);
+            toast({
+              title: "Payment Successful",
+              description: "Your subscription has been activated. Enjoy unlimited recipes!",
+            });
+          } catch (dbError) {
+            console.error("Database error:", dbError);
+            // Even if DB insert fails, the payment was successful
+            setIsSuccess(true);
+          }
+        } else {
+          setIsSuccess(false);
+          setError(data.message || "Payment verification failed. Please try again.");
+        }
       } catch (error) {
-        console.error("Error processing payment:", error);
-        toast({
-          title: "Error",
-          description: "There was a problem processing your payment. Please contact support.",
-          variant: "destructive",
-        });
-        setSuccess(false);
+        console.error("Error in payment verification:", error);
+        setIsSuccess(false);
+        setError("An unexpected error occurred. Please try again or contact support.");
       } finally {
-        setProcessing(false);
+        setIsLoading(false);
       }
     };
 
-    processPayment();
+    verifyPayment();
   }, [user, location.search, navigate, toast]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-amber-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            {processing ? "Processing Payment" : success ? "Payment Successful" : "Payment Failed"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center space-y-4 py-6">
-          {processing ? (
-            <Loader2 className="h-16 w-16 text-amber-600 animate-spin" />
-          ) : success ? (
-            <CheckCircle className="h-16 w-16 text-green-500" />
-          ) : (
-            <XCircle className="h-16 w-16 text-red-500" />
-          )}
-          
-          <p className="text-center text-gray-600 mt-4">
-            {processing
-              ? "Please wait while we process your payment..."
-              : success
-              ? "Your subscription has been activated successfully! You now have unlimited recipe generations."
-              : "We couldn't process your payment. Please try again or contact support."}
-          </p>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button 
-            onClick={() => navigate("/")} 
-            disabled={processing}
-            className="bg-amber-600 hover:bg-amber-700"
-          >
-            Return to Home
-          </Button>
-        </CardFooter>
-      </Card>
+    <div className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full text-center">
+        {isLoading ? (
+          <div className="py-8">
+            <Loader2 className="h-12 w-12 text-amber-600 animate-spin mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Processing Your Payment</h2>
+            <p className="text-gray-600">Please wait while we verify your payment...</p>
+          </div>
+        ) : isSuccess ? (
+          <div className="py-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="h-10 w-10 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+            <p className="text-gray-600 mb-6">
+              Your premium subscription has been activated. You now have unlimited access to our recipe generation service.
+            </p>
+            <div className="space-y-3">
+              <Button 
+                className="w-full bg-amber-600 hover:bg-amber-700"
+                onClick={() => navigate("/")}
+              >
+                Start Creating Recipes
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/dashboard")}
+              >
+                View My Subscription
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="py-8">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="h-10 w-10 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h2>
+            <p className="text-gray-600 mb-6">
+              {error || "There was an issue processing your payment. Please try again."}
+            </p>
+            <div className="space-y-3">
+              <Button 
+                className="w-full bg-amber-600 hover:bg-amber-700"
+                onClick={() => navigate("/#pricing")}
+              >
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/")}
+              >
+                Return to Homepage
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

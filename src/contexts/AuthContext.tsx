@@ -65,40 +65,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkSubscriptionStatus = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('status, expires_at')
-      .eq('user_id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (error) {
-      console.error('Error checking subscription status:', error);
-      setHasActiveSubscription(false);
-      return;
-    }
+      if (error) {
+        console.error('Error checking subscription status:', error);
+        setHasActiveSubscription(false);
+        return;
+      }
 
-    if (data && data.status === 'active' && new Date(data.expires_at) > new Date()) {
-      setHasActiveSubscription(true);
-    } else {
+      if (data && data.is_active && new Date(data.expires_at) > new Date()) {
+        setHasActiveSubscription(true);
+      } else {
+        setHasActiveSubscription(false);
+      }
+    } catch (error) {
+      console.error('Error in checkSubscriptionStatus:', error);
       setHasActiveSubscription(false);
     }
   };
 
   const checkGenerationUsage = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('recipe_generations')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1);
+    try {
+      const { data, error } = await supabase
+        .from('recipe_generations')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
 
-    if (error) {
-      console.error('Error checking recipe generations:', error);
-      return;
-    }
+      if (error) {
+        console.error('Error checking recipe generations:', error);
+        return;
+      }
 
-    if (data && data.length > 0) {
-      setHasUsedFreeGeneration(true);
-      localStorage.setItem('hasUsedFreeGeneration', 'true');
+      if (data && data.length > 0) {
+        setHasUsedFreeGeneration(true);
+        localStorage.setItem('hasUsedFreeGeneration', 'true');
+      }
+    } catch (error) {
+      console.error('Error in checkGenerationUsage:', error);
     }
   };
 
