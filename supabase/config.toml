@@ -1,4 +1,7 @@
 
+# This is a Supabase CLI configuration file.
+# For full documentation, visit: https://supabase.com/docs/guides/cli/config
+
 project_id = "rnxkknyghjfaetynbyaz"
 
 [api]
@@ -17,19 +20,16 @@ port = 54324
 
 [auth]
 enabled = true
-port = 54325
 
 [realtime]
 enabled = true
-port = 54326
 
 [storage]
 enabled = true
-port = 54327
 
-[edge_functions]
-[edge_functions.verify-payment]
+[functions]
+[functions.verify-payment]
 verify_jwt = true
 
-[edge_functions.payment-fallback]
+[functions.payment-fallback]
 verify_jwt = true
