@@ -176,14 +176,16 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
-      // If this is the first free generation, record it in the database
+      // If this is the first free generation, record it by updating user_subscriptions
       if (!hasUsedFreeGeneration) {
         try {
-          // Record the generation in the database
+          // Update the user_subscriptions table to mark free generation as used
           const { error } = await supabase
-            .from('recipe_generations')
-            .insert({
-              user_id: user.id
+            .from('user_subscriptions')
+            .upsert({
+              user_id: user.id,
+              is_subscribed: false,  // They used the free trial but aren't subscribed
+              updated_at: new Date().toISOString()
             });
           
           if (error) {

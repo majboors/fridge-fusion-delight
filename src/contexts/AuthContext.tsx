@@ -91,18 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkGenerationUsage = async (userId: string) => {
     try {
+      // Instead of directly querying recipe_generations, 
+      // use the user_subscriptions table to track a flag/count
       const { data, error } = await supabase
-        .from('recipe_generations')
-        .select('id')
+        .from('user_subscriptions')
+        .select('*')
         .eq('user_id', userId)
-        .limit(1);
+        .maybeSingle();
 
       if (error) {
-        console.error('Error checking recipe generations:', error);
+        console.error('Error checking user subscriptions:', error);
         return;
       }
 
-      if (data && data.length > 0) {
+      // Check if the user has any record with a flag or counter indicating free generation was used
+      if (data && data.is_subscribed === false) {
         setHasUsedFreeGeneration(true);
         localStorage.setItem('hasUsedFreeGeneration', 'true');
       }

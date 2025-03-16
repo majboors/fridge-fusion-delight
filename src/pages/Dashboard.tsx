@@ -25,24 +25,31 @@ export default function Dashboard() {
 
     const fetchUserData = async () => {
       try {
-        // Get recipe generation count
-        const { data: genData, error: genError } = await supabase
-          .from('recipe_generations')
-          .select('id', { count: 'exact' })
-          .eq('user_id', user.id);
-
-        if (genError) throw genError;
-        setGenerationCount(genData?.length || 0);
-
-        // Get subscription details
+        // Use user_subscriptions to get usage count
         const { data: subData, error: subError } = await supabase
-          .from('subscriptions')
+          .from('user_subscriptions')
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (subError) throw subError;
+        
+        // Determine generation count based on subscription data
+        setGenerationCount(subData?.is_subscribed === false ? 1 : 0);
         setSubscription(subData);
+        
+        // Get subscription details if needed
+        if (hasActiveSubscription) {
+          const { data: activeSubData, error: activeSubError } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (!activeSubError && activeSubData) {
+            setSubscription(activeSubData);
+          }
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
         toast({
@@ -56,7 +63,7 @@ export default function Dashboard() {
     };
 
     fetchUserData();
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, hasActiveSubscription]);
 
   const handleSignOut = async () => {
     await signOut();

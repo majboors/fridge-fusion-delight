@@ -50,16 +50,16 @@ export default function PaymentCallback() {
 
         if (data.success) {
           try {
-            // Record the payment in the database
+            // Record the payment in the database using the payment_transactions table
             await supabase
-              .from('payments')
+              .from('payment_transactions')
               .insert({
                 user_id: user.id,
-                payment_id: paymentId,
+                transaction_id: paymentId,
                 amount: 14,
                 currency: 'USD',
-                success: true,
-                transaction_data: data
+                status: 'success',
+                payment_data: data
               });
     
             setIsSuccess(true);
