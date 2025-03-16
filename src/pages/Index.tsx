@@ -1,5 +1,8 @@
+
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,10 +16,12 @@ import {
   FileImage,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
-  X
+  X,
+  User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PricingSection } from "@/components/PricingSection";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RecipeCard {
   card: number;
@@ -34,21 +39,15 @@ interface ApiResponse {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, hasActiveSubscription, hasUsedFreeGeneration, setHasUsedFreeGeneration } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [recipeData, setRecipeData] = useState<ApiResponse | null>(null);
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [hasUsedFreeGeneration, setHasUsedFreeGeneration] = useState(false);
-
-  useEffect(() => {
-    const hasUsed = localStorage.getItem('hasUsedFreeGeneration');
-    if (hasUsed) {
-      setHasUsedFreeGeneration(true);
-    }
-  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -97,7 +96,18 @@ const Index = () => {
       return;
     }
 
-    if (hasUsedFreeGeneration) {
+    // Check if user is logged in
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to generate recipes.",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    // Check if the user has used their free generation and doesn't have a subscription
+    if (hasUsedFreeGeneration && !hasActiveSubscription) {
       toast({
         title: "Free trial used",
         description: "Please upgrade to our Starter Package for unlimited recipe generations.",
@@ -163,8 +173,21 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
-      localStorage.setItem('hasUsedFreeGeneration', 'true');
-      setHasUsedFreeGeneration(true);
+      // If this is the first free generation, record it in the database
+      if (!hasUsedFreeGeneration) {
+        // Record the generation in the database
+        const { error } = await supabase
+          .from('recipe_generations')
+          .insert({
+            user_id: user.id
+          });
+        
+        if (error) {
+          console.error("Error recording recipe generation:", error);
+        } else {
+          setHasUsedFreeGeneration(true);
+        }
+      }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       toast({
@@ -201,7 +224,26 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-      <div className="fixed top-0 right-0 p-4 z-50">
+      <div className="fixed top-0 right-0 p-4 z-50 flex space-x-2">
+        {user ? (
+          <Button 
+            onClick={() => navigate("/dashboard")}
+            variant="outline"
+            className="bg-white"
+          >
+            <User className="mr-2 h-4 w-4" />
+            Dashboard
+          </Button>
+        ) : (
+          <Button 
+            onClick={() => navigate("/auth")}
+            variant="outline"
+            className="bg-white"
+          >
+            Sign In
+          </Button>
+        )}
+        
         <Button 
           onClick={scrollToPricing}
           variant="outline"
@@ -716,4 +758,3 @@ const Index = () => {
 };
 
 export default Index;
-

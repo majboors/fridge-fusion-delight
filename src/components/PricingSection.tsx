@@ -1,15 +1,33 @@
 
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export const PricingSection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user, hasActiveSubscription } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLoginRedirect = () => {
+    toast({
+      title: "Authentication Required",
+      description: "Please sign in to continue with the purchase.",
+    });
+    navigate("/auth");
+  };
 
   const handleSubscribe = async () => {
+    if (!user) {
+      handleLoginRedirect();
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch('https://pay.techrealm.pk/create-payment', {
@@ -18,7 +36,8 @@ export const PricingSection = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 5141 // Amount in AED
+          amount: 5141, // Amount in AED
+          redirection_url: window.location.origin + "/payment-callback",
         }),
       });
 
@@ -30,7 +49,7 @@ export const PricingSection = () => {
       console.log('Payment response:', data);
       
       if (data.payment_url) {
-        // Redirect to the correct payment URL from the response
+        // Redirect to the payment URL
         window.location.href = data.payment_url;
       } else {
         throw new Error('No payment URL received');
@@ -45,6 +64,10 @@ export const PricingSection = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDashboardClick = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -76,8 +99,12 @@ export const PricingSection = () => {
                   <span>AI-Powered Ingredient Analysis</span>
                 </li>
               </ul>
-              <Button disabled className="w-full" variant="outline">
-                Current Plan
+              <Button 
+                disabled={true} 
+                className="w-full" 
+                variant="outline"
+              >
+                {!user ? "Sign Up to Start" : "Current Plan"}
               </Button>
             </div>
           </Card>
@@ -104,13 +131,23 @@ export const PricingSection = () => {
                   <span>Priority Support</span>
                 </li>
               </ul>
-              <Button 
-                className="w-full bg-amber-600 hover:bg-amber-700" 
-                onClick={handleSubscribe}
-                disabled={isLoading}
-              >
-                {isLoading ? "Processing..." : "Upgrade Now"}
-              </Button>
+              {hasActiveSubscription ? (
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={handleDashboardClick}
+                >
+                  View Subscription
+                </Button>
+              ) : (
+                <Button 
+                  className="w-full bg-amber-600 hover:bg-amber-700" 
+                  onClick={user ? handleSubscribe : handleLoginRedirect}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Processing..." : user ? "Upgrade Now" : "Sign In to Upgrade"}
+                </Button>
+              )}
             </div>
           </Card>
         </div>
