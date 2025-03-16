@@ -118,12 +118,10 @@ const Index = () => {
       return;
     }
 
-    // For registered users, check authentication
     if (!checkAuthAndProceed(() => {})) {
       return;
     }
 
-    // Check if user has already used their free generation and is not subscribed
     if (hasUsedFreeGeneration && !hasActiveSubscription) {
       toast({
         title: "Free trial used",
@@ -190,7 +188,6 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
-      // Mark free trial as used only for users without a subscription who haven't used it yet
       if (user && !hasUsedFreeGeneration && !hasActiveSubscription) {
         try {
           console.log("Recording free recipe generation for user:", user.id);
@@ -209,14 +206,12 @@ const Index = () => {
             console.log("Successfully recorded free recipe generation");
             setHasUsedFreeGeneration(true); // Update state immediately to prevent multiple free uses
             
-            // Also store in localStorage as a fallback
             localStorage.setItem('hasUsedFreeGeneration', 'true');
           }
         } catch (error) {
           console.error("Error recording recipe generation:", error);
         }
       } else if (!user) {
-        // For anonymous users, store in localStorage
         localStorage.setItem('hasUsedFreeGeneration', 'true');
         setHasUsedFreeGeneration(true); // Update state immediately to prevent multiple free uses
       }
@@ -385,7 +380,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2070')] bg-cover bg-center opacity-5"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -533,7 +527,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Process Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -592,7 +585,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Fan Favorites Section */}
       <section className="py-24 bg-amber-50">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -662,7 +654,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Global Flavors Section */}
       <section className="py-24 bg-gradient-to-br from-white to-amber-50">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -785,8 +776,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-amber-600 text-white">
+      <section className="py-20 bg-amber-600 text-white">
         <div className="container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
