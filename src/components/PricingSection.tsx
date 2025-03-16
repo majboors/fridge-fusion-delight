@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +21,58 @@ export const PricingSection = () => {
     navigate("/auth");
   };
 
+  const handleTestSubscribe = async () => {
+    if (!user) {
+      handleLoginRedirect();
+      return;
+    }
+
+    if (hasActiveSubscription) {
+      toast({
+        title: "Already Subscribed",
+        description: "You already have an active subscription.",
+      });
+      navigate("/dashboard");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .upsert({
+          user_id: user.id,
+          is_subscribed: true,
+          subscription_start_date: new Date().toISOString(),
+          subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          payment_reference: 'test-payment',
+          updated_at: new Date().toISOString(),
+          free_trial_used: true
+        });
+
+      if (error) {
+        console.error('Error recording test subscription:', error);
+        throw new Error('Failed to activate test subscription');
+      }
+
+      toast({
+        title: "Test Subscription Activated",
+        description: "Your test premium subscription has been activated successfully!",
+      });
+
+      navigate("/payment-callback?success=true&id=test-payment");
+    } catch (error) {
+      console.error('Test subscription error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to activate test subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubscribe = async () => {
     if (!user) {
       handleLoginRedirect();
@@ -41,16 +92,16 @@ export const PricingSection = () => {
     try {
       const fallbackUrl = `${window.location.origin}/payment-fallback`;
       const callbackUrl = `${window.location.origin}/payment-callback`;
-      
+
       console.log(`Creating payment with callback: ${callbackUrl} and fallback: ${fallbackUrl}`);
-      
+
       const response = await fetch('https://pay.techrealm.pk/create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 5141, // Amount in fils
+          amount: 5141,
           redirection_url: callbackUrl,
           fallback_url: fallbackUrl,
           metadata: {
@@ -69,9 +120,8 @@ export const PricingSection = () => {
 
       const data = await response.json();
       console.log('Payment response:', data);
-      
+
       if (data.payment_url) {
-        // Record the payment attempt before redirecting
         try {
           await supabase
             .from('payment_transactions')
@@ -82,17 +132,15 @@ export const PricingSection = () => {
               currency: 'USD',
               status: 'pending',
               payment_reference: data.id || 'pending',
-              payment_data: { 
+              payment_data: {
                 initiated_at: new Date().toISOString(),
                 payment_url: data.payment_url
               }
             });
         } catch (dbError) {
           console.error('Error recording payment attempt:', dbError);
-          // Continue with redirect even if recording fails
         }
-        
-        // Redirect to payment page
+
         window.location.href = data.payment_url;
       } else {
         throw new Error('No payment URL received');
@@ -183,13 +231,26 @@ export const PricingSection = () => {
                   View Subscription
                 </Button>
               ) : (
-                <Button 
-                  className="w-full bg-amber-600 hover:bg-amber-700" 
-                  onClick={user ? handleSubscribe : handleLoginRedirect}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Processing..." : user ? "Upgrade Now" : "Sign In to Upgrade"}
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    className="w-full bg-amber-600 hover:bg-amber-700" 
+                    onClick={user ? handleSubscribe : handleLoginRedirect}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : user ? "Upgrade Now" : "Sign In to Upgrade"}
+                  </Button>
+                  
+                  {user && (
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={handleTestSubscribe}
+                      disabled={isLoading}
+                    >
+                      Test Subscription (No Payment)
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </Card>
