@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkGenerationUsage = async (userId: string) => {
     try {
       // Important: We'll reset the local state first, then check the DB
-      // This ensures we don't show "trial used" incorrectly
+      // This ensures we don't show "trial used" incorrectly while fetching
       setHasUsedFreeGeneration(false);
       
       const { data, error } = await supabase
@@ -111,17 +111,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // If the user has a record and is_subscribed is false,
-      // they've used their free generation
-      if (data && data.is_subscribed === false) {
+      // Fix: Only mark trial as used if we have a record AND free_trial_used is true
+      if (data && data.free_trial_used === true) {
         console.log("User has used their free generation:", userId);
         setHasUsedFreeGeneration(true);
-      } else if (!data) {
-        // If no record exists, this is a new user who hasn't used their trial
-        console.log("New user detected who hasn't used their free generation:", userId);
-        setHasUsedFreeGeneration(false);
       } else {
-        console.log("User has not used their free generation or is subscribed");
+        console.log("User has not used their free generation:", userId);
         setHasUsedFreeGeneration(false);
       }
     } catch (error) {
