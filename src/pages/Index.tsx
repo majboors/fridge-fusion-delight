@@ -118,10 +118,12 @@ const Index = () => {
       return;
     }
 
+    // For registered users, check authentication
     if (!checkAuthAndProceed(() => {})) {
       return;
     }
 
+    // Check if user has already used their free generation and is not subscribed
     if (hasUsedFreeGeneration && !hasActiveSubscription) {
       toast({
         title: "Free trial used",
@@ -188,6 +190,7 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
+      // Mark free trial as used only for users without a subscription who haven't used it yet
       if (user && !hasUsedFreeGeneration && !hasActiveSubscription) {
         try {
           console.log("Recording free recipe generation for user:", user.id);
@@ -204,14 +207,15 @@ const Index = () => {
             console.error("Error recording recipe generation:", error);
           } else {
             console.log("Successfully recorded free recipe generation");
-            setHasUsedFreeGeneration(true);
+            setHasUsedFreeGeneration(true); // Update state immediately to prevent multiple free uses
           }
         } catch (error) {
           console.error("Error recording recipe generation:", error);
         }
       } else if (!user) {
+        // For anonymous users, store in localStorage
         localStorage.setItem('hasUsedFreeGeneration', 'true');
-        setHasUsedFreeGeneration(true);
+        setHasUsedFreeGeneration(true); // Update state immediately to prevent multiple free uses
       }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
@@ -779,25 +783,4 @@ const Index = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-16"
-          >
-            <span className="inline-block px-3 py-1 bg-amber-800 text-white rounded-full text-sm font-medium mb-4">
-              Unlock Premium Features
-            </span>
-            <h2 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
-            <p className="text-xl text-amber-100 max-w-2xl mx-auto">
-              Get unlimited recipe generations and exclusive features with our premium plans.
-            </p>
-          </motion.div>
-          
-          <PricingSection />
-        </div>
-      </section>
-    </div>
-  );
-};
-
-export default Index;
-
+            viewport={{ once
