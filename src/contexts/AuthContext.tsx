@@ -23,7 +23,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasUsedFreeGeneration, setHasUsedFreeGeneration] = useState(false);
 
   useEffect(() => {
-    // For non-logged in users, check local storage
+    // We'll only use localStorage for anonymous users
+    // For logged-in users, we'll always check the database
     if (!user) {
       const storedHasUsed = localStorage.getItem('hasUsedFreeGeneration');
       if (storedHasUsed) {
@@ -54,8 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setHasActiveSubscription(false);
           
-          // Reset trial usage status on logout if needed
-          // We don't reset here to preserve the trial usage status across sessions
+          // Don't reset hasUsedFreeGeneration here as we want to preserve
+          // trial status for anonymous users across sessions
         }
         
         setLoading(false);
@@ -95,7 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkGenerationUsage = async (userId: string) => {
     try {
-      // Reset the local state when checking for a logged-in user
+      // Important: We'll reset the local state first, then check the DB
+      // This ensures we don't show "trial used" incorrectly
       setHasUsedFreeGeneration(false);
       
       const { data, error } = await supabase
@@ -109,11 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // If the user has a record and is_subscribed is false,
+      // they've used their free generation
       if (data && data.is_subscribed === false) {
-        console.log("User has used their free generation");
+        console.log("User has used their free generation:", userId);
         setHasUsedFreeGeneration(true);
+      } else if (!data) {
+        // If no record exists, this is a new user who hasn't used their trial
+        console.log("New user detected who hasn't used their free generation:", userId);
+        setHasUsedFreeGeneration(false);
       } else {
         console.log("User has not used their free generation or is subscribed");
+        setHasUsedFreeGeneration(false);
       }
     } catch (error) {
       console.error('Error in checkGenerationUsage:', error);

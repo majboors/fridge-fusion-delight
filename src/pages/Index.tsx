@@ -122,6 +122,7 @@ const Index = () => {
       return;
     }
 
+    // Check if user has already used their free generation and is not subscribed
     if (hasUsedFreeGeneration && !hasActiveSubscription) {
       toast({
         title: "Free trial used",
@@ -188,22 +189,32 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
+      // Only record the free generation if they haven't used it already
       if (!hasUsedFreeGeneration) {
         try {
           console.log("Recording free recipe generation for user:", user.id);
+          // Create or update the user_subscriptions record to mark free trial as used
           const { error } = await supabase
             .from('user_subscriptions')
             .upsert({
               user_id: user.id,
               is_subscribed: false,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
+              // Explicitly set free_trial_used to true
+              free_trial_used: true
             });
           
           if (error) {
             console.error("Error recording recipe generation:", error);
           } else {
             console.log("Successfully recorded free recipe generation");
+            // Update local state to reflect that the free trial has been used
             setHasUsedFreeGeneration(true);
+            
+            // For non-authenticated users, also store in localStorage
+            if (!user) {
+              localStorage.setItem('hasUsedFreeGeneration', 'true');
+            }
           }
         } catch (error) {
           console.error("Error recording recipe generation:", error);
@@ -775,53 +786,4 @@ const Index = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Cooking Experience?</h2>
-            <p className="text-xl mb-8 text-amber-100">
-              Stop wasting ingredients and discover delicious recipes tailored to what you already have.
-            </p>
-            <Button 
-              className="bg-white text-amber-600 hover:bg-amber-50 hover:text-amber-700 text-lg py-6 px-8"
-              onClick={() => {
-                if (checkAuthAndProceed(() => {})) {
-                  const fileInput = document.getElementById('fridge-photo');
-                  if (fileInput) {
-                    fileInput.click();
-                  }
-                }
-              }}
-            >
-              Upload Your Fridge Photo Now
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      <PricingSection />
-
-      <footer className="py-12 bg-gray-900 text-gray-400">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-white mb-4">Fridge-to-Feast</h3>
-            <p className="mb-8 max-w-md mx-auto">
-              AI-powered recipe generation from your fridge contents. 
-              No more food waste, no more boring meals.
-            </p>
-            <div className="flex justify-center space-x-4 mb-8">
-              <a href="#" className="hover:text-white transition-colors">About</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
-            </div>
-            <p className="text-sm">© {new Date().getFullYear()} Fridge-to-Feast. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-};
-
-export default Index;
+            viewport={{ once
