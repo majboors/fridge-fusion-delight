@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -89,6 +88,18 @@ const Index = () => {
     setCurrentCardIndex(0);
   };
 
+  const checkAuthAndProceed = (action: () => void) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to use this feature.",
+      });
+      navigate("/auth");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (!file && !previewUrl) {
       toast({
@@ -100,12 +111,7 @@ const Index = () => {
     }
 
     // Check if user is logged in
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to generate recipes.",
-      });
-      navigate("/auth");
+    if (!checkAuthAndProceed(() => {})) {
       return;
     }
 
@@ -761,35 +767,9 @@ const Index = () => {
             <p className="text-xl mb-8 text-amber-100">
               Stop wasting ingredients and discover delicious recipes tailored to what you already have.
             </p>
-            <Button className="bg-white text-amber-600 hover:bg-amber-50 hover:text-amber-700 text-lg py-6 px-8">
-              Upload Your Fridge Photo Now
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      <PricingSection />
-
-      <footer className="py-12 bg-gray-900 text-gray-400">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-white mb-4">Fridge-to-Feast</h3>
-            <p className="mb-8 max-w-md mx-auto">
-              AI-powered recipe generation from your fridge contents. 
-              No more food waste, no more boring meals.
-            </p>
-            <div className="flex justify-center space-x-4 mb-8">
-              <a href="#" className="hover:text-white transition-colors">About</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
-            </div>
-            <p className="text-sm">© {new Date().getFullYear()} Fridge-to-Feast. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-};
-
-export default Index;
+            <Button 
+              className="bg-white text-amber-600 hover:bg-amber-50 hover:text-amber-700 text-lg py-6 px-8"
+              onClick={() => {
+                // Check auth before allowing the user to proceed
+                if (checkAuthAndProceed(() => {})) {
+                  const fileInput = document.getElementById('fridge-
