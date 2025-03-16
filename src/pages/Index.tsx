@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -772,4 +773,41 @@ const Index = () => {
               onClick={() => {
                 // Check auth before allowing the user to proceed
                 if (checkAuthAndProceed(() => {})) {
-                  const fileInput = document.getElementById('fridge-
+                  const fileInput = document.getElementById('fridge-photo');
+                  if (fileInput) {
+                    fileInput.click();
+                  }
+                }
+              }}
+            >
+              Upload Your Fridge Photo Now
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      <PricingSection />
+
+      <footer className="py-12 bg-gray-900 text-gray-400">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-white mb-4">Fridge-to-Feast</h3>
+            <p className="mb-8 max-w-md mx-auto">
+              AI-powered recipe generation from your fridge contents. 
+              No more food waste, no more boring meals.
+            </p>
+            <div className="flex justify-center space-x-4 mb-8">
+              <a href="#" className="hover:text-white transition-colors">About</a>
+              <a href="#" className="hover:text-white transition-colors">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms</a>
+              <a href="#" className="hover:text-white transition-colors">Contact</a>
+            </div>
+            <p className="text-sm">© {new Date().getFullYear()} Fridge-to-Feast. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Index;
