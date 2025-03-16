@@ -55,8 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setHasActiveSubscription(false);
           
-          // Don't reset hasUsedFreeGeneration here as we want to preserve
-          // trial status for anonymous users across sessions
+          // Check localStorage for anonymous users
+          const storedHasUsed = localStorage.getItem('hasUsedFreeGeneration');
+          if (storedHasUsed) {
+            setHasUsedFreeGeneration(true);
+          } else {
+            setHasUsedFreeGeneration(false);
+          }
         }
         
         setLoading(false);

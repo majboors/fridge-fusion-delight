@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -209,6 +208,9 @@ const Index = () => {
           } else {
             console.log("Successfully recorded free recipe generation");
             setHasUsedFreeGeneration(true); // Update state immediately to prevent multiple free uses
+            
+            // Also store in localStorage as a fallback
+            localStorage.setItem('hasUsedFreeGeneration', 'true');
           }
         } catch (error) {
           console.error("Error recording recipe generation:", error);
@@ -652,7 +654,7 @@ const Index = () => {
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-semibold mb-2 text-gray-800">{recipeItem.title}</h3>
-                  <p className="text-gray-600 text-sm">{recipeItem.ingredients}</p>
+                  <p className="text-gray-600">{recipeItem.ingredients}</p>
                 </div>
               </motion.div>
             ))}
