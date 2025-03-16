@@ -122,7 +122,6 @@ const Index = () => {
       return;
     }
 
-    // Check if user has already used their free generation and is not subscribed
     if (hasUsedFreeGeneration && !hasActiveSubscription) {
       toast({
         title: "Free trial used",
@@ -189,18 +188,15 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
-      // Only record the free generation if they haven't used it already
       if (!hasUsedFreeGeneration) {
         try {
           console.log("Recording free recipe generation for user:", user.id);
-          // Create or update the user_subscriptions record to mark free trial as used
           const { error } = await supabase
             .from('user_subscriptions')
             .upsert({
               user_id: user.id,
               is_subscribed: false,
               updated_at: new Date().toISOString(),
-              // Explicitly set free_trial_used to true
               free_trial_used: true
             });
           
@@ -208,10 +204,7 @@ const Index = () => {
             console.error("Error recording recipe generation:", error);
           } else {
             console.log("Successfully recorded free recipe generation");
-            // Update local state to reflect that the free trial has been used
             setHasUsedFreeGeneration(true);
-            
-            // For non-authenticated users, also store in localStorage
             if (!user) {
               localStorage.setItem('hasUsedFreeGeneration', 'true');
             }
@@ -781,9 +774,29 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="py-20 bg-amber-600 text-white">
+      <section id="pricing" className="py-20 bg-amber-600 text-white">
         <div className="container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-3 py-1 bg-amber-800 text-white rounded-full text-sm font-medium mb-4">
+              Unlock Premium Features
+            </span>
+            <h2 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h2>
+            <p className="text-xl text-amber-100 max-w-2xl mx-auto">
+              Get unlimited recipe generations and exclusive features with our premium plans.
+            </p>
+          </motion.div>
+          
+          <PricingSection />
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Index;
