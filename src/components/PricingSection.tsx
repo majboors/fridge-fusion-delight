@@ -1,10 +1,10 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 export const PricingSection = () => {
@@ -27,9 +27,21 @@ export const PricingSection = () => {
       return;
     }
 
+    if (hasActiveSubscription) {
+      toast({
+        title: "Already Subscribed",
+        description: "You already have an active subscription.",
+      });
+      navigate("/dashboard");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const fallbackUrl = `${window.location.origin}/payment-fallback`;
+      const callbackUrl = `${window.location.origin}/payment-callback`;
+      
+      console.log(`Creating payment with callback: ${callbackUrl} and fallback: ${fallbackUrl}`);
       
       const response = await fetch('https://pay.techrealm.pk/create-payment', {
         method: 'POST',
@@ -37,16 +49,20 @@ export const PricingSection = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 5141, // Amount in AED
-          redirection_url: window.location.origin + "/payment-callback",
+          amount: 5141, // Amount in fils
+          redirection_url: callbackUrl,
           fallback_url: fallbackUrl,
           metadata: {
-            user_id: user.id
+            user_id: user.id,
+            email: user.email,
+            created_at: new Date().toISOString()
           }
         }),
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Payment initiation failed:', errorData || response.statusText);
         throw new Error('Payment initiation failed');
       }
 
@@ -54,6 +70,28 @@ export const PricingSection = () => {
       console.log('Payment response:', data);
       
       if (data.payment_url) {
+        // Record the payment attempt before redirecting
+        try {
+          await supabase
+            .from('payment_transactions')
+            .insert({
+              user_id: user.id,
+              transaction_id: data.id || 'pending',
+              amount: 14,
+              currency: 'USD',
+              status: 'pending',
+              payment_reference: data.id || 'pending',
+              payment_data: { 
+                initiated_at: new Date().toISOString(),
+                payment_url: data.payment_url
+              }
+            });
+        } catch (dbError) {
+          console.error('Error recording payment attempt:', dbError);
+          // Continue with redirect even if recording fails
+        }
+        
+        // Redirect to payment page
         window.location.href = data.payment_url;
       } else {
         throw new Error('No payment URL received');
