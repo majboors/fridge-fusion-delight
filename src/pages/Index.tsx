@@ -188,7 +188,7 @@ const Index = () => {
         description: "Check out your personalized recipe cards."
       });
       
-      if (!hasUsedFreeGeneration) {
+      if (user && !hasUsedFreeGeneration && !hasActiveSubscription) {
         try {
           console.log("Recording free recipe generation for user:", user.id);
           const { error } = await supabase
@@ -205,13 +205,13 @@ const Index = () => {
           } else {
             console.log("Successfully recorded free recipe generation");
             setHasUsedFreeGeneration(true);
-            if (!user) {
-              localStorage.setItem('hasUsedFreeGeneration', 'true');
-            }
           }
         } catch (error) {
           console.error("Error recording recipe generation:", error);
         }
+      } else if (!user) {
+        localStorage.setItem('hasUsedFreeGeneration', 'true');
+        setHasUsedFreeGeneration(true);
       }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
@@ -800,3 +800,4 @@ const Index = () => {
 };
 
 export default Index;
+
