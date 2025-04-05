@@ -7,7 +7,7 @@ interface MicronutrientData {
   value: number;
   unit: string;
   percentage: number;
-  color?: string;
+  color: string;
 }
 
 interface MicronutrientRadarChartProps {
@@ -55,7 +55,7 @@ export function MicronutrientRadarChart({ data }: MicronutrientRadarChartProps) 
               <Progress 
                 value={nutrient.percentage} 
                 className="h-2"
-                indicatorClassName={`bg-${nutrient.color.replace('#', '')}`}
+                indicatorStyle={{ backgroundColor: nutrient.color }}
               />
             </div>
           ))
