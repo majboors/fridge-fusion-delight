@@ -5,9 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MicronutrientRadarChart } from "@/components/dashboard/MicronutrientRadarChart";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { Loader2, Info } from "lucide-react";
+import { Loader2, Info, ChevronDown, ChevronUp, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -55,6 +56,8 @@ export default function MicronutrientTracking() {
   });
 
   const [radarData, setRadarData] = useState<{ name: string; value: number; fullMark: number }[]>([]);
+  const [historyLimit, setHistoryLimit] = useState(7); // Default to showing last 7 days
+  const [totalHistoryCount, setTotalHistoryCount] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -63,26 +66,37 @@ export default function MicronutrientTracking() {
     }
 
     fetchMicronutrientData();
-  }, [user, navigate]);
+  }, [user, navigate, historyLimit]);
 
   const fetchMicronutrientData = async () => {
     try {
       setLoading(true);
       
-      // Fetch recipes from the last 7 days that have micronutrient data
+      // First, count total number of days with micronutrient data
+      const { count, error: countError } = await supabase
+        .from('recipes')
+        .select('created_at', { count: 'exact', head: true })
+        .eq('user_id', user?.id);
+      
+      if (countError) {
+        throw countError;
+      }
+      
+      setTotalHistoryCount(count || 0);
+      
+      // Fetch recipes with micronutrient data, limited by historyLimit
       const { data: recipes, error } = await supabase
         .from('recipes')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(historyLimit);
       
       if (error) {
         throw error;
       }
 
       // Extract micronutrient data from recipes
-      // (Assuming recipes have a micronutrients field or we can extract from steps)
       const micronutrientHistory: MicronutrientHistory[] = [];
       const micronutrientTotals = {
         vitamin_a: { total: 0, count: 0 },
@@ -97,7 +111,6 @@ export default function MicronutrientTracking() {
       
       recipes.forEach(recipe => {
         // Try to extract micronutrient information from recipe data
-        // For recipes created from nutrition API, the data should be in the steps field
         const dateStr = new Date(recipe.created_at).toISOString().split('T')[0];
         
         // Skip if we already have data for this date
@@ -116,7 +129,6 @@ export default function MicronutrientTracking() {
         };
         
         // Extract micronutrient data from recipe steps
-        // This assumes the nutrition data is stored in a specific format in the steps
         if (recipe.steps && Array.isArray(recipe.steps)) {
           recipe.steps.forEach(step => {
             // Parse vitamin A
@@ -312,6 +324,16 @@ export default function MicronutrientTracking() {
     }
   };
 
+  const loadMoreHistory = () => {
+    setHistoryLimit(prev => prev + 7);
+  };
+
+  const loadLessHistory = () => {
+    if (historyLimit > 7) {
+      setHistoryLimit(prev => Math.max(7, prev - 7));
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -322,7 +344,11 @@ export default function MicronutrientTracking() {
 
   return (
     <div className="bg-background min-h-screen pb-20">
-      <PageHeader title="Micronutrient Tracking" />
+      <PageHeader title="Micronutrient Tracking">
+        <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+          <Settings className="h-5 w-5" />
+        </Button>
+      </PageHeader>
 
       <div className="px-6 py-6 space-y-8">
         <Card>
@@ -398,6 +424,30 @@ export default function MicronutrientTracking() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+            
+            <div className="mt-4 flex justify-center space-x-2">
+              {historyLimit > 7 && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadLessHistory}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronUp className="h-4 w-4" /> Show Less
+                </Button>
+              )}
+              
+              {historyLimit < totalHistoryCount && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadMoreHistory}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronDown className="h-4 w-4" /> Show More
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
