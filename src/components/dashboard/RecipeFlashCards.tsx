@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, X, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface RecipeCard {
   card: number;
@@ -36,37 +36,32 @@ export function RecipeFlashCards({ recipeCards, recipeImage, onClose }: RecipeFl
   const isLastCard = currentCardIndex === totalCards - 1;
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex justify-between items-center mb-2">
-        <Button variant="ghost" size="sm" onClick={onClose} className="flex items-center gap-1">
-          <ArrowLeft className="h-4 w-4" /> Back to recipe
-        </Button>
-        <div className="text-sm text-muted-foreground">
-          Card {currentCardIndex + 1} of {totalCards}
-        </div>
+    <div className="space-y-4 h-full flex flex-col p-4">
+      <div className="text-sm text-muted-foreground text-center">
+        Card {currentCardIndex + 1} of {totalCards}
       </div>
       
-      <div className="relative">
+      <div className="flex-grow relative">
         {isFirstCard && recipeImage && (
           <div className="mb-4 rounded-lg overflow-hidden">
             <img
               src={recipeImage}
               alt="Recipe"
-              className="w-full h-48 object-cover"
+              className="w-full h-32 object-cover"
             />
           </div>
         )}
         
-        <Card className="min-h-[200px] flex flex-col justify-center">
+        <Card className="min-h-[100px] flex flex-col justify-center">
           <CardContent className="py-6">
-            <p className={`text-center ${isFirstCard ? 'text-2xl font-bold' : 'text-lg'}`}>
+            <p className={`text-center ${isFirstCard ? 'text-xl font-bold' : 'text-base'}`}>
               {currentCard.content}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex justify-between items-center pt-4">
+      <div className="flex justify-between items-center">
         <Button
           variant="outline"
           size="icon"
@@ -92,12 +87,6 @@ export function RecipeFlashCards({ recipeCards, recipeImage, onClose }: RecipeFl
           disabled={isLastCard}
         >
           <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <div className="flex justify-end pt-2">
-        <Button variant="secondary" size="sm" onClick={onClose}>
-          <X className="h-4 w-4 mr-2" /> Close
         </Button>
       </div>
     </div>
