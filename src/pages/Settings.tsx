@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Clock, CheckCircle, AlertCircle, Crown, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { NavigationBar } from "@/components/dashboard/NavigationBar";
 
 export default function Settings() {
   const { user, hasActiveSubscription, signOut } = useAuth();
@@ -107,8 +108,8 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-background pb-16">
+      <div className="container mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
@@ -213,6 +214,7 @@ export default function Settings() {
           </Card>
         </div>
       </div>
+      <NavigationBar />
     </div>
   );
 }
