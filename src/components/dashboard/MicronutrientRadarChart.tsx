@@ -1,0 +1,58 @@
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+
+interface MicronutrientData {
+  name: string;
+  value: number;
+  unit: string;
+  percentage: number;
+  color?: string;
+}
+
+interface MicronutrientRadarChartProps {
+  data: {
+    vitamin_a: { value: number; unit: string; percentage: number };
+    vitamin_c: { value: number; unit: string; percentage: number };
+    calcium: { value: number; unit: string; percentage: number };
+    iron: { value: number; unit: string; percentage: number };
+    potassium: { value: number; unit: string; percentage: number };
+    sodium: { value: number; unit: string; percentage: number };
+  };
+}
+
+export function MicronutrientRadarChart({ data }: MicronutrientRadarChartProps) {
+  const micronutrients: MicronutrientData[] = [
+    { name: "Vitamin A", ...data.vitamin_a, color: "#f97316" },
+    { name: "Vitamin C", ...data.vitamin_c, color: "#84cc16" },
+    { name: "Calcium", ...data.calcium, color: "#06b6d4" },
+    { name: "Iron", ...data.iron, color: "#a855f7" },
+    { name: "Potassium", ...data.potassium, color: "#ec4899" },
+    { name: "Sodium", ...data.sodium, color: "#64748b" }
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle>Micronutrients</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {micronutrients.map((nutrient) => (
+          <div key={nutrient.name} className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span>{nutrient.name}</span>
+              <span>
+                {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
+              </span>
+            </div>
+            <Progress 
+              value={nutrient.percentage} 
+              className="h-2"
+              indicatorClassName={nutrient.color ? `bg-[${nutrient.color}]` : undefined}
+            />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}

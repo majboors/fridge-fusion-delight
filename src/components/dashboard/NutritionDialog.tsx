@@ -4,11 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Check, X, Save, Share, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { MacronutrientPieChart } from "./MacronutrientPieChart";
+import { CalorieGauge } from "./CalorieGauge";
+import { CalorieBreakdownChart } from "./CalorieBreakdownChart";
+import { MicronutrientRadarChart } from "./MicronutrientRadarChart";
 
 interface NutritionResponseData {
   calorie_count: number;
@@ -175,129 +178,19 @@ export function NutritionDialog({
               </div>
             )}
             
-            {/* Calories */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Calories</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{nutritionData.calorie_count}</div>
-                <div className="text-sm text-muted-foreground">Total calories</div>
-                
-                {nutritionData.item_breakdown.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <h4 className="font-medium text-sm">Breakdown by Item:</h4>
-                    {nutritionData.item_breakdown.map((item, idx) => (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span>{item.name}</span>
-                          <span>{item.calories} cal ({item.percentage}%)</span>
-                        </div>
-                        <Progress value={item.percentage} className="h-1" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Calorie Gauge */}
+            <CalorieGauge calories={nutritionData.calorie_count} />
             
-            {/* Macronutrients */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Macronutrients</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Protein</span>
-                    <span>{nutritionData.macronutrients.protein.value}{nutritionData.macronutrients.protein.unit} ({nutritionData.macronutrients.protein.percentage}%)</span>
-                  </div>
-                  <Progress value={nutritionData.macronutrients.protein.percentage} className="h-2 bg-secondary" indicatorClassName="bg-green-500" />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Carbs</span>
-                    <span>{nutritionData.macronutrients.carbs.value}{nutritionData.macronutrients.carbs.unit} ({nutritionData.macronutrients.carbs.percentage}%)</span>
-                  </div>
-                  <Progress value={nutritionData.macronutrients.carbs.percentage} className="h-2 bg-secondary" indicatorClassName="bg-yellow-400" />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Fat</span>
-                    <span>{nutritionData.macronutrients.fat.value}{nutritionData.macronutrients.fat.unit} ({nutritionData.macronutrients.fat.percentage}%)</span>
-                  </div>
-                  <Progress value={nutritionData.macronutrients.fat.percentage} className="h-2 bg-secondary" indicatorClassName="bg-blue-400" />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Fiber</span>
-                    <span>{nutritionData.macronutrients.fiber.value}{nutritionData.macronutrients.fiber.unit} ({nutritionData.macronutrients.fiber.percentage}%)</span>
-                  </div>
-                  <Progress value={nutritionData.macronutrients.fiber.percentage} className="h-2 bg-secondary" indicatorClassName="bg-amber-600" />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Macronutrient Pie Chart */}
+            <MacronutrientPieChart data={nutritionData.macronutrients} />
             
-            {/* Micronutrients */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Micronutrients</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Vitamin A</span>
-                      <span>{nutritionData.micronutrients.vitamin_a.percentage}%</span>
-                    </div>
-                    <Progress value={nutritionData.micronutrients.vitamin_a.percentage} className="h-1" />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Vitamin C</span>
-                      <span>{nutritionData.micronutrients.vitamin_c.percentage}%</span>
-                    </div>
-                    <Progress value={nutritionData.micronutrients.vitamin_c.percentage} className="h-1" />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Calcium</span>
-                      <span>{nutritionData.micronutrients.calcium.percentage}%</span>
-                    </div>
-                    <Progress value={nutritionData.micronutrients.calcium.percentage} className="h-1" />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Iron</span>
-                      <span>{nutritionData.micronutrients.iron.percentage}%</span>
-                    </div>
-                    <Progress value={nutritionData.micronutrients.iron.percentage} className="h-1" />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Potassium</span>
-                      <span>{nutritionData.micronutrients.potassium.percentage}%</span>
-                    </div>
-                    <Progress value={nutritionData.micronutrients.potassium.percentage} className="h-1" />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Sodium</span>
-                      <span>{nutritionData.micronutrients.sodium.percentage}%</span>
-                    </div>
-                    <Progress value={nutritionData.micronutrients.sodium.percentage} className="h-1" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Item Breakdown Chart */}
+            {nutritionData.item_breakdown.length > 0 && (
+              <CalorieBreakdownChart items={nutritionData.item_breakdown} />
+            )}
+            
+            {/* Micronutrient Visualizations */}
+            <MicronutrientRadarChart data={nutritionData.micronutrients} />
             
             {/* Food Items */}
             <Card>
