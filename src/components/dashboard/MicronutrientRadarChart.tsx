@@ -48,9 +48,7 @@ export function MicronutrientRadarChart({ data }: MicronutrientRadarChartProps) 
             <Progress 
               value={nutrient.percentage} 
               className="h-2"
-              style={{ 
-                "--progress-background": nutrient.color 
-              } as React.CSSProperties}
+              indicatorClassName={`bg-[${nutrient.color}]`}
             />
           </div>
         ))}

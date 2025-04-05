@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -149,7 +148,7 @@ export function NutritionDialog({
         description: "Meal logged successfully",
       });
       
-      // Call the onMealLogged callback to refresh dashboard data
+      // Call the onMealLogged callback ONLY if it exists AND the meal was successfully logged
       if (onMealLogged) {
         onMealLogged();
       }
@@ -177,7 +176,7 @@ export function NutritionDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-[calc(80vh-120px)] pb-4 pr-4">
+          <ScrollArea className="h-[calc(80vh-120px)] pr-4">
             <div className="space-y-6 pb-6">
               {/* Food Image */}
               {imageUrl && (
