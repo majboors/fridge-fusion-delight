@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   BarChart3, 
   PieChart, 
@@ -22,20 +23,29 @@ import { FeatureCard } from "@/components/dashboard/FeatureCard";
 import { NotificationCard } from "@/components/dashboard/NotificationCard";
 import { ProgressRing } from "@/components/dashboard/ProgressRing";
 
+interface NutritionData {
+  id: string;
+  user_id: string;
+  date: string;
+  calories_consumed: number;
+  calories_goal: number;
+  carbs_consumed: number;
+  carbs_goal: number;
+  protein_consumed: number;
+  protein_goal: number;
+  fat_consumed: number;
+  fat_goal: number;
+  weekly_progress: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [nutritionData, setNutritionData] = useState<NutritionData | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Mock data (in a real app, this would come from an API)
-  const [dailyData, setDailyData] = useState({
-    calories: { consumed: 1250, goal: 2000 },
-    carbs: { consumed: 90, goal: 250 },
-    protein: { consumed: 48, goal: 150 },
-    fat: { consumed: 80, goal: 65 },
-    weeklyProgress: 65,
-  });
 
   useEffect(() => {
     if (!user) {
@@ -43,13 +53,32 @@ export default function Dashboard() {
       return;
     }
     
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [user, navigate]);
+    const fetchNutritionData = async () => {
+      try {
+        // Fetch or create today's nutrition data using our stored function
+        const { data, error } = await supabase.rpc('get_or_create_todays_nutrition_data', {
+          user_uuid: user.id
+        });
+        
+        if (error) {
+          console.error('Error fetching nutrition data:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load your nutrition data",
+            variant: "destructive",
+          });
+        } else if (data && data.length > 0) {
+          setNutritionData(data[0]);
+        }
+      } catch (error) {
+        console.error('Error in fetchNutritionData:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNutritionData();
+  }, [user, navigate, toast]);
 
   const handleAddMeal = () => {
     toast({
@@ -65,6 +94,27 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  // Use data from Supabase with fallback to zero values
+  const dailyData = {
+    calories: { 
+      consumed: nutritionData?.calories_consumed || 0, 
+      goal: nutritionData?.calories_goal || 2000 
+    },
+    carbs: { 
+      consumed: nutritionData?.carbs_consumed || 0, 
+      goal: nutritionData?.carbs_goal || 250 
+    },
+    protein: { 
+      consumed: nutritionData?.protein_consumed || 0, 
+      goal: nutritionData?.protein_goal || 150 
+    },
+    fat: { 
+      consumed: nutritionData?.fat_consumed || 0, 
+      goal: nutritionData?.fat_goal || 65 
+    },
+    weeklyProgress: nutritionData?.weekly_progress || 0,
+  };
 
   const firstName = user?.email?.split('@')[0] || 'User';
   const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
@@ -122,19 +172,19 @@ export default function Dashboard() {
             <Card className="bg-secondary border-0">
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Vitamin C</span>
-                <p className="text-sm font-bold text-green-600">120%</p>
+                <p className="text-sm font-bold text-green-600">0%</p>
               </CardContent>
             </Card>
             <Card className="bg-secondary border-0">
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Iron</span>
-                <p className="text-sm font-bold text-amber-600">65%</p>
+                <p className="text-sm font-bold text-amber-600">0%</p>
               </CardContent>
             </Card>
             <Card className="bg-secondary border-0">
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Calcium</span>
-                <p className="text-sm font-bold text-red-600">45%</p>
+                <p className="text-sm font-bold text-red-600">0%</p>
               </CardContent>
             </Card>
           </div>
@@ -183,7 +233,7 @@ export default function Dashboard() {
           <div className="flex flex-col items-center">
             <ProgressRing 
               progress={dailyData.weeklyProgress} 
-              title="65%" 
+              title={`${dailyData.weeklyProgress}%`}
               subtitle="Weekly Progress" 
             />
             <p className="text-sm text-muted-foreground mt-2">Based on your goals</p>
