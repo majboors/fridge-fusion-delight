@@ -55,7 +55,7 @@ export default function Dashboard() {
     
     const fetchNutritionData = async () => {
       try {
-        // Fetch or create today's nutrition data using our stored function
+        // Fix the type issue by explicitly typing the response
         const { data, error } = await supabase.rpc('get_or_create_todays_nutrition_data', {
           user_uuid: user.id
         });
@@ -68,7 +68,8 @@ export default function Dashboard() {
             variant: "destructive",
           });
         } else if (data && data.length > 0) {
-          setNutritionData(data[0]);
+          // Fix the type issue here by ensuring we set a properly typed object
+          setNutritionData(data[0] as NutritionData);
         }
       } catch (error) {
         console.error('Error in fetchNutritionData:', error);
