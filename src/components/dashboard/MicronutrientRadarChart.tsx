@@ -48,7 +48,7 @@ export function MicronutrientRadarChart({ data }: MicronutrientRadarChartProps) 
             <Progress 
               value={nutrient.percentage} 
               className="h-2"
-              indicatorClassName={`bg-[${nutrient.color}]`}
+              indicatorClassName={`bg-${nutrient.color.replace('#', '')}`}
             />
           </div>
         ))}

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, BarChart2, Camera, Settings, BookOpen } from "lucide-react";
+import { Home, BarChart2, Camera, Settings, BookOpen, Radar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FeatureSelectionDialog } from "./FeatureSelectionDialog";
 
@@ -28,10 +28,10 @@ export function NavigationBar() {
             active={isActive('/dashboard')}
           />
           <NavItem 
-            icon={<BarChart2 className={`w-6 h-6 ${isActive('/progress') ? 'text-primary fill-primary/20' : 'text-muted-foreground'}`} />} 
-            label="Progress" 
-            onClick={() => navigate('/progress')} 
-            active={isActive('/progress')}
+            icon={<Radar className={`w-6 h-6 ${isActive('/micronutrients') ? 'text-primary fill-primary/20' : 'text-muted-foreground'}`} />} 
+            label="Nutrients" 
+            onClick={() => navigate('/micronutrients')} 
+            active={isActive('/micronutrients')}
           />
           <div className="relative flex flex-col items-center justify-center">
             <button 

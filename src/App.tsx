@@ -12,6 +12,7 @@ import Recipes from "./pages/Recipes";
 import Settings from "./pages/Settings";
 import PaymentCallback from "./pages/PaymentCallback";
 import PaymentFallback from "./pages/PaymentFallback";
+import MicronutrientTracking from "./pages/MicronutrientTracking";
 import "./App.css";
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
               <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/payment-fallback" element={<PaymentFallback />} />
               <Route path="/api-testing" element={<ApiTesting />} />
+              <Route path="/micronutrients" element={<MicronutrientTracking />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>
