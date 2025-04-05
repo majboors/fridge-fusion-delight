@@ -4,28 +4,70 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, Utensils, UtensilsCrossed } from "lucide-react";
+import { Plus, Loader2, Utensils, UtensilsCrossed, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
+import { CameraOptionsDialog } from "@/components/dashboard/CameraOptionsDialog";
+import { supabase } from "@/integrations/supabase/client";
+
+// Recipe types
+interface Recipe {
+  id: string;
+  title: string;
+  image_url: string | null;
+  ingredients: string[];
+  steps: string[];
+  created_at: string;
+}
 
 export default function Recipes() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate("/auth");
       return;
     }
+    
+    fetchRecipes();
   }, [user, navigate]);
 
+  const fetchRecipes = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setRecipes(data || []);
+      
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load recipes. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddRecipe = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Recipe creation functionality will be available soon!",
-    });
+    setCameraDialogOpen(true);
   };
   
   return (
@@ -35,21 +77,62 @@ export default function Recipes() {
         <h1 className="text-4xl font-bold mb-6">Recipes</h1>
       </header>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
-        </div>
-      ) : (
-        <div className="px-6">
-          {/* Add Recipe Button */}
-          <Button 
-            className="w-full py-6 text-lg flex items-center justify-center gap-2 mb-6" 
-            onClick={handleAddRecipe}
-          >
-            <Plus className="h-5 w-5" /> Add Recipe
-          </Button>
-          
-          {/* No Recipes State */}
+      <div className="px-6">
+        {/* Add Recipe Button */}
+        <Button 
+          className="w-full py-6 text-lg flex items-center justify-center gap-2 mb-6" 
+          onClick={handleAddRecipe}
+        >
+          <Plus className="h-5 w-5" /> Add Recipe
+        </Button>
+        
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          </div>
+        ) : recipes.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recipes.map((recipe) => (
+              <Card key={recipe.id} className="overflow-hidden">
+                {recipe.image_url && (
+                  <div className="h-48 overflow-hidden">
+                    <img 
+                      src={recipe.image_url} 
+                      alt={recipe.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <CardHeader>
+                  <CardTitle>{recipe.title}</CardTitle>
+                  <CardDescription>
+                    {recipe.ingredients.length} ingredients • {recipe.steps.length} steps
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <h4 className="text-sm font-medium mb-2">Ingredients:</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {recipe.ingredients.slice(0, 3).map((ingredient, idx) => (
+                      <span key={idx} className="bg-muted text-xs px-2 py-1 rounded">
+                        {ingredient}
+                      </span>
+                    ))}
+                    {recipe.ingredients.length > 3 && (
+                      <span className="bg-muted text-xs px-2 py-1 rounded">
+                        +{recipe.ingredients.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" size="sm">
+                    View Recipe
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
           <div className="flex flex-col items-center justify-center py-10">
             <div className="bg-muted/50 p-8 rounded-full mb-4">
               <UtensilsCrossed className="h-12 w-12 text-muted-foreground" />
@@ -59,11 +142,14 @@ export default function Recipes() {
               Create your first recipe by using the camera feature or adding a recipe manually
             </p>
           </div>
-          
-          {/* Recipe Cards will be displayed here when available */}
-          
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Camera Options Dialog */}
+      <CameraOptionsDialog 
+        open={cameraDialogOpen}
+        onOpenChange={setCameraDialogOpen}
+      />
 
       {/* Navigation Bar */}
       <NavigationBar />
