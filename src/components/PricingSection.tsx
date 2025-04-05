@@ -111,7 +111,7 @@ export const PricingSection = () => {
   };
 
   return (
-    <section id="pricing" className="py-24 bg-secondary/50">
+    <section id="pricing" className="py-24 bg-green-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-foreground mb-4">Simple, Transparent Pricing</h2>
@@ -149,7 +149,7 @@ export const PricingSection = () => {
             </div>
           </Card>
 
-          <Card className="p-8 bg-accent border-primary/20">
+          <Card className="p-8 bg-green-100 border-primary/20">
             <div className="text-center">
               <h3 className="text-xl font-semibold mb-2 text-foreground">Starter Package</h3>
               <div className="text-4xl font-bold mb-6 text-foreground">$14</div>
