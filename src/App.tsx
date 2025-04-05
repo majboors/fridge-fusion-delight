@@ -10,6 +10,7 @@ import ApiTesting from "./pages/ApiTesting";
 import Dashboard from "./pages/Dashboard";
 import Recipes from "./pages/Recipes";
 import Settings from "./pages/Settings";
+import Goals from "./pages/Goals";
 import PaymentCallback from "./pages/PaymentCallback";
 import PaymentFallback from "./pages/PaymentFallback";
 import MicronutrientTracking from "./pages/MicronutrientTracking";
@@ -27,6 +28,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/recipes" element={<Recipes />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/goals" element={<Goals />} />
               <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/payment-fallback" element={<PaymentFallback />} />
               <Route path="/api-testing" element={<ApiTesting />} />

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,12 +6,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Plus, Loader2, Utensils, UtensilsCrossed, Camera, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { CameraOptionsDialog } from "@/components/dashboard/CameraOptionsDialog";
 import { TextRecipeDialog } from "@/components/dashboard/TextRecipeDialog";
 import { RecipeDetailsDialog } from "@/components/dashboard/RecipeDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
 
-// Recipe types
 interface Recipe {
   id: string;
   title: string;
@@ -89,9 +88,7 @@ export default function Recipes() {
   return (
     <div className="bg-background min-h-screen pb-20">
       {/* Header */}
-      <header className="pt-8 px-6">
-        <h1 className="text-4xl font-bold mb-6">Recipes</h1>
-      </header>
+      <PageHeader title="Recipes" />
 
       <div className="px-6">
         {/* Add Recipe Options */}

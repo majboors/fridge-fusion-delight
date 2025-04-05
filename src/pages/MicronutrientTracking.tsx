@@ -1,27 +1,12 @@
-
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowLeft, Info } from "lucide-react";
-
-import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { MicronutrientRadarChart } from "@/components/dashboard/MicronutrientRadarChart";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { NavigationBar } from "@/components/dashboard/NavigationBar";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Loader2 } from "lucide-react";
+
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { 
   ResponsiveContainer, 
   RadarChart, 
@@ -30,7 +15,6 @@ import {
   Radar 
 } from "recharts";
 
-// Define types for our data
 interface MicronutrientHistory {
   date: string;
   vitamin_a: number;
@@ -64,7 +48,6 @@ export default function MicronutrientTracking() {
     sodium: { value: 0, unit: "mg", percentage: 0 },
   });
 
-  // For the radar chart
   const [radarData, setRadarData] = useState<{ name: string; value: number; fullMark: number }[]>([]);
 
   useEffect(() => {
@@ -80,10 +63,6 @@ export default function MicronutrientTracking() {
     try {
       setLoading(true);
 
-      // This is a mock implementation since we don't have actual micronutrient data in the database yet
-      // In a real implementation, we would fetch the data from Supabase
-
-      // Simulate data from Supabase by generating random values
       const mockHistoryData: MicronutrientHistory[] = [];
       const today = new Date();
       
@@ -93,18 +72,17 @@ export default function MicronutrientTracking() {
         
         mockHistoryData.push({
           date: date.toISOString().split('T')[0],
-          vitamin_a: Math.floor(Math.random() * 800) + 200, // 200-1000 mcg
-          vitamin_c: Math.floor(Math.random() * 80) + 20,   // 20-100 mg
-          calcium: Math.floor(Math.random() * 800) + 200,   // 200-1000 mg
-          iron: Math.floor(Math.random() * 14) + 4,         // 4-18 mg
-          potassium: Math.floor(Math.random() * 3000) + 1000, // 1000-4000 mg
-          sodium: Math.floor(Math.random() * 2000) + 500,   // 500-2500 mg
+          vitamin_a: Math.floor(Math.random() * 800) + 200,
+          vitamin_c: Math.floor(Math.random() * 80) + 20,
+          calcium: Math.floor(Math.random() * 800) + 200,
+          iron: Math.floor(Math.random() * 14) + 4,
+          potassium: Math.floor(Math.random() * 3000) + 1000,
+          sodium: Math.floor(Math.random() * 2000) + 500,
         });
       }
       
       setHistoryData(mockHistoryData);
       
-      // Calculate averages
       const avgValues = {
         vitamin_a: { 
           value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.vitamin_a, 0) / mockHistoryData.length),
@@ -140,7 +118,6 @@ export default function MicronutrientTracking() {
       
       setAverages(avgValues);
       
-      // Prepare radar chart data
       setRadarData([
         { name: "Vitamin A", value: avgValues.vitamin_a.percentage, fullMark: 100 },
         { name: "Vitamin C", value: avgValues.vitamin_c.percentage, fullMark: 100 },
@@ -166,17 +143,10 @@ export default function MicronutrientTracking() {
   }
 
   return (
-    <div className="bg-background pb-20">
-      {/* Header */}
-      <header className="pt-8 px-6 flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-3xl font-bold">Micronutrient Tracking</h1>
-      </header>
+    <div className="bg-background min-h-screen pb-20">
+      <PageHeader title="Micronutrient Tracking" />
 
       <div className="px-6 py-6 space-y-8">
-        {/* Radar Chart */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
@@ -215,10 +185,8 @@ export default function MicronutrientTracking() {
           </CardContent>
         </Card>
 
-        {/* Current Averages */}
         <MicronutrientRadarChart data={averages} />
 
-        {/* History Table */}
         <Card>
           <CardHeader>
             <CardTitle>7-Day History</CardTitle>
@@ -257,7 +225,6 @@ export default function MicronutrientTracking() {
         </Card>
       </div>
 
-      {/* Navigation Bar */}
       <NavigationBar />
     </div>
   );

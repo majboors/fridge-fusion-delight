@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { NutrientProgress } from "@/components/dashboard/NutrientProgress";
 import { MacroChart } from "@/components/dashboard/MacroChart";
 import { FeatureCard } from "@/components/dashboard/FeatureCard";
@@ -80,7 +80,6 @@ export default function Dashboard() {
     
     try {
       setLoading(true);
-      // Fix the type issue by explicitly typing the response
       const { data, error } = await supabase.rpc('get_or_create_todays_nutrition_data', {
         user_uuid: user.id
       });
@@ -93,7 +92,6 @@ export default function Dashboard() {
           variant: "destructive",
         });
       } else if (data && data.length > 0) {
-        // Fix the type issue here by ensuring we set a properly typed object
         setNutritionData(data[0] as NutritionData);
       }
     } catch (error) {
@@ -113,7 +111,6 @@ export default function Dashboard() {
   }, [user, navigate, toast]);
 
   const handleAddMeal = () => {
-    // For demo purposes, let's create mock nutrition data
     const mockNutritionData: NutritionResponseData = {
       calorie_count: 450,
       macronutrients: {
@@ -151,7 +148,6 @@ export default function Dashboard() {
     );
   }
 
-  // Use data from Supabase with fallback to zero values
   const dailyData = {
     calories: { 
       consumed: nutritionData?.calories_consumed || 0, 
@@ -177,12 +173,8 @@ export default function Dashboard() {
 
   return (
     <div className="bg-background pb-20">
-      {/* Header */}
-      <header className="pt-8 px-6">
-        <h1 className="text-4xl font-bold mb-6">Welcome back, {capitalizedName}!</h1>
-      </header>
+      <PageHeader title={`Welcome back, ${capitalizedName}!`} />
 
-      {/* Daily Summary */}
       <div className="px-6">
         <h2 className="text-2xl font-semibold mb-3">Daily Summary</h2>
         
@@ -253,7 +245,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Log Meal Button */}
       <div className="px-6 mb-8">
         <Button 
           className="w-full py-6 text-lg flex items-center justify-center gap-2" 
@@ -263,7 +254,6 @@ export default function Dashboard() {
         </Button>
       </div>
 
-      {/* Feature Navigation */}
       <div className="px-6 mb-8">
         <div className="grid grid-cols-2 gap-4">
           <FeatureCard 
@@ -289,7 +279,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Progress & Notifications */}
       <div className="px-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col items-center">
@@ -317,7 +306,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Nutrition Dialog */}
       <NutritionDialog 
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen} 
@@ -325,7 +313,6 @@ export default function Dashboard() {
         onMealLogged={fetchNutritionData} 
       />
 
-      {/* Navigation Bar */}
       <NavigationBar />
     </div>
   );
