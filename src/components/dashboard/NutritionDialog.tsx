@@ -161,7 +161,7 @@ export function NutritionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Nutrition Analysis</DialogTitle>
           <DialogDescription>
@@ -169,8 +169,8 @@ export function NutritionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-6">
+        <ScrollArea className="flex-1 pr-4 max-h-[calc(85vh-150px)]">
+          <div className="space-y-6 pb-4">
             {/* Food Image */}
             {imageUrl && (
               <div className="w-full h-48 overflow-hidden rounded-md">
