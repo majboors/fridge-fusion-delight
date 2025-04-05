@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,6 +47,9 @@ export function RecipeDetailsDialog({ recipe, open, onOpenChange }: RecipeDetail
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl">{recipe.title}</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            View recipe details below
+          </DialogDescription>
         </DialogHeader>
         
         {recipe.image_url && (
@@ -57,36 +60,34 @@ export function RecipeDetailsDialog({ recipe, open, onOpenChange }: RecipeDetail
         
         {/* Navigation tabs */}
         <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as any)} className="w-full">
-          <TabsList className="grid grid-cols-3 w-full rounded-none">
-            <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
-            <TabsTrigger value="instructions">Instructions</TabsTrigger>
-            <TabsTrigger value="flashcards">Flash Cards</TabsTrigger>
-          </TabsList>
+          <div className="sticky top-0 bg-background z-10">
+            <TabsList className="grid grid-cols-3 w-full rounded-none">
+              <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
+              <TabsTrigger value="instructions">Instructions</TabsTrigger>
+              <TabsTrigger value="flashcards">Flash Cards</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="ingredients" className="m-0">
-            <div className="relative h-64">
+            <div className="h-64">
               <ScrollArea className="h-full p-6">
-                <div>
-                  <ul className="list-disc pl-5 mb-6 space-y-2">
-                    {recipe.ingredients.map((ingredient, index) => (
-                      <li key={index}>{ingredient}</li>
-                    ))}
-                  </ul>
-                </div>
+                <ul className="list-disc pl-5 mb-6 space-y-2">
+                  {recipe.ingredients.map((ingredient, index) => (
+                    <li key={index}>{ingredient}</li>
+                  ))}
+                </ul>
               </ScrollArea>
             </div>
           </TabsContent>
           
           <TabsContent value="instructions" className="m-0">
-            <div className="relative h-64">
+            <div className="h-64">
               <ScrollArea className="h-full p-6">
-                <div>
-                  <ol className="list-decimal pl-5 space-y-4">
-                    {recipe.steps.map((step, index) => (
-                      <li key={index} className="pl-2">{step}</li>
-                    ))}
-                  </ol>
-                </div>
+                <ol className="list-decimal pl-5 space-y-4">
+                  {recipe.steps.map((step, index) => (
+                    <li key={index} className="pl-2">{step}</li>
+                  ))}
+                </ol>
               </ScrollArea>
             </div>
           </TabsContent>
