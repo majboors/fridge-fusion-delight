@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -118,13 +119,19 @@ export function NutritionDialog({
         
       const title = `${foodItemsTitle} (${nutritionData.calorie_count} calories)`;
 
-      // Create steps with nutrition information
+      // Create steps with nutrition information - format to ensure micronutrient data is parsable
       const steps = [
         `This meal contains approximately ${nutritionData.calorie_count} calories.`,
         `Protein: ${nutritionData.macronutrients.protein.value}${nutritionData.macronutrients.protein.unit} (${nutritionData.macronutrients.protein.percentage}%)`,
         `Carbs: ${nutritionData.macronutrients.carbs.value}${nutritionData.macronutrients.carbs.unit} (${nutritionData.macronutrients.carbs.percentage}%)`,
         `Fat: ${nutritionData.macronutrients.fat.value}${nutritionData.macronutrients.fat.unit} (${nutritionData.macronutrients.fat.percentage}%)`,
         `Fiber: ${nutritionData.macronutrients.fiber.value}${nutritionData.macronutrients.fiber.unit} (${nutritionData.macronutrients.fiber.percentage}%)`,
+        `Vitamin A: ${nutritionData.micronutrients.vitamin_a.value}${nutritionData.micronutrients.vitamin_a.unit} (${nutritionData.micronutrients.vitamin_a.percentage}%)`,
+        `Vitamin C: ${nutritionData.micronutrients.vitamin_c.value}${nutritionData.micronutrients.vitamin_c.unit} (${nutritionData.micronutrients.vitamin_c.percentage}%)`,
+        `Calcium: ${nutritionData.micronutrients.calcium.value}${nutritionData.micronutrients.calcium.unit} (${nutritionData.micronutrients.calcium.percentage}%)`,
+        `Iron: ${nutritionData.micronutrients.iron.value}${nutritionData.micronutrients.iron.unit} (${nutritionData.micronutrients.iron.percentage}%)`,
+        `Potassium: ${nutritionData.micronutrients.potassium.value}${nutritionData.micronutrients.potassium.unit} (${nutritionData.micronutrients.potassium.percentage}%)`,
+        `Sodium: ${nutritionData.micronutrients.sodium.value}${nutritionData.micronutrients.sodium.unit} (${nutritionData.micronutrients.sodium.percentage}%)`,
       ];
 
       // Save to recipes table

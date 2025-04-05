@@ -114,6 +114,7 @@ export function CameraOptionsDialog({
         const formData = new FormData();
         formData.append("image", file);
 
+        console.log("Sending request to nutrition API...");
         const response = await fetch("https://mealplan.techrealm.online/api/nutrition", {
           method: "POST",
           body: formData,
@@ -124,6 +125,7 @@ export function CameraOptionsDialog({
         }
 
         const data: NutritionResponse = await response.json();
+        console.log("Nutrition API response:", data);
         setNutritionResponse(data);
         
         // Show nutrition dialog
@@ -199,6 +201,13 @@ export function CameraOptionsDialog({
       setImageUrl(null);
     }
     onOpenChange(false);
+  };
+
+  const handleNutritionLogSuccess = () => {
+    // Optionally refresh data or notify parent component
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   const getDialogTitle = () => {
@@ -290,6 +299,7 @@ export function CameraOptionsDialog({
         onOpenChange={setNutritionDialogOpen}
         nutritionData={nutritionResponse}
         imageUrl={imageUrl || undefined}
+        onMealLogged={handleNutritionLogSuccess}
       />
     </>
   );

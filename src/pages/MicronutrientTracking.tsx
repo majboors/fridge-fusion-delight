@@ -8,6 +8,8 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Loader2, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { 
@@ -40,6 +42,7 @@ interface MicronutrientAverages {
 export default function MicronutrientTracking() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [historyData, setHistoryData] = useState<MicronutrientHistory[]>([]);
   const [averages, setAverages] = useState<MicronutrientAverages>({
@@ -65,7 +68,181 @@ export default function MicronutrientTracking() {
   const fetchMicronutrientData = async () => {
     try {
       setLoading(true);
+      
+      // Fetch recipes from the last 7 days that have micronutrient data
+      const { data: recipes, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) {
+        throw error;
+      }
 
+      // Extract micronutrient data from recipes
+      // (Assuming recipes have a micronutrients field or we can extract from steps)
+      const micronutrientHistory: MicronutrientHistory[] = [];
+      const micronutrientTotals = {
+        vitamin_a: { total: 0, count: 0 },
+        vitamin_c: { total: 0, count: 0 },
+        calcium: { total: 0, count: 0 },
+        iron: { total: 0, count: 0 },
+        potassium: { total: 0, count: 0 },
+        sodium: { total: 0, count: 0 },
+      };
+      
+      const processedDates = new Set();
+      
+      recipes.forEach(recipe => {
+        // Try to extract micronutrient information from recipe data
+        // For recipes created from nutrition API, the data should be in the steps field
+        const dateStr = new Date(recipe.created_at).toISOString().split('T')[0];
+        
+        // Skip if we already have data for this date
+        if (processedDates.has(dateStr)) {
+          return;
+        }
+        
+        let microData = {
+          date: dateStr,
+          vitamin_a: 0,
+          vitamin_c: 0,
+          calcium: 0,
+          iron: 0,
+          potassium: 0,
+          sodium: 0
+        };
+        
+        // Extract micronutrient data from recipe steps
+        // This assumes the nutrition data is stored in a specific format in the steps
+        if (recipe.steps && Array.isArray(recipe.steps)) {
+          recipe.steps.forEach(step => {
+            // Parse vitamin A
+            const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg/i);
+            if (vitaminAMatch) {
+              microData.vitamin_a = parseFloat(vitaminAMatch[1]);
+              micronutrientTotals.vitamin_a.total += microData.vitamin_a;
+              micronutrientTotals.vitamin_a.count += 1;
+            }
+            
+            // Parse vitamin C
+            const vitaminCMatch = step.match(/Vitamin C:?\s*(\d+\.?\d*)\s*mg/i);
+            if (vitaminCMatch) {
+              microData.vitamin_c = parseFloat(vitaminCMatch[1]);
+              micronutrientTotals.vitamin_c.total += microData.vitamin_c;
+              micronutrientTotals.vitamin_c.count += 1;
+            }
+            
+            // Parse calcium
+            const calciumMatch = step.match(/Calcium:?\s*(\d+\.?\d*)\s*mg/i);
+            if (calciumMatch) {
+              microData.calcium = parseFloat(calciumMatch[1]);
+              micronutrientTotals.calcium.total += microData.calcium;
+              micronutrientTotals.calcium.count += 1;
+            }
+            
+            // Parse iron
+            const ironMatch = step.match(/Iron:?\s*(\d+\.?\d*)\s*mg/i);
+            if (ironMatch) {
+              microData.iron = parseFloat(ironMatch[1]);
+              micronutrientTotals.iron.total += microData.iron;
+              micronutrientTotals.iron.count += 1;
+            }
+            
+            // Parse potassium
+            const potassiumMatch = step.match(/Potassium:?\s*(\d+\.?\d*)\s*mg/i);
+            if (potassiumMatch) {
+              microData.potassium = parseFloat(potassiumMatch[1]);
+              micronutrientTotals.potassium.total += microData.potassium;
+              micronutrientTotals.potassium.count += 1;
+            }
+            
+            // Parse sodium
+            const sodiumMatch = step.match(/Sodium:?\s*(\d+\.?\d*)\s*mg/i);
+            if (sodiumMatch) {
+              microData.sodium = parseFloat(sodiumMatch[1]);
+              micronutrientTotals.sodium.total += microData.sodium;
+              micronutrientTotals.sodium.count += 1;
+            }
+          });
+        }
+        
+        // Only add data if we found at least one micronutrient
+        if (microData.vitamin_a || microData.vitamin_c || microData.calcium || 
+            microData.iron || microData.potassium || microData.sodium) {
+          micronutrientHistory.push(microData);
+          processedDates.add(dateStr);
+        }
+      });
+
+      // If we have no real data yet, use some mock data for initial display
+      if (micronutrientHistory.length === 0) {
+        const today = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - i);
+          
+          micronutrientHistory.push({
+            date: date.toISOString().split('T')[0],
+            vitamin_a: Math.floor(Math.random() * 800) + 200,
+            vitamin_c: Math.floor(Math.random() * 80) + 20,
+            calcium: Math.floor(Math.random() * 800) + 200,
+            iron: Math.floor(Math.random() * 14) + 4,
+            potassium: Math.floor(Math.random() * 3000) + 1000,
+            sodium: Math.floor(Math.random() * 2000) + 500,
+          });
+        }
+        
+        toast({
+          title: "No micronutrient data found",
+          description: "Using sample data for visualization. Log your meals to see real data.",
+          variant: "default",
+        });
+      }
+      
+      setHistoryData(micronutrientHistory);
+      
+      // Calculate averages
+      const calculateAverage = (nutrient: keyof typeof micronutrientTotals, unit: string, daily: number) => {
+        const total = micronutrientTotals[nutrient].total;
+        const count = micronutrientTotals[nutrient].count || 1; // Prevent division by zero
+        const average = total / count;
+        const percentage = Math.round((average / daily) * 100);
+        return { value: Math.round(average), unit, percentage };
+      };
+      
+      const avgValues = {
+        vitamin_a: calculateAverage('vitamin_a', 'mcg', 900),
+        vitamin_c: calculateAverage('vitamin_c', 'mg', 90),
+        calcium: calculateAverage('calcium', 'mg', 1000),
+        iron: calculateAverage('iron', 'mg', 18),
+        potassium: calculateAverage('potassium', 'mg', 3500),
+        sodium: calculateAverage('sodium', 'mg', 2300),
+      };
+      
+      setAverages(avgValues);
+      
+      setRadarData([
+        { name: "Vitamin A", value: avgValues.vitamin_a.percentage, fullMark: 100 },
+        { name: "Vitamin C", value: avgValues.vitamin_c.percentage, fullMark: 100 },
+        { name: "Calcium", value: avgValues.calcium.percentage, fullMark: 100 },
+        { name: "Iron", value: avgValues.iron.percentage, fullMark: 100 },
+        { name: "Potassium", value: avgValues.potassium.percentage, fullMark: 100 },
+        { name: "Sodium", value: avgValues.sodium.percentage, fullMark: 100 },
+      ]);
+      
+    } catch (error) {
+      console.error("Error fetching micronutrient data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch micronutrient data. Using mock data instead.",
+        variant: "destructive",
+      });
+      
+      // Use mock data as fallback
       const mockHistoryData: MicronutrientHistory[] = [];
       const today = new Date();
       
@@ -86,6 +263,7 @@ export default function MicronutrientTracking() {
       
       setHistoryData(mockHistoryData);
       
+      // Set mock averages
       const avgValues = {
         vitamin_a: { 
           value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.vitamin_a, 0) / mockHistoryData.length),
@@ -129,9 +307,6 @@ export default function MicronutrientTracking() {
         { name: "Potassium", value: avgValues.potassium.percentage, fullMark: 100 },
         { name: "Sodium", value: avgValues.sodium.percentage, fullMark: 100 },
       ]);
-      
-    } catch (error) {
-      console.error("Error fetching micronutrient data:", error);
     } finally {
       setLoading(false);
     }
@@ -155,7 +330,7 @@ export default function MicronutrientTracking() {
             <CardTitle className="flex items-center gap-2">
               Micronutrient Balance <Info className="h-4 w-4 text-muted-foreground" />
             </CardTitle>
-            <CardDescription>7-day average of your micronutrient intake</CardDescription>
+            <CardDescription>Your micronutrient intake summary</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
             <div className="w-full h-[300px]">
@@ -192,8 +367,8 @@ export default function MicronutrientTracking() {
 
         <Card>
           <CardHeader>
-            <CardTitle>7-Day History</CardTitle>
-            <CardDescription>Your daily micronutrient intake for the past week</CardDescription>
+            <CardTitle>Nutrition History</CardTitle>
+            <CardDescription>Your daily micronutrient intake based on logged meals</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
