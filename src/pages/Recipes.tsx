@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, Utensils, UtensilsCrossed, Camera } from "lucide-react";
+import { Plus, Loader2, Utensils, UtensilsCrossed, Camera, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { CameraOptionsDialog } from "@/components/dashboard/CameraOptionsDialog";
+import { TextRecipeDialog } from "@/components/dashboard/TextRecipeDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 // Recipe types
@@ -27,6 +28,8 @@ export default function Recipes() {
   const [loading, setLoading] = useState(true);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
+  const [textRecipeDialogOpen, setTextRecipeDialogOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<"camera" | "text" | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -52,7 +55,7 @@ export default function Recipes() {
         throw error;
       }
       
-      setRecipes(data || []);
+      setRecipes(data as Recipe[] || []);
       
     } catch (error) {
       console.error("Error fetching recipes:", error);
@@ -66,8 +69,13 @@ export default function Recipes() {
     }
   };
 
-  const handleAddRecipe = () => {
-    setCameraDialogOpen(true);
+  const handleOptionSelect = (option: "camera" | "text") => {
+    setSelectedOption(option);
+    if (option === "camera") {
+      setCameraDialogOpen(true);
+    } else {
+      setTextRecipeDialogOpen(true);
+    }
   };
   
   return (
@@ -78,13 +86,22 @@ export default function Recipes() {
       </header>
 
       <div className="px-6">
-        {/* Add Recipe Button */}
-        <Button 
-          className="w-full py-6 text-lg flex items-center justify-center gap-2 mb-6" 
-          onClick={handleAddRecipe}
-        >
-          <Plus className="h-5 w-5" /> Add Recipe
-        </Button>
+        {/* Add Recipe Options */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Button 
+            className="py-6 text-lg flex items-center justify-center gap-2" 
+            onClick={() => handleOptionSelect("camera")}
+          >
+            <Camera className="h-5 w-5" /> Use Camera
+          </Button>
+          <Button 
+            className="py-6 text-lg flex items-center justify-center gap-2"
+            variant="secondary" 
+            onClick={() => handleOptionSelect("text")}
+          >
+            <FileText className="h-5 w-5" /> Text Recipe
+          </Button>
+        </div>
         
         {loading ? (
           <div className="flex items-center justify-center py-10">
@@ -149,6 +166,14 @@ export default function Recipes() {
       <CameraOptionsDialog 
         open={cameraDialogOpen}
         onOpenChange={setCameraDialogOpen}
+        onSuccess={fetchRecipes}
+      />
+
+      {/* Text Recipe Dialog */}
+      <TextRecipeDialog
+        open={textRecipeDialogOpen}
+        onOpenChange={setTextRecipeDialogOpen}
+        onSuccess={fetchRecipes}
       />
 
       {/* Navigation Bar */}
