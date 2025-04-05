@@ -6,12 +6,12 @@ import { MicronutrientRadarChart } from "@/components/dashboard/MicronutrientRad
 import { MacronutrientPieChart } from "@/components/dashboard/MacronutrientPieChart";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { Loader2, Info, ChevronDown, ChevronUp, Settings } from "lucide-react";
+import { Loader2, Info, ChevronDown, ChevronUp, Settings, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress"; // Added missing import
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,10 +52,10 @@ interface MicronutrientAverages {
 }
 
 interface MacronutrientAverages {
-  protein: { value: number; unit: string; percentage: number };
-  carbs: { value: number; unit: string; percentage: number };
-  fat: { value: number; unit: string; percentage: number };
-  fiber: { value: number; unit: string; percentage: number };
+  protein: { value: number; percentage: number; unit: string };
+  carbs: { value: number; percentage: number; unit: string };
+  fat: { value: number; percentage: number; unit: string };
+  fiber: { value: number; percentage: number; unit: string };
 }
 
 export default function MicronutrientTracking() {
@@ -284,7 +284,7 @@ export default function MicronutrientTracking() {
         
         toast({
           title: "No nutrient data found",
-          description: "Please log your meals to see your nutrient data.",
+          description: "Please scan your meals to track your nutrition data.",
           variant: "default",
         });
       } else {
@@ -422,6 +422,10 @@ export default function MicronutrientTracking() {
     }
   };
 
+  const navigateToScanPage = () => {
+    navigate("/recipes");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -482,6 +486,16 @@ export default function MicronutrientTracking() {
                   </ChartContainer>
                 </div>
               </CardContent>
+              {noDataFound && (
+                <CardContent className="pt-0">
+                  <Button 
+                    onClick={navigateToScanPage} 
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                  </Button>
+                </CardContent>
+              )}
             </Card>
 
             <MicronutrientRadarChart data={microAverages} />
@@ -533,7 +547,7 @@ export default function MicronutrientTracking() {
                   </Table>
                 </div>
 
-                {!noDataFound && (
+                {!noDataFound && totalHistoryCount > 0 && (
                   <div className="mt-4 flex justify-center space-x-2">
                     {historyLimit > 7 && (
                       <Button 
@@ -558,6 +572,17 @@ export default function MicronutrientTracking() {
                     )}
                   </div>
                 )}
+                
+                {noDataFound && (
+                  <div className="mt-4">
+                    <Button 
+                      onClick={navigateToScanPage} 
+                      className="w-full flex items-center justify-center gap-2"
+                    >
+                      <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -575,8 +600,24 @@ export default function MicronutrientTracking() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center">
-                <MacronutrientPieChart data={macroAverages} />
+                {noDataFound ? (
+                  <div className="text-center py-4 flex flex-col items-center">
+                    <p className="text-muted-foreground mb-4">Scan your food to see macronutrient data</p>
+                  </div>
+                ) : (
+                  <MacronutrientPieChart data={macroAverages} />
+                )}
               </CardContent>
+              {noDataFound && (
+                <CardContent className="pt-0">
+                  <Button 
+                    onClick={navigateToScanPage} 
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                  </Button>
+                </CardContent>
+              )}
             </Card>
 
             <Card>
@@ -613,6 +654,17 @@ export default function MicronutrientTracking() {
                     </div>
                   ))}
                 </div>
+                
+                {noDataFound && (
+                  <div className="mt-6">
+                    <Button 
+                      onClick={navigateToScanPage} 
+                      className="w-full flex items-center justify-center gap-2"
+                    >
+                      <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -659,7 +711,7 @@ export default function MicronutrientTracking() {
                   </Table>
                 </div>
 
-                {!noDataFound && (
+                {!noDataFound && totalHistoryCount > 0 && (
                   <div className="mt-4 flex justify-center space-x-2">
                     {historyLimit > 7 && (
                       <Button 
@@ -682,6 +734,17 @@ export default function MicronutrientTracking() {
                         <ChevronDown className="h-4 w-4" /> Show More
                       </Button>
                     )}
+                  </div>
+                )}
+                
+                {noDataFound && (
+                  <div className="mt-4">
+                    <Button 
+                      onClick={navigateToScanPage} 
+                      className="w-full flex items-center justify-center gap-2"
+                    >
+                      <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                    </Button>
                   </div>
                 )}
               </CardContent>
