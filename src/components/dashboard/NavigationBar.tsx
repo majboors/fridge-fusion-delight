@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, BarChart2, Camera, Settings } from "lucide-react";
+import { Home, BarChart2, Camera, Settings, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CameraOptionsDialog } from "./CameraOptionsDialog";
 
@@ -17,19 +17,39 @@ export function NavigationBar() {
     setCameraDialogOpen(true);
   };
 
-  const handleOptionSelect = (option: "calories" | "recipe") => {
+  const handleCaptureOption = (option: "calories" | "recipe") => {
     setCameraDialogOpen(false);
     
     if (option === "calories") {
       toast({
-        title: "Coming Soon",
-        description: "Calorie scanning functionality will be available soon!",
+        title: "Scanning for Calories",
+        description: "Camera access requested for calorie scanning.",
       });
+      // Future implementation: Access camera for calorie scanning
     } else if (option === "recipe") {
       toast({
-        title: "Coming Soon",
-        description: "Recipe creation functionality will be available soon!",
+        title: "Creating Recipe",
+        description: "Camera access requested for recipe creation.",
       });
+      // Future implementation: Access camera for recipe creation
+    }
+  };
+
+  const handleUploadOption = (option: "calories" | "recipe") => {
+    setCameraDialogOpen(false);
+    
+    if (option === "calories") {
+      toast({
+        title: "Upload for Calories",
+        description: "Please select an image to analyze calories.",
+      });
+      // Future implementation: File upload for calorie scanning
+    } else if (option === "recipe") {
+      toast({
+        title: "Upload for Recipe",
+        description: "Please select an image to create a recipe.",
+      });
+      // Future implementation: File upload for recipe creation
     }
   };
   
@@ -46,7 +66,7 @@ export function NavigationBar() {
           <NavItem 
             icon={<BarChart2 className={`w-6 h-6 ${isActive('/progress') ? 'text-primary fill-primary/20' : 'text-muted-foreground'}`} />} 
             label="Progress" 
-            onClick={() => navigate('/dashboard')} 
+            onClick={() => navigate('/progress')} 
             active={isActive('/progress')}
           />
           <div className="relative flex flex-col items-center justify-center">
@@ -58,9 +78,9 @@ export function NavigationBar() {
             </button>
           </div>
           <NavItem 
-            icon={<BarChart2 className={`w-6 h-6 ${isActive('/recipes') ? 'text-primary fill-primary/20' : 'text-muted-foreground'}`} />} 
+            icon={<BookOpen className={`w-6 h-6 ${isActive('/recipes') ? 'text-primary fill-primary/20' : 'text-muted-foreground'}`} />} 
             label="Recipes" 
-            onClick={() => navigate('/dashboard')} 
+            onClick={() => navigate('/recipes')} 
             active={isActive('/recipes')}
           />
           <NavItem 
@@ -75,7 +95,8 @@ export function NavigationBar() {
       <CameraOptionsDialog 
         open={cameraDialogOpen} 
         onOpenChange={setCameraDialogOpen} 
-        onSelectOption={handleOptionSelect}
+        onSelectOption={handleCaptureOption}
+        onSelectUpload={handleUploadOption}
       />
     </>
   );
