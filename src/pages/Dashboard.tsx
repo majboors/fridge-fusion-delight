@@ -1,218 +1,212 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Clock, CheckCircle, AlertCircle, Crown, Star } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { 
+  BarChart3, 
+  PieChart, 
+  Pill, 
+  Utensils, 
+  CalendarCheck, 
+  Plus, 
+  Loader2
+} from "lucide-react";
+
+import { NavigationBar } from "@/components/dashboard/NavigationBar";
+import { NutrientProgress } from "@/components/dashboard/NutrientProgress";
+import { MacroChart } from "@/components/dashboard/MacroChart";
+import { FeatureCard } from "@/components/dashboard/FeatureCard";
+import { NotificationCard } from "@/components/dashboard/NotificationCard";
+import { ProgressRing } from "@/components/dashboard/ProgressRing";
 
 export default function Dashboard() {
-  const { user, hasActiveSubscription, signOut } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [generationCount, setGenerationCount] = useState(0);
-  const [subscription, setSubscription] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Mock data (in a real app, this would come from an API)
+  const [dailyData, setDailyData] = useState({
+    calories: { consumed: 1250, goal: 2000 },
+    carbs: { consumed: 90, goal: 250 },
+    protein: { consumed: 48, goal: 150 },
+    fat: { consumed: 80, goal: 65 },
+    weeklyProgress: 65,
+  });
 
   useEffect(() => {
     if (!user) {
       navigate("/auth");
       return;
     }
+    
+    // Simulate loading data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [user, navigate]);
 
-    const fetchUserData = async () => {
-      try {
-        // Get all user subscriptions for this user
-        const { data: subData, error: subError } = await supabase
-          .from('user_subscriptions')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (subError) throw subError;
-        
-        // Find a subscribed record if it exists
-        const activeSubscription = subData?.find(sub => sub.is_subscribed === true);
-        
-        if (activeSubscription) {
-          setSubscription(activeSubscription);
-          setGenerationCount(0); // For subscribed users
-        } else {
-          // Find a record with free_trial_used flag
-          const trialUsed = subData?.some(sub => sub.free_trial_used === true);
-          setGenerationCount(trialUsed ? 0 : 1);
-          
-          // Set the latest subscription record
-          if (subData && subData.length > 0) {
-            // Sort by created_at descending and get the latest
-            const latestSub = [...subData].sort((a, b) => 
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )[0];
-            setSubscription(latestSub);
-          }
-        }
-        
-        // Get subscription details if needed
-        if (hasActiveSubscription) {
-          const { data: activeSubData, error: activeSubError } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-          if (!activeSubError && activeSubData) {
-            setSubscription(activeSubData);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load your data. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [user, navigate, toast, hasActiveSubscription]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    }).format(date);
+  const handleAddMeal = () => {
+    toast({
+      title: "Coming Soon",
+      description: "Meal logging functionality will be available soon!",
+    });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-amber-50">
-        <Loader2 className="h-8 w-8 text-amber-600 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
 
+  const firstName = user?.email?.split('@')[0] || 'User';
+  const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+
   return (
-    <div className="min-h-screen bg-amber-50 py-12">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
-            {hasActiveSubscription && (
-              <Badge className="bg-purple-600 hover:bg-purple-700 flex items-center gap-1 py-1">
-                <Crown className="h-3.5 w-3.5" />
-                <span>Premium</span>
-              </Badge>
-            )}
+    <div className="bg-background pb-20">
+      {/* Header */}
+      <header className="pt-8 px-6">
+        <h1 className="text-4xl font-bold mb-6">Welcome back, {capitalizedName}!</h1>
+      </header>
+
+      {/* Daily Summary */}
+      <div className="px-6">
+        <h2 className="text-2xl font-semibold mb-3">Daily Summary</h2>
+        
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex-1">
+            <h3 className="text-3xl font-bold">{dailyData.calories.consumed}</h3>
+            <p className="text-sm text-muted-foreground">of {dailyData.calories.goal} calories</p>
+            
+            <div className="mt-4 space-y-3">
+              <NutrientProgress 
+                consumed={dailyData.carbs.consumed} 
+                goal={dailyData.carbs.goal} 
+                label="Carbs" 
+                color="bg-yellow-400"
+              />
+              <NutrientProgress 
+                consumed={dailyData.protein.consumed} 
+                goal={dailyData.protein.goal} 
+                label="Protein" 
+                color="bg-green-500"
+              />
+              <NutrientProgress 
+                consumed={dailyData.fat.consumed} 
+                goal={dailyData.fat.goal} 
+                label="Fat" 
+                color="bg-blue-400"
+              />
+            </div>
           </div>
-          <Button onClick={handleSignOut} variant="outline">Sign Out</Button>
+          
+          <div className="ml-4">
+            <MacroChart 
+              protein={dailyData.protein.consumed}
+              carbs={dailyData.carbs.consumed}
+              fat={dailyData.fat.consumed}
+            />
+          </div>
         </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          <Card className={hasActiveSubscription ? "border-purple-200 bg-purple-50" : ""}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Subscription Status</CardTitle>
-              {hasActiveSubscription && <Star className="h-5 w-5 text-purple-600 fill-purple-600" />}
-            </CardHeader>
-            <CardContent className="flex items-center space-x-4 pt-6">
-              {hasActiveSubscription ? (
-                <>
-                  <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-                    <Crown className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 flex items-center">
-                      Premium Subscription
-                      <Badge className="ml-2 bg-green-500 hover:bg-green-600">Active</Badge>
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Expires on: {formatDate(subscription?.expires_at || subscription?.subscription_end_date)}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="h-8 w-8 text-amber-500" />
-                  <div>
-                    <p className="font-medium text-gray-900">No Active Subscription</p>
-                    <p className="text-sm text-gray-500">
-                      Upgrade for unlimited recipes
-                    </p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-            <CardFooter>
-              {!hasActiveSubscription && (
-                <Button 
-                  className="w-full bg-amber-600 hover:bg-amber-700"
-                  onClick={() => navigate("/#pricing")}
-                >
-                  Upgrade Now
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Usage Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <p className="text-gray-700">Recipes Generated:</p>
-                  <p className="font-medium text-gray-900">{generationCount}</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-gray-700">Plan:</p>
-                  <p className="font-medium flex items-center">
-                    {hasActiveSubscription ? (
-                      <>
-                        <span className="text-purple-700">Premium</span>
-                        <Crown className="ml-1 h-4 w-4 text-purple-600" />
-                      </>
-                    ) : (
-                      "Free Trial"
-                    )}
-                  </p>
-                </div>
-                {!hasActiveSubscription && (
-                  <div className="flex justify-between items-center">
-                    <p className="text-gray-700">Free Generations Remaining:</p>
-                    <p className="font-medium text-gray-900">
-                      {generationCount === 0 ? "0" : "1"}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                className="w-full"
-                variant="outline"
-                onClick={() => navigate("/")}
-              >
-                Generate New Recipe
-              </Button>
-            </CardFooter>
-          </Card>
+        
+        <div className="mb-4">
+          <h3 className="text-sm font-medium mb-2">Micronutrient Highlights</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <Card className="bg-secondary border-0">
+              <CardContent className="p-2 text-center">
+                <span className="text-xs">Vitamin C</span>
+                <p className="text-sm font-bold text-green-600">120%</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-secondary border-0">
+              <CardContent className="p-2 text-center">
+                <span className="text-xs">Iron</span>
+                <p className="text-sm font-bold text-amber-600">65%</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-secondary border-0">
+              <CardContent className="p-2 text-center">
+                <span className="text-xs">Calcium</span>
+                <p className="text-sm font-bold text-red-600">45%</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
+
+      {/* Log Meal Button */}
+      <div className="px-6 mb-8">
+        <Button 
+          className="w-full py-6 text-lg flex items-center justify-center gap-2" 
+          onClick={handleAddMeal}
+        >
+          <Plus className="h-5 w-5" /> Log Meal
+        </Button>
+      </div>
+
+      {/* Feature Navigation */}
+      <div className="px-6 mb-8">
+        <div className="grid grid-cols-2 gap-4">
+          <FeatureCard 
+            title="Calorie Count" 
+            icon={BarChart3} 
+            onClick={() => toast({ title: "Coming Soon!" })}
+          />
+          <FeatureCard 
+            title="Macronutrient Details" 
+            icon={PieChart} 
+            onClick={() => toast({ title: "Coming Soon!" })}
+          />
+          <FeatureCard 
+            title="Micronutrient Tracking" 
+            icon={Pill} 
+            onClick={() => toast({ title: "Coming Soon!" })}
+          />
+          <FeatureCard 
+            title="Daily Meal Suggestions" 
+            icon={Utensils} 
+            onClick={() => toast({ title: "Coming Soon!" })}
+          />
+        </div>
+      </div>
+
+      {/* Progress & Notifications */}
+      <div className="px-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col items-center">
+            <ProgressRing 
+              progress={dailyData.weeklyProgress} 
+              title="65%" 
+              subtitle="Weekly Progress" 
+            />
+            <p className="text-sm text-muted-foreground mt-2">Based on your goals</p>
+          </div>
+          
+          <div>
+            <NotificationCard message="Don't forget to log dinner!" />
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2"
+                onClick={() => toast({ title: "Coming Soon!" })}
+              >
+                <CalendarCheck className="h-4 w-4" />
+                View Meal Plan
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Bar */}
+      <NavigationBar />
     </div>
   );
 }

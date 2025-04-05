@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: 120 40% 99%;
+    --background: 0 0% 100%;
     --foreground: 120 10% 10%;
 
     --card: 0 0% 100%;
@@ -33,7 +33,7 @@
     --input: 120 20% 90%;
     --ring: 142 70% 35%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
     --sidebar-background: 120 30% 98%;
     --sidebar-foreground: 120 10% 20%;

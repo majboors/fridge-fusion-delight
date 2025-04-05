@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ApiTesting from "./pages/ApiTesting";
 import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
 import PaymentCallback from "./pages/PaymentCallback";
 import PaymentFallback from "./pages/PaymentFallback";
 import "./App.css";
@@ -22,6 +23,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/payment-fallback" element={<PaymentFallback />} />
               <Route path="/api-testing" element={<ApiTesting />} />
