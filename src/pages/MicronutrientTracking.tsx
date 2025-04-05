@@ -3,12 +3,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { MicronutrientRadarChart } from "@/components/dashboard/MicronutrientRadarChart";
+import { MacronutrientPieChart } from "@/components/dashboard/MacronutrientPieChart";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Loader2, Info, ChevronDown, ChevronUp, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,6 +33,14 @@ interface MicronutrientHistory {
   sodium: number;
 }
 
+interface MacronutrientHistory {
+  date: string;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+}
+
 interface MicronutrientAverages {
   vitamin_a: { value: number; unit: string; percentage: number };
   vitamin_c: { value: number; unit: string; percentage: number };
@@ -40,19 +50,33 @@ interface MicronutrientAverages {
   sodium: { value: number; unit: string; percentage: number };
 }
 
+interface MacronutrientAverages {
+  protein: { value: number; unit: string; percentage: number };
+  carbs: { value: number; unit: string; percentage: number };
+  fat: { value: number; unit: string; percentage: number };
+  fiber: { value: number; unit: string; percentage: number };
+}
+
 export default function MicronutrientTracking() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [historyData, setHistoryData] = useState<MicronutrientHistory[]>([]);
-  const [averages, setAverages] = useState<MicronutrientAverages>({
+  const [microHistoryData, setMicroHistoryData] = useState<MicronutrientHistory[]>([]);
+  const [macroHistoryData, setMacroHistoryData] = useState<MacronutrientHistory[]>([]);
+  const [microAverages, setMicroAverages] = useState<MicronutrientAverages>({
     vitamin_a: { value: 0, unit: "mcg", percentage: 0 },
     vitamin_c: { value: 0, unit: "mg", percentage: 0 },
     calcium: { value: 0, unit: "mg", percentage: 0 },
     iron: { value: 0, unit: "mg", percentage: 0 },
     potassium: { value: 0, unit: "mg", percentage: 0 },
     sodium: { value: 0, unit: "mg", percentage: 0 },
+  });
+  const [macroAverages, setMacroAverages] = useState<MacronutrientAverages>({
+    protein: { value: 0, unit: "g", percentage: 0 },
+    carbs: { value: 0, unit: "g", percentage: 0 },
+    fat: { value: 0, unit: "g", percentage: 0 },
+    fiber: { value: 0, unit: "g", percentage: 0 },
   });
 
   const [radarData, setRadarData] = useState<{ name: string; value: number; fullMark: number }[]>([]);
@@ -66,10 +90,10 @@ export default function MicronutrientTracking() {
       return;
     }
 
-    fetchMicronutrientData();
+    fetchNutrientData();
   }, [user, navigate, historyLimit]);
 
-  const fetchMicronutrientData = async () => {
+  const fetchNutrientData = async () => {
     try {
       setLoading(true);
       
@@ -96,6 +120,8 @@ export default function MicronutrientTracking() {
       }
 
       const micronutrientHistory: MicronutrientHistory[] = [];
+      const macronutrientHistory: MacronutrientHistory[] = [];
+      
       const micronutrientTotals = {
         vitamin_a: { total: 0, count: 0 },
         vitamin_c: { total: 0, count: 0 },
@@ -103,6 +129,13 @@ export default function MicronutrientTracking() {
         iron: { total: 0, count: 0 },
         potassium: { total: 0, count: 0 },
         sodium: { total: 0, count: 0 },
+      };
+      
+      const macronutrientTotals = {
+        protein: { total: 0, count: 0 },
+        carbs: { total: 0, count: 0 },
+        fat: { total: 0, count: 0 },
+        fiber: { total: 0, count: 0 },
       };
       
       const processedDates = new Set();
@@ -125,8 +158,17 @@ export default function MicronutrientTracking() {
             sodium: 0
           };
           
+          let macroData = {
+            date: dateStr,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0
+          };
+          
           if (recipe.steps && Array.isArray(recipe.steps)) {
             recipe.steps.forEach(step => {
+              // Extract micronutrients
               const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg/i);
               if (vitaminAMatch) {
                 microData.vitamin_a = parseFloat(vitaminAMatch[1]);
@@ -168,12 +210,43 @@ export default function MicronutrientTracking() {
                 micronutrientTotals.sodium.total += microData.sodium;
                 micronutrientTotals.sodium.count += 1;
               }
+              
+              // Extract macronutrients
+              const proteinMatch = step.match(/Protein:?\s*(\d+\.?\d*)\s*g/i);
+              if (proteinMatch) {
+                macroData.protein = parseFloat(proteinMatch[1]);
+                macronutrientTotals.protein.total += macroData.protein;
+                macronutrientTotals.protein.count += 1;
+              }
+              
+              const carbsMatch = step.match(/Carbs:?\s*(\d+\.?\d*)\s*g/i);
+              if (carbsMatch) {
+                macroData.carbs = parseFloat(carbsMatch[1]);
+                macronutrientTotals.carbs.total += macroData.carbs;
+                macronutrientTotals.carbs.count += 1;
+              }
+              
+              const fatMatch = step.match(/Fat:?\s*(\d+\.?\d*)\s*g/i);
+              if (fatMatch) {
+                macroData.fat = parseFloat(fatMatch[1]);
+                macronutrientTotals.fat.total += macroData.fat;
+                macronutrientTotals.fat.count += 1;
+              }
+              
+              const fiberMatch = step.match(/Fiber:?\s*(\d+\.?\d*)\s*g/i);
+              if (fiberMatch) {
+                macroData.fiber = parseFloat(fiberMatch[1]);
+                macronutrientTotals.fiber.total += macroData.fiber;
+                macronutrientTotals.fiber.count += 1;
+              }
             });
           }
           
           if (microData.vitamin_a || microData.vitamin_c || microData.calcium || 
-              microData.iron || microData.potassium || microData.sodium) {
+              microData.iron || microData.potassium || microData.sodium ||
+              macroData.protein || macroData.carbs || macroData.fat || macroData.fiber) {
             micronutrientHistory.push(microData);
+            macronutrientHistory.push(macroData);
             processedDates.add(dateStr);
           }
         });
@@ -187,9 +260,10 @@ export default function MicronutrientTracking() {
         for (let i = 6; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(today.getDate() - i);
+          const dateStr = date.toISOString().split('T')[0];
           
           micronutrientHistory.push({
-            date: date.toISOString().split('T')[0],
+            date: dateStr,
             vitamin_a: 0,
             vitamin_c: 0,
             calcium: 0,
@@ -197,20 +271,29 @@ export default function MicronutrientTracking() {
             potassium: 0,
             sodium: 0,
           });
+          
+          macronutrientHistory.push({
+            date: dateStr,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0
+          });
         }
         
         toast({
-          title: "No micronutrient data found",
-          description: "Please log your meals to see your micronutrient data.",
+          title: "No nutrient data found",
+          description: "Please log your meals to see your nutrient data.",
           variant: "default",
         });
       } else {
         setNoDataFound(false);
       }
       
-      setHistoryData(micronutrientHistory);
+      setMicroHistoryData(micronutrientHistory);
+      setMacroHistoryData(macronutrientHistory);
       
-      const calculateAverage = (nutrient: keyof typeof micronutrientTotals, unit: string, daily: number) => {
+      const calculateMicroAverage = (nutrient: keyof typeof micronutrientTotals, unit: string, daily: number) => {
         const total = micronutrientTotals[nutrient].total;
         const count = micronutrientTotals[nutrient].count || 1;
         const average = total / count;
@@ -218,46 +301,64 @@ export default function MicronutrientTracking() {
         return { value: Math.round(average), unit, percentage };
       };
       
-      const avgValues = {
-        vitamin_a: calculateAverage('vitamin_a', 'mcg', 900),
-        vitamin_c: calculateAverage('vitamin_c', 'mg', 90),
-        calcium: calculateAverage('calcium', 'mg', 1000),
-        iron: calculateAverage('iron', 'mg', 18),
-        potassium: calculateAverage('potassium', 'mg', 3500),
-        sodium: calculateAverage('sodium', 'mg', 2300),
+      const calculateMacroAverage = (nutrient: keyof typeof macronutrientTotals, unit: string, daily: number) => {
+        const total = macronutrientTotals[nutrient].total;
+        const count = macronutrientTotals[nutrient].count || 1;
+        const average = total / count;
+        const percentage = Math.round((average / daily) * 100);
+        return { value: Math.round(average), unit, percentage };
       };
       
-      setAverages(avgValues);
+      const microAvgValues = {
+        vitamin_a: calculateMicroAverage('vitamin_a', 'mcg', 900),
+        vitamin_c: calculateMicroAverage('vitamin_c', 'mg', 90),
+        calcium: calculateMicroAverage('calcium', 'mg', 1000),
+        iron: calculateMicroAverage('iron', 'mg', 18),
+        potassium: calculateMicroAverage('potassium', 'mg', 3500),
+        sodium: calculateMicroAverage('sodium', 'mg', 2300),
+      };
+      
+      const macroAvgValues = {
+        protein: calculateMacroAverage('protein', 'g', 50),
+        carbs: calculateMacroAverage('carbs', 'g', 275),
+        fat: calculateMacroAverage('fat', 'g', 78),
+        fiber: calculateMacroAverage('fiber', 'g', 28),
+      };
+      
+      setMicroAverages(microAvgValues);
+      setMacroAverages(macroAvgValues);
       
       setRadarData([
-        { name: "Vitamin A", value: avgValues.vitamin_a.percentage, fullMark: 100 },
-        { name: "Vitamin C", value: avgValues.vitamin_c.percentage, fullMark: 100 },
-        { name: "Calcium", value: avgValues.calcium.percentage, fullMark: 100 },
-        { name: "Iron", value: avgValues.iron.percentage, fullMark: 100 },
-        { name: "Potassium", value: avgValues.potassium.percentage, fullMark: 100 },
-        { name: "Sodium", value: avgValues.sodium.percentage, fullMark: 100 },
+        { name: "Vitamin A", value: microAvgValues.vitamin_a.percentage, fullMark: 100 },
+        { name: "Vitamin C", value: microAvgValues.vitamin_c.percentage, fullMark: 100 },
+        { name: "Calcium", value: microAvgValues.calcium.percentage, fullMark: 100 },
+        { name: "Iron", value: microAvgValues.iron.percentage, fullMark: 100 },
+        { name: "Potassium", value: microAvgValues.potassium.percentage, fullMark: 100 },
+        { name: "Sodium", value: microAvgValues.sodium.percentage, fullMark: 100 },
       ]);
       
     } catch (error) {
-      console.error("Error fetching micronutrient data:", error);
+      console.error("Error fetching nutrient data:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch micronutrient data.",
+        description: "Failed to fetch nutrient data.",
         variant: "destructive",
       });
       
       setNoDataFound(true);
       
       // Set empty history with zeros
-      const emptyHistoryData: MicronutrientHistory[] = [];
+      const emptyMicroHistory: MicronutrientHistory[] = [];
+      const emptyMacroHistory: MacronutrientHistory[] = [];
       const today = new Date();
       
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
         
-        emptyHistoryData.push({
-          date: date.toISOString().split('T')[0],
+        emptyMicroHistory.push({
+          date: dateStr,
           vitamin_a: 0,
           vitamin_c: 0,
           calcium: 0,
@@ -265,11 +366,20 @@ export default function MicronutrientTracking() {
           potassium: 0,
           sodium: 0,
         });
+        
+        emptyMacroHistory.push({
+          date: dateStr,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          fiber: 0
+        });
       }
       
-      setHistoryData(emptyHistoryData);
+      setMicroHistoryData(emptyMicroHistory);
+      setMacroHistoryData(emptyMacroHistory);
       
-      const zeroValues = {
+      const zeroMicroValues = {
         vitamin_a: { value: 0, unit: "mcg", percentage: 0 },
         vitamin_c: { value: 0, unit: "mg", percentage: 0 },
         calcium: { value: 0, unit: "mg", percentage: 0 },
@@ -278,7 +388,15 @@ export default function MicronutrientTracking() {
         sodium: { value: 0, unit: "mg", percentage: 0 },
       };
       
-      setAverages(zeroValues);
+      const zeroMacroValues = {
+        protein: { value: 0, unit: "g", percentage: 0 },
+        carbs: { value: 0, unit: "g", percentage: 0 },
+        fat: { value: 0, unit: "g", percentage: 0 },
+        fiber: { value: 0, unit: "g", percentage: 0 },
+      };
+      
+      setMicroAverages(zeroMicroValues);
+      setMacroAverages(zeroMacroValues);
       
       setRadarData([
         { name: "Vitamin A", value: 0, fullMark: 100 },
@@ -313,127 +431,262 @@ export default function MicronutrientTracking() {
 
   return (
     <div className="bg-background min-h-screen pb-20">
-      <PageHeader title="Micronutrient Tracking" />
+      <PageHeader title="Nutrient Tracking" />
 
       <div className="px-6 py-6 space-y-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              Micronutrient Balance <Info className="h-4 w-4 text-muted-foreground" />
-            </CardTitle>
-            <CardDescription>
-              {noDataFound 
-                ? "No micronutrient data available. Log your meals to see your data." 
-                : "Your micronutrient intake summary"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="w-full h-[300px]">
-              <ChartContainer 
-                config={{
-                  vitamin_a: { color: "#f97316" },
-                  vitamin_c: { color: "#84cc16" },
-                  calcium: { color: "#06b6d4" },
-                  iron: { color: "#a855f7" },
-                  potassium: { color: "#ec4899" },
-                  sodium: { color: "#64748b" }
-                }}
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="name" />
-                    <Radar
-                      name="Micronutrients"
-                      dataKey="value"
-                      stroke="#8884d8"
-                      fill="#8884d8"
-                      fillOpacity={0.6}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="micro" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="micro">Micronutrients</TabsTrigger>
+            <TabsTrigger value="macro">Macronutrients</TabsTrigger>
+          </TabsList>
 
-        <MicronutrientRadarChart data={averages} />
+          <TabsContent value="micro" className="space-y-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  Micronutrient Balance <Info className="h-4 w-4 text-muted-foreground" />
+                </CardTitle>
+                <CardDescription>
+                  {noDataFound 
+                    ? "No micronutrient data available. Log your meals to see your data." 
+                    : "Your micronutrient intake summary"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <div className="w-full h-[300px]">
+                  <ChartContainer 
+                    config={{
+                      vitamin_a: { color: "#f97316" },
+                      vitamin_c: { color: "#84cc16" },
+                      calcium: { color: "#06b6d4" },
+                      iron: { color: "#a855f7" },
+                      potassium: { color: "#ec4899" },
+                      sodium: { color: "#64748b" }
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="name" />
+                        <Radar
+                          name="Micronutrients"
+                          dataKey="value"
+                          stroke="#8884d8"
+                          fill="#8884d8"
+                          fillOpacity={0.6}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Nutrition History</CardTitle>
-            <CardDescription>
-              {noDataFound 
-                ? "No historical data available. Log your meals to build your nutrition history." 
-                : "Your daily micronutrient intake based on logged meals"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Date</TableHead>
-                    <TableHead>Vitamin A (mcg)</TableHead>
-                    <TableHead>Vitamin C (mg)</TableHead>
-                    <TableHead>Calcium (mg)</TableHead>
-                    <TableHead>Iron (mg)</TableHead>
-                    <TableHead>Potassium (mg)</TableHead>
-                    <TableHead>Sodium (mg)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {historyData.length > 0 ? (
-                    historyData.map((day) => (
-                      <TableRow key={day.date}>
-                        <TableCell className="font-medium">{day.date}</TableCell>
-                        <TableCell>{day.vitamin_a}</TableCell>
-                        <TableCell>{day.vitamin_c}</TableCell>
-                        <TableCell>{day.calcium}</TableCell>
-                        <TableCell>{day.iron}</TableCell>
-                        <TableCell>{day.potassium}</TableCell>
-                        <TableCell>{day.sodium}</TableCell>
+            <MicronutrientRadarChart data={microAverages} />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Micronutrient History</CardTitle>
+                <CardDescription>
+                  {noDataFound 
+                    ? "No historical data available. Log your meals to build your nutrition history." 
+                    : "Your daily micronutrient intake based on logged meals"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Date</TableHead>
+                        <TableHead>Vitamin A (mcg)</TableHead>
+                        <TableHead>Vitamin C (mg)</TableHead>
+                        <TableHead>Calcium (mg)</TableHead>
+                        <TableHead>Iron (mg)</TableHead>
+                        <TableHead>Potassium (mg)</TableHead>
+                        <TableHead>Sodium (mg)</TableHead>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6">
-                        No nutrition data available
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            
-            {!noDataFound && (
-              <div className="mt-4 flex justify-center space-x-2">
-                {historyLimit > 7 && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={loadLessHistory}
-                    className="flex items-center gap-1"
-                  >
-                    <ChevronUp className="h-4 w-4" /> Show Less
-                  </Button>
+                    </TableHeader>
+                    <TableBody>
+                      {microHistoryData.length > 0 ? (
+                        microHistoryData.map((day) => (
+                          <TableRow key={day.date}>
+                            <TableCell className="font-medium">{day.date}</TableCell>
+                            <TableCell>{day.vitamin_a}</TableCell>
+                            <TableCell>{day.vitamin_c}</TableCell>
+                            <TableCell>{day.calcium}</TableCell>
+                            <TableCell>{day.iron}</TableCell>
+                            <TableCell>{day.potassium}</TableCell>
+                            <TableCell>{day.sodium}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-6">
+                            No nutrition data available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {!noDataFound && (
+                  <div className="mt-4 flex justify-center space-x-2">
+                    {historyLimit > 7 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={loadLessHistory}
+                        className="flex items-center gap-1"
+                      >
+                        <ChevronUp className="h-4 w-4" /> Show Less
+                      </Button>
+                    )}
+                    
+                    {historyLimit < totalHistoryCount && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={loadMoreHistory}
+                        className="flex items-center gap-1"
+                      >
+                        <ChevronDown className="h-4 w-4" /> Show More
+                      </Button>
+                    )}
+                  </div>
                 )}
-                
-                {historyLimit < totalHistoryCount && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={loadMoreHistory}
-                    className="flex items-center gap-1"
-                  >
-                    <ChevronDown className="h-4 w-4" /> Show More
-                  </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="macro" className="space-y-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  Macronutrient Distribution <Info className="h-4 w-4 text-muted-foreground" />
+                </CardTitle>
+                <CardDescription>
+                  {noDataFound 
+                    ? "No macronutrient data available. Log your meals to see your data." 
+                    : "Your macronutrient intake summary"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <MacronutrientPieChart data={macroAverages} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Macronutrient Details</CardTitle>
+                <CardDescription>
+                  {noDataFound
+                    ? "Log your meals to see macronutrient details"
+                    : "Detailed breakdown of your macronutrient consumption"
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {Object.entries(macroAverages).map(([key, nutrient]) => (
+                    <div key={key} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium capitalize">{key}</span>
+                        <span>
+                          {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
+                        </span>
+                      </div>
+                      <Progress 
+                        value={nutrient.percentage} 
+                        className="h-2"
+                        indicatorStyle={{ 
+                          backgroundColor: 
+                            key === "protein" ? "#4ade80" : 
+                            key === "carbs" ? "#facc15" : 
+                            key === "fat" ? "#60a5fa" : 
+                            "#f59e0b" // fiber
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Macronutrient History</CardTitle>
+                <CardDescription>
+                  {noDataFound 
+                    ? "No historical data available. Log your meals to build your nutrition history." 
+                    : "Your daily macronutrient intake based on logged meals"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Date</TableHead>
+                        <TableHead>Protein (g)</TableHead>
+                        <TableHead>Carbs (g)</TableHead>
+                        <TableHead>Fat (g)</TableHead>
+                        <TableHead>Fiber (g)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {macroHistoryData.length > 0 ? (
+                        macroHistoryData.map((day) => (
+                          <TableRow key={day.date}>
+                            <TableCell className="font-medium">{day.date}</TableCell>
+                            <TableCell>{day.protein}</TableCell>
+                            <TableCell>{day.carbs}</TableCell>
+                            <TableCell>{day.fat}</TableCell>
+                            <TableCell>{day.fiber}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-6">
+                            No nutrition data available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {!noDataFound && (
+                  <div className="mt-4 flex justify-center space-x-2">
+                    {historyLimit > 7 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={loadLessHistory}
+                        className="flex items-center gap-1"
+                      >
+                        <ChevronUp className="h-4 w-4" /> Show Less
+                      </Button>
+                    )}
+                    
+                    {historyLimit < totalHistoryCount && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={loadMoreHistory}
+                        className="flex items-center gap-1"
+                      >
+                        <ChevronDown className="h-4 w-4" /> Show More
+                      </Button>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <NavigationBar />
