@@ -175,6 +175,7 @@ export default function Recipes() {
         open={cameraDialogOpen}
         onOpenChange={setCameraDialogOpen}
         onSuccess={fetchRecipes}
+        featureType="recipe"
       />
 
       {/* Text Recipe Dialog */}
