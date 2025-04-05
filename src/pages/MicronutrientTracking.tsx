@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,7 +71,6 @@ export default function MicronutrientTracking() {
     try {
       setLoading(true);
       
-      // First, count total number of days with micronutrient data
       const { count, error: countError } = await supabase
         .from('recipes')
         .select('created_at', { count: 'exact', head: true })
@@ -84,7 +82,6 @@ export default function MicronutrientTracking() {
       
       setTotalHistoryCount(count || 0);
       
-      // Fetch recipes with micronutrient data, limited by historyLimit
       const { data: recipes, error } = await supabase
         .from('recipes')
         .select('*')
@@ -96,7 +93,6 @@ export default function MicronutrientTracking() {
         throw error;
       }
 
-      // Extract micronutrient data from recipes
       const micronutrientHistory: MicronutrientHistory[] = [];
       const micronutrientTotals = {
         vitamin_a: { total: 0, count: 0 },
@@ -110,10 +106,8 @@ export default function MicronutrientTracking() {
       const processedDates = new Set();
       
       recipes.forEach(recipe => {
-        // Try to extract micronutrient information from recipe data
         const dateStr = new Date(recipe.created_at).toISOString().split('T')[0];
         
-        // Skip if we already have data for this date
         if (processedDates.has(dateStr)) {
           return;
         }
@@ -128,10 +122,8 @@ export default function MicronutrientTracking() {
           sodium: 0
         };
         
-        // Extract micronutrient data from recipe steps
         if (recipe.steps && Array.isArray(recipe.steps)) {
           recipe.steps.forEach(step => {
-            // Parse vitamin A
             const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg/i);
             if (vitaminAMatch) {
               microData.vitamin_a = parseFloat(vitaminAMatch[1]);
@@ -139,7 +131,6 @@ export default function MicronutrientTracking() {
               micronutrientTotals.vitamin_a.count += 1;
             }
             
-            // Parse vitamin C
             const vitaminCMatch = step.match(/Vitamin C:?\s*(\d+\.?\d*)\s*mg/i);
             if (vitaminCMatch) {
               microData.vitamin_c = parseFloat(vitaminCMatch[1]);
@@ -147,7 +138,6 @@ export default function MicronutrientTracking() {
               micronutrientTotals.vitamin_c.count += 1;
             }
             
-            // Parse calcium
             const calciumMatch = step.match(/Calcium:?\s*(\d+\.?\d*)\s*mg/i);
             if (calciumMatch) {
               microData.calcium = parseFloat(calciumMatch[1]);
@@ -155,7 +145,6 @@ export default function MicronutrientTracking() {
               micronutrientTotals.calcium.count += 1;
             }
             
-            // Parse iron
             const ironMatch = step.match(/Iron:?\s*(\d+\.?\d*)\s*mg/i);
             if (ironMatch) {
               microData.iron = parseFloat(ironMatch[1]);
@@ -163,7 +152,6 @@ export default function MicronutrientTracking() {
               micronutrientTotals.iron.count += 1;
             }
             
-            // Parse potassium
             const potassiumMatch = step.match(/Potassium:?\s*(\d+\.?\d*)\s*mg/i);
             if (potassiumMatch) {
               microData.potassium = parseFloat(potassiumMatch[1]);
@@ -171,7 +159,6 @@ export default function MicronutrientTracking() {
               micronutrientTotals.potassium.count += 1;
             }
             
-            // Parse sodium
             const sodiumMatch = step.match(/Sodium:?\s*(\d+\.?\d*)\s*mg/i);
             if (sodiumMatch) {
               microData.sodium = parseFloat(sodiumMatch[1]);
@@ -181,7 +168,6 @@ export default function MicronutrientTracking() {
           });
         }
         
-        // Only add data if we found at least one micronutrient
         if (microData.vitamin_a || microData.vitamin_c || microData.calcium || 
             microData.iron || microData.potassium || microData.sodium) {
           micronutrientHistory.push(microData);
@@ -189,7 +175,6 @@ export default function MicronutrientTracking() {
         }
       });
 
-      // If we have no real data yet, use some mock data for initial display
       if (micronutrientHistory.length === 0) {
         const today = new Date();
         
@@ -217,10 +202,9 @@ export default function MicronutrientTracking() {
       
       setHistoryData(micronutrientHistory);
       
-      // Calculate averages
       const calculateAverage = (nutrient: keyof typeof micronutrientTotals, unit: string, daily: number) => {
         const total = micronutrientTotals[nutrient].total;
-        const count = micronutrientTotals[nutrient].count || 1; // Prevent division by zero
+        const count = micronutrientTotals[nutrient].count || 1;
         const average = total / count;
         const percentage = Math.round((average / daily) * 100);
         return { value: Math.round(average), unit, percentage };
@@ -254,7 +238,6 @@ export default function MicronutrientTracking() {
         variant: "destructive",
       });
       
-      // Use mock data as fallback
       const mockHistoryData: MicronutrientHistory[] = [];
       const today = new Date();
       
@@ -275,7 +258,6 @@ export default function MicronutrientTracking() {
       
       setHistoryData(mockHistoryData);
       
-      // Set mock averages
       const avgValues = {
         vitamin_a: { 
           value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.vitamin_a, 0) / mockHistoryData.length),
@@ -345,7 +327,12 @@ export default function MicronutrientTracking() {
   return (
     <div className="bg-background min-h-screen pb-20">
       <PageHeader title="Micronutrient Tracking">
-        <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full"
+          onClick={() => navigate("/settings")}
+        >
           <Settings className="h-5 w-5" />
         </Button>
       </PageHeader>
