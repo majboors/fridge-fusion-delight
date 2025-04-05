@@ -161,68 +161,70 @@ export function NutritionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="pb-2">
           <DialogTitle>Nutrition Analysis</DialogTitle>
           <DialogDescription>
             Here's the nutritional breakdown of your food
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 max-h-[calc(85vh-150px)]">
-          <div className="space-y-6 pb-4">
-            {/* Food Image */}
-            {imageUrl && (
-              <div className="w-full h-48 overflow-hidden rounded-md">
-                <img src={imageUrl} alt="Food" className="w-full h-full object-cover" />
-              </div>
-            )}
-            
-            {/* Calorie Gauge */}
-            <CalorieGauge calories={nutritionData.calorie_count} />
-            
-            {/* Macronutrient Pie Chart */}
-            <MacronutrientPieChart data={nutritionData.macronutrients} />
-            
-            {/* Item Breakdown Chart */}
-            {nutritionData.item_breakdown.length > 0 && (
-              <CalorieBreakdownChart items={nutritionData.item_breakdown} />
-            )}
-            
-            {/* Micronutrient Visualizations */}
-            <MicronutrientRadarChart data={nutritionData.micronutrients} />
-            
-            {/* Food Items */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Detected Food</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {nutritionData.food_items.map((item, idx) => (
-                    <span key={idx} className="bg-secondary px-3 py-1 rounded-full text-sm">
-                      {item}
-                    </span>
-                  ))}
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-[calc(80vh-120px)] pr-4 pb-4">
+            <div className="space-y-6 pb-6">
+              {/* Food Image */}
+              {imageUrl && (
+                <div className="w-full h-48 overflow-hidden rounded-md">
+                  <img src={imageUrl} alt="Food" className="w-full h-full object-cover" />
                 </div>
-                {nutritionData.serving_size && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Serving size: {nutritionData.serving_size}
+              )}
+              
+              {/* Calorie Gauge */}
+              <CalorieGauge calories={nutritionData.calorie_count} />
+              
+              {/* Macronutrient Pie Chart */}
+              <MacronutrientPieChart data={nutritionData.macronutrients} />
+              
+              {/* Item Breakdown Chart */}
+              {nutritionData.item_breakdown.length > 0 && (
+                <CalorieBreakdownChart items={nutritionData.item_breakdown} />
+              )}
+              
+              {/* Micronutrient Visualizations */}
+              <MicronutrientRadarChart data={nutritionData.micronutrients} />
+              
+              {/* Food Items */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle>Detected Food</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {nutritionData.food_items.map((item, idx) => (
+                      <span key={idx} className="bg-secondary px-3 py-1 rounded-full text-sm">
+                        {item}
+                      </span>
+                    ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            {isLogged && (
-              <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900">
-                <CardContent className="flex items-center gap-2 py-4">
-                  <Award className="h-5 w-5 text-green-500" />
-                  <span className="font-medium">Achievement Unlocked: Nutrition Tracker!</span>
+                  {nutritionData.serving_size && (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      Serving size: {nutritionData.serving_size}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
-          </div>
-        </ScrollArea>
+              
+              {isLogged && (
+                <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900">
+                  <CardContent className="flex items-center gap-2 py-4">
+                    <Award className="h-5 w-5 text-green-500" />
+                    <span className="font-medium">Achievement Unlocked: Nutrition Tracker!</span>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
 
         <div className="flex justify-between mt-4 pt-4 border-t">
           {!isLogged ? (
