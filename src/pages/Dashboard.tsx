@@ -22,6 +22,7 @@ import { MacroChart } from "@/components/dashboard/MacroChart";
 import { FeatureCard } from "@/components/dashboard/FeatureCard";
 import { NotificationCard } from "@/components/dashboard/NotificationCard";
 import { ProgressRing } from "@/components/dashboard/ProgressRing";
+import { NutritionDialog } from "@/components/dashboard/NutritionDialog";
 
 interface NutritionData {
   id: string;
@@ -40,12 +41,67 @@ interface NutritionData {
   updated_at: string;
 }
 
+interface NutritionResponseData {
+  calorie_count: number;
+  macronutrients: {
+    protein: { value: number; unit: string; percentage: number };
+    carbs: { value: number; unit: string; percentage: number };
+    fat: { value: number; unit: string; percentage: number };
+    fiber: { value: number; unit: string; percentage: number };
+  };
+  micronutrients: {
+    vitamin_a: { value: number; unit: string; percentage: number };
+    vitamin_c: { value: number; unit: string; percentage: number };
+    calcium: { value: number; unit: string; percentage: number };
+    iron: { value: number; unit: string; percentage: number };
+    potassium: { value: number; unit: string; percentage: number };
+    sodium: { value: number; unit: string; percentage: number };
+  };
+  food_items: string[];
+  item_breakdown: {
+    name: string;
+    calories: number;
+    percentage: number;
+  }[];
+  serving_size: string;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [nutritionData, setNutritionData] = useState<NutritionData | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [nutritionAnalysis, setNutritionAnalysis] = useState<NutritionResponseData | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const fetchNutritionData = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      // Fix the type issue by explicitly typing the response
+      const { data, error } = await supabase.rpc('get_or_create_todays_nutrition_data', {
+        user_uuid: user.id
+      });
+      
+      if (error) {
+        console.error('Error fetching nutrition data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load your nutrition data",
+          variant: "destructive",
+        });
+      } else if (data && data.length > 0) {
+        // Fix the type issue here by ensuring we set a properly typed object
+        setNutritionData(data[0] as NutritionData);
+      }
+    } catch (error) {
+      console.error('Error in fetchNutritionData:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -53,39 +109,38 @@ export default function Dashboard() {
       return;
     }
     
-    const fetchNutritionData = async () => {
-      try {
-        // Fix the type issue by explicitly typing the response
-        const { data, error } = await supabase.rpc('get_or_create_todays_nutrition_data', {
-          user_uuid: user.id
-        });
-        
-        if (error) {
-          console.error('Error fetching nutrition data:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load your nutrition data",
-            variant: "destructive",
-          });
-        } else if (data && data.length > 0) {
-          // Fix the type issue here by ensuring we set a properly typed object
-          setNutritionData(data[0] as NutritionData);
-        }
-      } catch (error) {
-        console.error('Error in fetchNutritionData:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchNutritionData();
   }, [user, navigate, toast]);
 
   const handleAddMeal = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Meal logging functionality will be available soon!",
-    });
+    // For demo purposes, let's create mock nutrition data
+    const mockNutritionData: NutritionResponseData = {
+      calorie_count: 450,
+      macronutrients: {
+        protein: { value: 25, unit: "g", percentage: 35 },
+        carbs: { value: 40, unit: "g", percentage: 25 },
+        fat: { value: 15, unit: "g", percentage: 30 },
+        fiber: { value: 8, unit: "g", percentage: 10 },
+      },
+      micronutrients: {
+        vitamin_a: { value: 400, unit: "mcg", percentage: 45 },
+        vitamin_c: { value: 50, unit: "mg", percentage: 55 },
+        calcium: { value: 150, unit: "mg", percentage: 12 },
+        iron: { value: 2, unit: "mg", percentage: 10 },
+        potassium: { value: 800, unit: "mg", percentage: 20 },
+        sodium: { value: 500, unit: "mg", percentage: 22 },
+      },
+      food_items: ["Grilled Chicken", "Brown Rice", "Steamed Broccoli"],
+      item_breakdown: [
+        { name: "Grilled Chicken", calories: 250, percentage: 55 },
+        { name: "Brown Rice", calories: 150, percentage: 33 },
+        { name: "Steamed Broccoli", calories: 50, percentage: 12 },
+      ],
+      serving_size: "1 serving (approx. 250g)"
+    };
+    
+    setNutritionAnalysis(mockNutritionData);
+    setIsDialogOpen(true);
   };
 
   if (loading) {
@@ -173,19 +228,25 @@ export default function Dashboard() {
             <Card className="bg-secondary border-0">
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Vitamin C</span>
-                <p className="text-sm font-bold text-green-600">0%</p>
+                <p className="text-sm font-bold text-green-600">
+                  {nutritionAnalysis?.micronutrients.vitamin_c.percentage || 0}%
+                </p>
               </CardContent>
             </Card>
             <Card className="bg-secondary border-0">
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Iron</span>
-                <p className="text-sm font-bold text-amber-600">0%</p>
+                <p className="text-sm font-bold text-amber-600">
+                  {nutritionAnalysis?.micronutrients.iron.percentage || 0}%
+                </p>
               </CardContent>
             </Card>
             <Card className="bg-secondary border-0">
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Calcium</span>
-                <p className="text-sm font-bold text-red-600">0%</p>
+                <p className="text-sm font-bold text-red-600">
+                  {nutritionAnalysis?.micronutrients.calcium.percentage || 0}%
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -255,6 +316,14 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Nutrition Dialog */}
+      <NutritionDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
+        nutritionData={nutritionAnalysis}
+        onMealLogged={fetchNutritionData} 
+      />
 
       {/* Navigation Bar */}
       <NavigationBar />

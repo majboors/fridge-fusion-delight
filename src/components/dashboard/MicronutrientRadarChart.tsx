@@ -23,12 +23,12 @@ interface MicronutrientRadarChartProps {
 
 export function MicronutrientRadarChart({ data }: MicronutrientRadarChartProps) {
   const micronutrients: MicronutrientData[] = [
-    { name: "Vitamin A", ...data.vitamin_a, color: "#f97316" },
-    { name: "Vitamin C", ...data.vitamin_c, color: "#84cc16" },
-    { name: "Calcium", ...data.calcium, color: "#06b6d4" },
-    { name: "Iron", ...data.iron, color: "#a855f7" },
-    { name: "Potassium", ...data.potassium, color: "#ec4899" },
-    { name: "Sodium", ...data.sodium, color: "#64748b" }
+    { name: "Vitamin A", ...data.vitamin_a, color: "#f97316" }, // orange
+    { name: "Vitamin C", ...data.vitamin_c, color: "#84cc16" }, // lime
+    { name: "Calcium", ...data.calcium, color: "#06b6d4" },    // cyan
+    { name: "Iron", ...data.iron, color: "#a855f7" },         // purple
+    { name: "Potassium", ...data.potassium, color: "#ec4899" }, // pink
+    { name: "Sodium", ...data.sodium, color: "#64748b" }      // slate
   ];
 
   return (
@@ -48,7 +48,9 @@ export function MicronutrientRadarChart({ data }: MicronutrientRadarChartProps) 
             <Progress 
               value={nutrient.percentage} 
               className="h-2"
-              indicatorClassName={nutrient.color ? `bg-[${nutrient.color}]` : undefined}
+              style={{ 
+                "--progress-background": nutrient.color 
+              } as React.CSSProperties}
             />
           </div>
         ))}

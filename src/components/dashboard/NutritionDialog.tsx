@@ -43,13 +43,15 @@ interface NutritionDialogProps {
   onOpenChange: (open: boolean) => void;
   nutritionData: NutritionResponseData | null;
   imageUrl?: string;
+  onMealLogged?: () => void;
 }
 
 export function NutritionDialog({
   open,
   onOpenChange,
   nutritionData,
-  imageUrl
+  imageUrl,
+  onMealLogged
 }: NutritionDialogProps) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -146,6 +148,11 @@ export function NutritionDialog({
         title: "Success!",
         description: "Meal logged successfully",
       });
+      
+      // Call the onMealLogged callback to refresh dashboard data
+      if (onMealLogged) {
+        onMealLogged();
+      }
 
     } catch (error) {
       console.error("Error saving meal:", error);
@@ -170,7 +177,7 @@ export function NutritionDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-[calc(80vh-120px)] pr-4 pb-4">
+          <ScrollArea className="h-[calc(80vh-120px)] pb-4 pr-4">
             <div className="space-y-6 pb-6">
               {/* Food Image */}
               {imageUrl && (
