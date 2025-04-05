@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { CameraOptionsDialog } from "@/components/dashboard/CameraOptionsDialog";
 import { TextRecipeDialog } from "@/components/dashboard/TextRecipeDialog";
+import { RecipeDetailsDialog } from "@/components/dashboard/RecipeDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 // Recipe types
@@ -30,6 +31,8 @@ export default function Recipes() {
   const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
   const [textRecipeDialogOpen, setTextRecipeDialogOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<"camera" | "text" | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [recipeDetailsOpen, setRecipeDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -76,6 +79,11 @@ export default function Recipes() {
     } else {
       setTextRecipeDialogOpen(true);
     }
+  };
+  
+  const handleViewRecipe = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+    setRecipeDetailsOpen(true);
   };
   
   return (
@@ -142,7 +150,7 @@ export default function Recipes() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => handleViewRecipe(recipe)}>
                     View Recipe
                   </Button>
                 </CardFooter>
@@ -174,6 +182,13 @@ export default function Recipes() {
         open={textRecipeDialogOpen}
         onOpenChange={setTextRecipeDialogOpen}
         onSuccess={fetchRecipes}
+      />
+
+      {/* Recipe Details Dialog */}
+      <RecipeDetailsDialog
+        recipe={selectedRecipe}
+        open={recipeDetailsOpen}
+        onOpenChange={setRecipeDetailsOpen}
       />
 
       {/* Navigation Bar */}
