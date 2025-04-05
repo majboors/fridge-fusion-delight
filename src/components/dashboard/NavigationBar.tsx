@@ -3,18 +3,18 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, BarChart2, Camera, Settings, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { CameraOptionsDialog } from "./CameraOptionsDialog";
+import { FeatureSelectionDialog } from "./FeatureSelectionDialog";
 
 export function NavigationBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
+  const [featureDialogOpen, setFeatureDialogOpen] = useState(false);
   
   const isActive = (path: string) => location.pathname === path;
   
   const handleCameraClick = () => {
-    setCameraDialogOpen(true);
+    setFeatureDialogOpen(true);
   };
   
   return (
@@ -56,9 +56,9 @@ export function NavigationBar() {
         </div>
       </div>
       
-      <CameraOptionsDialog 
-        open={cameraDialogOpen} 
-        onOpenChange={setCameraDialogOpen}
+      <FeatureSelectionDialog 
+        open={featureDialogOpen} 
+        onOpenChange={setFeatureDialogOpen}
       />
     </>
   );

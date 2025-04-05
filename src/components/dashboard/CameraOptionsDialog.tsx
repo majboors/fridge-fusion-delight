@@ -12,6 +12,7 @@ interface CameraOptionsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  featureType: "calorie" | "recipe" | null;
 }
 
 interface RecipeCard {
@@ -32,7 +33,8 @@ interface RecipeResponse {
 export function CameraOptionsDialog({
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
+  featureType
 }: CameraOptionsDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -74,6 +76,20 @@ export function CameraOptionsDialog({
     try {
       setLoading(true);
       
+      if (featureType === "calorie") {
+        // Handle calorie scanning
+        toast({
+          title: "Calorie Scanner",
+          description: "Calorie scanning feature coming soon!",
+        });
+        setTimeout(() => {
+          setLoading(false);
+          onOpenChange(false);
+        }, 1500);
+        return;
+      }
+      
+      // Continue with recipe generation
       const formData = new FormData();
       formData.append("image", file);
 
@@ -138,13 +154,27 @@ export function CameraOptionsDialog({
     onOpenChange(false);
   };
 
+  const getDialogTitle = () => {
+    if (featureType === "calorie") {
+      return "Scan Food for Calories";
+    }
+    return "Create Recipe From Image";
+  };
+
+  const getDialogDescription = () => {
+    if (featureType === "calorie") {
+      return "Take a photo of your food to log calories";
+    }
+    return "Take a photo of your fridge or ingredients to generate a recipe";
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Recipe From Image</DialogTitle>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
           <DialogDescription>
-            Take a photo of your fridge or ingredients to generate a recipe
+            {getDialogDescription()}
           </DialogDescription>
         </DialogHeader>
 
@@ -152,7 +182,7 @@ export function CameraOptionsDialog({
           <div className="flex flex-col items-center justify-center py-10">
             <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
             <p className="text-center text-muted-foreground">
-              Analyzing your ingredients and creating a recipe...
+              {featureType === "calorie" ? "Analyzing your food..." : "Analyzing your ingredients and creating a recipe..."}
             </p>
           </div>
         ) : recipeResponse ? (
