@@ -31,27 +31,35 @@ export function MicronutrientRadarChart({ data }: MicronutrientRadarChartProps) 
     { name: "Sodium", ...data.sodium, color: "#64748b" }      // slate
   ];
 
+  const hasNoData = micronutrients.every(nutrient => nutrient.value === 0);
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle>Micronutrients</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {micronutrients.map((nutrient) => (
-          <div key={nutrient.name} className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span>{nutrient.name}</span>
-              <span>
-                {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
-              </span>
-            </div>
-            <Progress 
-              value={nutrient.percentage} 
-              className="h-2"
-              indicatorClassName={`bg-${nutrient.color.replace('#', '')}`}
-            />
+        {hasNoData ? (
+          <div className="text-center py-4 text-muted-foreground">
+            No micronutrient data available
           </div>
-        ))}
+        ) : (
+          micronutrients.map((nutrient) => (
+            <div key={nutrient.name} className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>{nutrient.name}</span>
+                <span>
+                  {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
+                </span>
+              </div>
+              <Progress 
+                value={nutrient.percentage} 
+                className="h-2"
+                indicatorClassName={`bg-${nutrient.color.replace('#', '')}`}
+              />
+            </div>
+          ))
+        )}
       </CardContent>
     </Card>
   );

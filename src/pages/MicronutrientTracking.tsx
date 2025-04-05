@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,6 +58,7 @@ export default function MicronutrientTracking() {
   const [radarData, setRadarData] = useState<{ name: string; value: number; fullMark: number }[]>([]);
   const [historyLimit, setHistoryLimit] = useState(7); // Default to showing last 7 days
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
+  const [noDataFound, setNoDataFound] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -105,77 +107,81 @@ export default function MicronutrientTracking() {
       
       const processedDates = new Set();
       
-      recipes.forEach(recipe => {
-        const dateStr = new Date(recipe.created_at).toISOString().split('T')[0];
-        
-        if (processedDates.has(dateStr)) {
-          return;
-        }
-        
-        let microData = {
-          date: dateStr,
-          vitamin_a: 0,
-          vitamin_c: 0,
-          calcium: 0,
-          iron: 0,
-          potassium: 0,
-          sodium: 0
-        };
-        
-        if (recipe.steps && Array.isArray(recipe.steps)) {
-          recipe.steps.forEach(step => {
-            const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg/i);
-            if (vitaminAMatch) {
-              microData.vitamin_a = parseFloat(vitaminAMatch[1]);
-              micronutrientTotals.vitamin_a.total += microData.vitamin_a;
-              micronutrientTotals.vitamin_a.count += 1;
-            }
-            
-            const vitaminCMatch = step.match(/Vitamin C:?\s*(\d+\.?\d*)\s*mg/i);
-            if (vitaminCMatch) {
-              microData.vitamin_c = parseFloat(vitaminCMatch[1]);
-              micronutrientTotals.vitamin_c.total += microData.vitamin_c;
-              micronutrientTotals.vitamin_c.count += 1;
-            }
-            
-            const calciumMatch = step.match(/Calcium:?\s*(\d+\.?\d*)\s*mg/i);
-            if (calciumMatch) {
-              microData.calcium = parseFloat(calciumMatch[1]);
-              micronutrientTotals.calcium.total += microData.calcium;
-              micronutrientTotals.calcium.count += 1;
-            }
-            
-            const ironMatch = step.match(/Iron:?\s*(\d+\.?\d*)\s*mg/i);
-            if (ironMatch) {
-              microData.iron = parseFloat(ironMatch[1]);
-              micronutrientTotals.iron.total += microData.iron;
-              micronutrientTotals.iron.count += 1;
-            }
-            
-            const potassiumMatch = step.match(/Potassium:?\s*(\d+\.?\d*)\s*mg/i);
-            if (potassiumMatch) {
-              microData.potassium = parseFloat(potassiumMatch[1]);
-              micronutrientTotals.potassium.total += microData.potassium;
-              micronutrientTotals.potassium.count += 1;
-            }
-            
-            const sodiumMatch = step.match(/Sodium:?\s*(\d+\.?\d*)\s*mg/i);
-            if (sodiumMatch) {
-              microData.sodium = parseFloat(sodiumMatch[1]);
-              micronutrientTotals.sodium.total += microData.sodium;
-              micronutrientTotals.sodium.count += 1;
-            }
-          });
-        }
-        
-        if (microData.vitamin_a || microData.vitamin_c || microData.calcium || 
-            microData.iron || microData.potassium || microData.sodium) {
-          micronutrientHistory.push(microData);
-          processedDates.add(dateStr);
-        }
-      });
-
+      if (recipes && recipes.length > 0) {
+        recipes.forEach(recipe => {
+          const dateStr = new Date(recipe.created_at).toISOString().split('T')[0];
+          
+          if (processedDates.has(dateStr)) {
+            return;
+          }
+          
+          let microData = {
+            date: dateStr,
+            vitamin_a: 0,
+            vitamin_c: 0,
+            calcium: 0,
+            iron: 0,
+            potassium: 0,
+            sodium: 0
+          };
+          
+          if (recipe.steps && Array.isArray(recipe.steps)) {
+            recipe.steps.forEach(step => {
+              const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg/i);
+              if (vitaminAMatch) {
+                microData.vitamin_a = parseFloat(vitaminAMatch[1]);
+                micronutrientTotals.vitamin_a.total += microData.vitamin_a;
+                micronutrientTotals.vitamin_a.count += 1;
+              }
+              
+              const vitaminCMatch = step.match(/Vitamin C:?\s*(\d+\.?\d*)\s*mg/i);
+              if (vitaminCMatch) {
+                microData.vitamin_c = parseFloat(vitaminCMatch[1]);
+                micronutrientTotals.vitamin_c.total += microData.vitamin_c;
+                micronutrientTotals.vitamin_c.count += 1;
+              }
+              
+              const calciumMatch = step.match(/Calcium:?\s*(\d+\.?\d*)\s*mg/i);
+              if (calciumMatch) {
+                microData.calcium = parseFloat(calciumMatch[1]);
+                micronutrientTotals.calcium.total += microData.calcium;
+                micronutrientTotals.calcium.count += 1;
+              }
+              
+              const ironMatch = step.match(/Iron:?\s*(\d+\.?\d*)\s*mg/i);
+              if (ironMatch) {
+                microData.iron = parseFloat(ironMatch[1]);
+                micronutrientTotals.iron.total += microData.iron;
+                micronutrientTotals.iron.count += 1;
+              }
+              
+              const potassiumMatch = step.match(/Potassium:?\s*(\d+\.?\d*)\s*mg/i);
+              if (potassiumMatch) {
+                microData.potassium = parseFloat(potassiumMatch[1]);
+                micronutrientTotals.potassium.total += microData.potassium;
+                micronutrientTotals.potassium.count += 1;
+              }
+              
+              const sodiumMatch = step.match(/Sodium:?\s*(\d+\.?\d*)\s*mg/i);
+              if (sodiumMatch) {
+                microData.sodium = parseFloat(sodiumMatch[1]);
+                micronutrientTotals.sodium.total += microData.sodium;
+                micronutrientTotals.sodium.count += 1;
+              }
+            });
+          }
+          
+          if (microData.vitamin_a || microData.vitamin_c || microData.calcium || 
+              microData.iron || microData.potassium || microData.sodium) {
+            micronutrientHistory.push(microData);
+            processedDates.add(dateStr);
+          }
+        });
+      }
+      
       if (micronutrientHistory.length === 0) {
+        setNoDataFound(true);
+        // Set empty history with zeros
         const today = new Date();
         
         for (let i = 6; i >= 0; i--) {
@@ -184,20 +190,22 @@ export default function MicronutrientTracking() {
           
           micronutrientHistory.push({
             date: date.toISOString().split('T')[0],
-            vitamin_a: Math.floor(Math.random() * 800) + 200,
-            vitamin_c: Math.floor(Math.random() * 80) + 20,
-            calcium: Math.floor(Math.random() * 800) + 200,
-            iron: Math.floor(Math.random() * 14) + 4,
-            potassium: Math.floor(Math.random() * 3000) + 1000,
-            sodium: Math.floor(Math.random() * 2000) + 500,
+            vitamin_a: 0,
+            vitamin_c: 0,
+            calcium: 0,
+            iron: 0,
+            potassium: 0,
+            sodium: 0,
           });
         }
         
         toast({
           title: "No micronutrient data found",
-          description: "Using sample data for visualization. Log your meals to see real data.",
+          description: "Please log your meals to see your micronutrient data.",
           variant: "default",
         });
+      } else {
+        setNoDataFound(false);
       }
       
       setHistoryData(micronutrientHistory);
@@ -234,72 +242,51 @@ export default function MicronutrientTracking() {
       console.error("Error fetching micronutrient data:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch micronutrient data. Using mock data instead.",
+        description: "Failed to fetch micronutrient data.",
         variant: "destructive",
       });
       
-      const mockHistoryData: MicronutrientHistory[] = [];
+      setNoDataFound(true);
+      
+      // Set empty history with zeros
+      const emptyHistoryData: MicronutrientHistory[] = [];
       const today = new Date();
       
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
         
-        mockHistoryData.push({
+        emptyHistoryData.push({
           date: date.toISOString().split('T')[0],
-          vitamin_a: Math.floor(Math.random() * 800) + 200,
-          vitamin_c: Math.floor(Math.random() * 80) + 20,
-          calcium: Math.floor(Math.random() * 800) + 200,
-          iron: Math.floor(Math.random() * 14) + 4,
-          potassium: Math.floor(Math.random() * 3000) + 1000,
-          sodium: Math.floor(Math.random() * 2000) + 500,
+          vitamin_a: 0,
+          vitamin_c: 0,
+          calcium: 0,
+          iron: 0,
+          potassium: 0,
+          sodium: 0,
         });
       }
       
-      setHistoryData(mockHistoryData);
+      setHistoryData(emptyHistoryData);
       
-      const avgValues = {
-        vitamin_a: { 
-          value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.vitamin_a, 0) / mockHistoryData.length),
-          unit: "mcg",
-          percentage: Math.round((mockHistoryData.reduce((sum, day) => sum + day.vitamin_a, 0) / mockHistoryData.length) / 900 * 100)
-        },
-        vitamin_c: { 
-          value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.vitamin_c, 0) / mockHistoryData.length),
-          unit: "mg",
-          percentage: Math.round((mockHistoryData.reduce((sum, day) => sum + day.vitamin_c, 0) / mockHistoryData.length) / 90 * 100)
-        },
-        calcium: { 
-          value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.calcium, 0) / mockHistoryData.length),
-          unit: "mg",
-          percentage: Math.round((mockHistoryData.reduce((sum, day) => sum + day.calcium, 0) / mockHistoryData.length) / 1000 * 100)
-        },
-        iron: { 
-          value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.iron, 0) / mockHistoryData.length),
-          unit: "mg",
-          percentage: Math.round((mockHistoryData.reduce((sum, day) => sum + day.iron, 0) / mockHistoryData.length) / 18 * 100)
-        },
-        potassium: { 
-          value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.potassium, 0) / mockHistoryData.length),
-          unit: "mg",
-          percentage: Math.round((mockHistoryData.reduce((sum, day) => sum + day.potassium, 0) / mockHistoryData.length) / 3500 * 100)
-        },
-        sodium: { 
-          value: Math.round(mockHistoryData.reduce((sum, day) => sum + day.sodium, 0) / mockHistoryData.length),
-          unit: "mg",
-          percentage: Math.round((mockHistoryData.reduce((sum, day) => sum + day.sodium, 0) / mockHistoryData.length) / 2300 * 100)
-        }
+      const zeroValues = {
+        vitamin_a: { value: 0, unit: "mcg", percentage: 0 },
+        vitamin_c: { value: 0, unit: "mg", percentage: 0 },
+        calcium: { value: 0, unit: "mg", percentage: 0 },
+        iron: { value: 0, unit: "mg", percentage: 0 },
+        potassium: { value: 0, unit: "mg", percentage: 0 },
+        sodium: { value: 0, unit: "mg", percentage: 0 },
       };
       
-      setAverages(avgValues);
+      setAverages(zeroValues);
       
       setRadarData([
-        { name: "Vitamin A", value: avgValues.vitamin_a.percentage, fullMark: 100 },
-        { name: "Vitamin C", value: avgValues.vitamin_c.percentage, fullMark: 100 },
-        { name: "Calcium", value: avgValues.calcium.percentage, fullMark: 100 },
-        { name: "Iron", value: avgValues.iron.percentage, fullMark: 100 },
-        { name: "Potassium", value: avgValues.potassium.percentage, fullMark: 100 },
-        { name: "Sodium", value: avgValues.sodium.percentage, fullMark: 100 },
+        { name: "Vitamin A", value: 0, fullMark: 100 },
+        { name: "Vitamin C", value: 0, fullMark: 100 },
+        { name: "Calcium", value: 0, fullMark: 100 },
+        { name: "Iron", value: 0, fullMark: 100 },
+        { name: "Potassium", value: 0, fullMark: 100 },
+        { name: "Sodium", value: 0, fullMark: 100 },
       ]);
     } finally {
       setLoading(false);
@@ -326,16 +313,7 @@ export default function MicronutrientTracking() {
 
   return (
     <div className="bg-background min-h-screen pb-20">
-      <PageHeader title="Micronutrient Tracking">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="rounded-full"
-          onClick={() => navigate("/settings")}
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
-      </PageHeader>
+      <PageHeader title="Micronutrient Tracking" />
 
       <div className="px-6 py-6 space-y-8">
         <Card>
@@ -343,7 +321,11 @@ export default function MicronutrientTracking() {
             <CardTitle className="flex items-center gap-2">
               Micronutrient Balance <Info className="h-4 w-4 text-muted-foreground" />
             </CardTitle>
-            <CardDescription>Your micronutrient intake summary</CardDescription>
+            <CardDescription>
+              {noDataFound 
+                ? "No micronutrient data available. Log your meals to see your data." 
+                : "Your micronutrient intake summary"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
             <div className="w-full h-[300px]">
@@ -381,7 +363,11 @@ export default function MicronutrientTracking() {
         <Card>
           <CardHeader>
             <CardTitle>Nutrition History</CardTitle>
-            <CardDescription>Your daily micronutrient intake based on logged meals</CardDescription>
+            <CardDescription>
+              {noDataFound 
+                ? "No historical data available. Log your meals to build your nutrition history." 
+                : "Your daily micronutrient intake based on logged meals"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -398,44 +384,54 @@ export default function MicronutrientTracking() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {historyData.map((day) => (
-                    <TableRow key={day.date}>
-                      <TableCell className="font-medium">{day.date}</TableCell>
-                      <TableCell>{day.vitamin_a}</TableCell>
-                      <TableCell>{day.vitamin_c}</TableCell>
-                      <TableCell>{day.calcium}</TableCell>
-                      <TableCell>{day.iron}</TableCell>
-                      <TableCell>{day.potassium}</TableCell>
-                      <TableCell>{day.sodium}</TableCell>
+                  {historyData.length > 0 ? (
+                    historyData.map((day) => (
+                      <TableRow key={day.date}>
+                        <TableCell className="font-medium">{day.date}</TableCell>
+                        <TableCell>{day.vitamin_a}</TableCell>
+                        <TableCell>{day.vitamin_c}</TableCell>
+                        <TableCell>{day.calcium}</TableCell>
+                        <TableCell>{day.iron}</TableCell>
+                        <TableCell>{day.potassium}</TableCell>
+                        <TableCell>{day.sodium}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-6">
+                        No nutrition data available
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
             
-            <div className="mt-4 flex justify-center space-x-2">
-              {historyLimit > 7 && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={loadLessHistory}
-                  className="flex items-center gap-1"
-                >
-                  <ChevronUp className="h-4 w-4" /> Show Less
-                </Button>
-              )}
-              
-              {historyLimit < totalHistoryCount && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={loadMoreHistory}
-                  className="flex items-center gap-1"
-                >
-                  <ChevronDown className="h-4 w-4" /> Show More
-                </Button>
-              )}
-            </div>
+            {!noDataFound && (
+              <div className="mt-4 flex justify-center space-x-2">
+                {historyLimit > 7 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={loadLessHistory}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronUp className="h-4 w-4" /> Show Less
+                  </Button>
+                )}
+                
+                {historyLimit < totalHistoryCount && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={loadMoreHistory}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronDown className="h-4 w-4" /> Show More
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
