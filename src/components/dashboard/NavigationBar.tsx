@@ -16,42 +16,6 @@ export function NavigationBar() {
   const handleCameraClick = () => {
     setCameraDialogOpen(true);
   };
-
-  const handleCaptureOption = (option: "calories" | "recipe") => {
-    setCameraDialogOpen(false);
-    
-    if (option === "calories") {
-      toast({
-        title: "Scanning for Calories",
-        description: "Camera access requested for calorie scanning.",
-      });
-      // Future implementation: Access camera for calorie scanning
-    } else if (option === "recipe") {
-      toast({
-        title: "Creating Recipe",
-        description: "Camera access requested for recipe creation.",
-      });
-      // Future implementation: Access camera for recipe creation
-    }
-  };
-
-  const handleUploadOption = (option: "calories" | "recipe") => {
-    setCameraDialogOpen(false);
-    
-    if (option === "calories") {
-      toast({
-        title: "Upload for Calories",
-        description: "Please select an image to analyze calories.",
-      });
-      // Future implementation: File upload for calorie scanning
-    } else if (option === "recipe") {
-      toast({
-        title: "Upload for Recipe",
-        description: "Please select an image to create a recipe.",
-      });
-      // Future implementation: File upload for recipe creation
-    }
-  };
   
   return (
     <>
@@ -94,9 +58,7 @@ export function NavigationBar() {
       
       <CameraOptionsDialog 
         open={cameraDialogOpen} 
-        onOpenChange={setCameraDialogOpen} 
-        onSelectOption={handleCaptureOption}
-        onSelectUpload={handleUploadOption}
+        onOpenChange={setCameraDialogOpen}
       />
     </>
   );
