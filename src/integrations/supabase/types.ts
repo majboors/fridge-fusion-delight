@@ -36,6 +36,57 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_data: {
+        Row: {
+          calories_consumed: number
+          calories_goal: number
+          carbs_consumed: number
+          carbs_goal: number
+          created_at: string
+          date: string
+          fat_consumed: number
+          fat_goal: number
+          id: string
+          protein_consumed: number
+          protein_goal: number
+          updated_at: string
+          user_id: string
+          weekly_progress: number
+        }
+        Insert: {
+          calories_consumed?: number
+          calories_goal?: number
+          carbs_consumed?: number
+          carbs_goal?: number
+          created_at?: string
+          date?: string
+          fat_consumed?: number
+          fat_goal?: number
+          id?: string
+          protein_consumed?: number
+          protein_goal?: number
+          updated_at?: string
+          user_id: string
+          weekly_progress?: number
+        }
+        Update: {
+          calories_consumed?: number
+          calories_goal?: number
+          carbs_consumed?: number
+          carbs_goal?: number
+          created_at?: string
+          date?: string
+          fat_consumed?: number
+          fat_goal?: number
+          id?: string
+          protein_consumed?: number
+          protein_goal?: number
+          updated_at?: string
+          user_id?: string
+          weekly_progress?: number
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount: number
@@ -187,6 +238,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_or_create_todays_nutrition_data: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: {
+          calories_consumed: number
+          calories_goal: number
+          carbs_consumed: number
+          carbs_goal: number
+          created_at: string
+          date: string
+          fat_consumed: number
+          fat_goal: number
+          id: string
+          protein_consumed: number
+          protein_goal: number
+          updated_at: string
+          user_id: string
+          weekly_progress: number
+        }[]
+      }
       get_subscription_status: {
         Args: {
           user_uuid: string
