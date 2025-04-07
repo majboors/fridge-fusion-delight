@@ -10,14 +10,39 @@ interface FeatureCardProps {
   onClick?: () => void;
   route?: string;
   routeState?: Record<string, any>;
+  activeTab?: string; // Added for tab selection
+  view?: string; // Added for view parameter (for goals page)
 }
 
-export function FeatureCard({ title, icon: Icon, onClick, route, routeState }: FeatureCardProps) {
+export function FeatureCard({ 
+  title, 
+  icon: Icon, 
+  onClick, 
+  route, 
+  routeState,
+  activeTab,
+  view
+}: FeatureCardProps) {
   const navigate = useNavigate();
   
   const handleClick = () => {
     if (route) {
-      navigate(route, { state: routeState });
+      // Combine all navigation state parameters
+      const state = {
+        ...routeState
+      };
+      
+      // Add activeTab if provided
+      if (activeTab) {
+        state.activeTab = activeTab;
+      }
+      
+      // Add view if provided (for goals page)
+      if (view) {
+        state.view = view;
+      }
+        
+      navigate(route, { state });
     } else if (onClick) {
       onClick();
     }

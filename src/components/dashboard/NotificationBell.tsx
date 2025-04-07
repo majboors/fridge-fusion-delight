@@ -11,8 +11,10 @@ import { useNotifications } from "@/contexts/NotificationsContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, isToday, isYesterday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 export function NotificationBell() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
 
@@ -28,6 +30,21 @@ export function NotificationBell() {
 
   const handleMarkAllAsRead = () => {
     markAllAsRead();
+  };
+
+  const handleNotificationClick = (notification) => {
+    markAsRead(notification.id);
+    
+    // Handle navigation based on notification type
+    if (notification.type === "goal") {
+      navigate("/goals", { state: { view: "saved" } });
+    } else if (notification.type === "meal") {
+      navigate("/micronutrient-tracking", { state: { activeTab: "history" } });
+    } else if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+    }
+    
+    setOpen(false);
   };
 
   const formatNotificationTime = (timestamp: string) => {
@@ -50,7 +67,20 @@ export function NotificationBell() {
     switch (type) {
       case "goal": return "Goal Reminder";
       case "meal": return "Meal Log";
-      default: return "System";
+      case "system": return "System";
+      default: return "Notification";
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    // This will add a visual distinction for different notification types
+    const baseClasses = "inline-block w-2 h-2 rounded-full mr-1";
+    
+    switch (type) {
+      case "goal": return <span className={`${baseClasses} bg-amber-500`}></span>;
+      case "meal": return <span className={`${baseClasses} bg-green-500`}></span>;
+      case "system": return <span className={`${baseClasses} bg-blue-500`}></span>;
+      default: return null;
     }
   };
 
@@ -86,11 +116,12 @@ export function NotificationBell() {
               {notifications.map((notification) => (
                 <div 
                   key={notification.id}
-                  className={`p-4 ${notification.isRead ? 'bg-background' : 'bg-accent/50'}`}
-                  onClick={() => markAsRead(notification.id)}
+                  className={`p-4 ${notification.isRead ? 'bg-background' : 'bg-accent/50'} cursor-pointer`}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex justify-between mb-1">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground flex items-center">
+                      {getTypeIcon(notification.type)}
                       {getTypeLabel(notification.type)}
                     </span>
                     <span className="text-xs text-muted-foreground">

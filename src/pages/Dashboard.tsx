@@ -12,7 +12,9 @@ import {
   Utensils, 
   CalendarCheck, 
   Plus, 
-  Loader2
+  Loader2,
+  UtensilsCrossed,
+  Dna
 } from "lucide-react";
 
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
@@ -187,7 +189,12 @@ export default function Dashboard() {
     
     fetchNutritionData();
     fetchMicronutrientData();
-    fetchNotifications();
+    
+    const timer = setTimeout(() => {
+      fetchNotifications();
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [user, navigate]);
 
   const handleAddMeal = () => {
@@ -339,28 +346,24 @@ export default function Dashboard() {
       </div>
 
       <div className="px-6 mb-8">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <FeatureCard 
-            title="Calorie Count" 
-            icon={BarChart3} 
-            onClick={handleOpenCalorieCounter}
-          />
-          <FeatureCard 
-            title="Macronutrient Details" 
-            icon={PieChart} 
-            route="/micronutrients"
-            routeState={{ activeTab: "macronutrients" }}
+            title="Daily Meal Suggestions" 
+            icon={UtensilsCrossed} 
+            route="/goals"
+            routeState={{ view: "saved" }}
           />
           <FeatureCard 
             title="Micronutrient Tracking" 
-            icon={Pill} 
-            route="/micronutrients"
-            routeState={{ activeTab: "micronutrients" }}
+            icon={Dna} 
+            route="/micronutrient-tracking"
+            activeTab="micro"
           />
           <FeatureCard 
-            title="Daily Meal Suggestions" 
-            icon={Utensils} 
-            route="/goals"
+            title="Macronutrient Balance" 
+            icon={PieChart} 
+            route="/micronutrient-tracking"
+            activeTab="macro"
           />
         </div>
       </div>
@@ -377,7 +380,7 @@ export default function Dashboard() {
           </div>
           
           <div>
-            <NotificationCard />
+            <NotificationCard message="Welcome to nutrition tracking! Add your first meal to get started." />
             <div className="mt-4">
               <Button 
                 variant="outline" 
