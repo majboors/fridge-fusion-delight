@@ -19,15 +19,13 @@ export function NotificationCard({
 }: NotificationCardProps) {
   const { notifications, markAsRead } = useNotifications();
   
-  // Filter to show only unread notifications
-  const unreadNotifications = notifications
-    .filter(n => !n.isRead)
-    .slice(0, maxItems);
+  // Show all notifications up to maxItems, not just unread ones
+  const displayNotifications = notifications.slice(0, maxItems);
     
-  // If no unread notifications but a message was provided, show that
-  const displayMessage = unreadNotifications.length > 0 
+  // If no notifications but a message was provided, show that
+  const displayMessage = displayNotifications.length > 0 
     ? null
-    : (message || "No new notifications");
+    : (message || "No notifications");
     
   const formatNotificationTime = (timestamp: string) => {
     try {
@@ -54,12 +52,12 @@ export function NotificationCard({
             <span className="text-sm">{displayMessage}</span>
           </div>
         ) : (
-          <ScrollArea className={unreadNotifications.length > 1 ? "h-[120px]" : "h-auto"}>
+          <ScrollArea className={displayNotifications.length > 1 ? "h-[120px]" : "h-auto"}>
             <div className="space-y-2">
-              {unreadNotifications.map((notification) => (
+              {displayNotifications.map((notification) => (
                 <div 
                   key={notification.id}
-                  className="flex items-center justify-between bg-background rounded-md p-2 cursor-pointer hover:bg-accent/50"
+                  className={`flex items-center justify-between bg-background rounded-md p-2 cursor-pointer hover:bg-accent/50 ${!notification.isRead ? 'border-l-2 border-primary' : ''}`}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <div className="flex-1">
@@ -82,7 +80,7 @@ export function NotificationCard({
           </ScrollArea>
         )}
         
-        {showViewAll && (
+        {showViewAll && notifications.length > maxItems && (
           <Button 
             variant="ghost"
             className="w-full text-xs mt-2"
