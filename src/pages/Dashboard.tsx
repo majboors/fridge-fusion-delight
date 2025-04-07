@@ -14,7 +14,8 @@ import {
   Plus, 
   Loader2,
   UtensilsCrossed,
-  Dna
+  Dna,
+  Calculator
 } from "lucide-react";
 
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
@@ -347,10 +348,11 @@ export default function Dashboard() {
       </div>
 
       <div className="px-6 mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <CalorieGauge 
-            calories={dailyData.calories.consumed} 
-            dailyGoal={dailyData.calories.goal}
+        <div className="grid grid-cols-2 gap-4">
+          <FeatureCard 
+            title="Calorie Counter" 
+            icon={Calculator} 
+            onClick={handleOpenCalorieCounter}
           />
           <FeatureCard 
             title="Daily Meal Suggestions" 
