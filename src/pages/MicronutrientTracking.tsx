@@ -120,6 +120,8 @@ export default function MicronutrientTracking() {
   
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeDetail | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -128,7 +130,26 @@ export default function MicronutrientTracking() {
     }
 
     fetchNutrientData();
-  }, [user, navigate, historyLimit]);
+    
+    const channel = supabase
+      .channel('recipe_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT', 
+          schema: 'public',
+          table: 'recipes'
+        },
+        () => {
+          fetchNutrientData();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, navigate, historyLimit, refreshKey]);
 
   const fetchNutrientData = async () => {
     try {
@@ -203,7 +224,6 @@ export default function MicronutrientTracking() {
           
           if (recipe.steps && Array.isArray(recipe.steps)) {
             recipe.steps.forEach(step => {
-              // Extract micronutrients
               const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg/i);
               if (vitaminAMatch) {
                 microData.vitamin_a = parseFloat(vitaminAMatch[1]);
@@ -246,7 +266,6 @@ export default function MicronutrientTracking() {
                 micronutrientTotals.sodium.count += 1;
               }
               
-              // Extract macronutrients
               const proteinMatch = step.match(/Protein:?\s*(\d+\.?\d*)\s*g/i);
               if (proteinMatch) {
                 macroData.protein = parseFloat(proteinMatch[1]);
@@ -281,7 +300,6 @@ export default function MicronutrientTracking() {
               microData.iron || microData.potassium || microData.sodium ||
               macroData.protein || macroData.carbs || macroData.fat || macroData.fiber) {
             
-            // For daily aggregation, we merge values for the same date
             if (processedDates.has(dateStr)) {
               const existingMicroIndex = micronutrientHistory.findIndex(item => item.date === dateStr);
               const existingMacroIndex = macronutrientHistory.findIndex(item => item.date === dateStr);
@@ -301,13 +319,15 @@ export default function MicronutrientTracking() {
                 macronutrientHistory[existingMacroIndex].fat += macroData.fat;
                 macronutrientHistory[existingMacroIndex].fiber += macroData.fiber;
               }
+              
+              const existingIds = processedDates.get(dateStr) || [];
+              processedDates.set(dateStr, [...existingIds, recipe.id]);
             } else {
               micronutrientHistory.push(microData);
               macronutrientHistory.push(macroData);
               processedDates.set(dateStr, [recipe.id]);
             }
             
-            // Also add individual meal records for history viewing
             const formattedDate = new Date(recipe.created_at).toLocaleString();
             micronutrientHistory.push({...microData, date: formattedDate});
             macronutrientHistory.push({...macroData, date: formattedDate});
@@ -317,7 +337,6 @@ export default function MicronutrientTracking() {
       
       if (micronutrientHistory.length === 0) {
         setNoDataFound(true);
-        // Set empty history with zeros
         const today = new Date();
         
         for (let i = 6; i >= 0; i--) {
@@ -410,7 +429,6 @@ export default function MicronutrientTracking() {
       
       setNoDataFound(true);
       
-      // Set empty history with zeros
       const emptyMicroHistory: MicronutrientHistory[] = [];
       const emptyMacroHistory: MacronutrientHistory[] = [];
       const today = new Date();
@@ -501,7 +519,6 @@ export default function MicronutrientTracking() {
       if (error) throw error;
       
       if (data) {
-        // Parse micronutrients and macronutrients from steps
         const micronutrients: any = {
           vitamin_a: { value: 0, unit: 'mcg', percentage: 0 },
           vitamin_c: { value: 0, unit: 'mg', percentage: 0 },
@@ -520,7 +537,6 @@ export default function MicronutrientTracking() {
         
         if (data.steps && Array.isArray(data.steps)) {
           data.steps.forEach(step => {
-            // Extract micronutrients
             const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg\s*\((\d+\.?\d*)%\)/i);
             if (vitaminAMatch) {
               micronutrients.vitamin_a = { 
@@ -575,7 +591,6 @@ export default function MicronutrientTracking() {
               };
             }
             
-            // Extract macronutrients
             const proteinMatch = step.match(/Protein:?\s*(\d+\.?\d*)\s*g\s*\((\d+\.?\d*)%\)/i);
             if (proteinMatch) {
               macronutrients.protein = { 
@@ -633,6 +648,10 @@ export default function MicronutrientTracking() {
         variant: "destructive"
       });
     }
+  };
+
+  const refreshData = () => {
+    setRefreshKey(prevKey => prevKey + 1);
   };
 
   if (loading) {

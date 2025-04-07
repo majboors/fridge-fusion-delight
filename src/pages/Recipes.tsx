@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export default function Recipes() {
     fetchRecipes();
   }, [user, navigate]);
 
-  const fetchRecipes = async () => {
+  const fetchRecipes = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -69,7 +69,7 @@ export default function Recipes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
 
   const handleOptionSelect = (option: "camera" | "text") => {
     setSelectedOption(option);
