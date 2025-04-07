@@ -1,4 +1,5 @@
-import { ThemeProvider } from "@/components/ui/theme-provider"
+
+import { ThemeProvider } from "@/components/ThemeProvider"
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner"
 import {
@@ -7,7 +8,7 @@ import {
 } from "react-router-dom";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
-import Micronutrients from "@/pages/Micronutrients";
+import MicronutrientTracking from "@/pages/MicronutrientTracking";
 import Recipes from "@/pages/Recipes";
 import Goals from "@/pages/Goals";
 import Settings from "@/pages/Settings";
@@ -28,7 +29,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/micronutrients",
-    element: <Micronutrients />,
+    element: <MicronutrientTracking />,
   },
   {
     path: "/recipes",
