@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Target, Check, ChevronRight } from "lucide-react";
+import { Loader2, Target, Check, ChevronRight, ArrowRight } from "lucide-react";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { calculateCalorieIntake, generateMealPlan } from "@/lib/api-client";
 import { supabase } from "@/integrations/supabase/client";
 
 type GoalType = "gain" | "lose" | "maintain" | "";
-type FormStep = "goal-selection" | "goal-details" | "results" | "meal-plan";
+type FormStep = "goal-selection" | "basic-info" | "weight-details" | "activity-details" | "dietary-details" | "results" | "meal-plan";
 
 interface UserGoalDetails {
   goalType: GoalType;
@@ -118,7 +118,7 @@ export default function Goals() {
 
   const handleGoalSelect = (goalType: GoalType) => {
     setUserGoal({...userGoal, goalType});
-    setCurrentStep("goal-details");
+    setCurrentStep("basic-info");
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -128,6 +128,24 @@ export default function Goals() {
 
   const handleRadioChange = (name: string, value: string) => {
     setUserGoal({...userGoal, [name]: value});
+  };
+
+  const handleNextStep = (currentStepName: FormStep) => {
+    const steps: FormStep[] = ["goal-selection", "basic-info", "weight-details", "activity-details", "dietary-details"];
+    const currentIndex = steps.indexOf(currentStepName);
+    
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1]);
+    }
+  };
+
+  const handlePreviousStep = (currentStepName: FormStep) => {
+    const steps: FormStep[] = ["goal-selection", "basic-info", "weight-details", "activity-details", "dietary-details"];
+    const currentIndex = steps.indexOf(currentStepName);
+    
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1]);
+    }
   };
 
   const handleSubmitGoal = async () => {
@@ -211,6 +229,48 @@ export default function Goals() {
     }
   };
 
+  const renderStepIndicator = () => {
+    const steps = [
+      { id: "goal-selection", label: "Goal" },
+      { id: "basic-info", label: "Basic Info" },
+      { id: "weight-details", label: "Weight" },
+      { id: "activity-details", label: "Activity" },
+      { id: "dietary-details", label: "Diet" }
+    ];
+    
+    if (currentStep === "results" || currentStep === "meal-plan") {
+      return null;
+    }
+    
+    const currentIndex = steps.findIndex(step => step.id === currentStep);
+    
+    return (
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          {steps.map((step, index) => (
+            <React.Fragment key={step.id}>
+              <div className="flex flex-col items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                  index < currentIndex ? "bg-primary text-primary-foreground" : 
+                  index === currentIndex ? "bg-primary/90 text-primary-foreground" : 
+                  "bg-secondary text-secondary-foreground"
+                }`}>
+                  {index < currentIndex ? <Check className="h-4 w-4" /> : index + 1}
+                </div>
+                <span className="text-xs mt-1">{step.label}</span>
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`h-0.5 flex-1 mx-2 ${
+                  index < currentIndex ? "bg-primary" : "bg-secondary"
+                }`} />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -224,6 +284,8 @@ export default function Goals() {
       <PageHeader title="Goals" />
 
       <div className="px-6">
+        {renderStepIndicator()}
+        
         {currentStep === "goal-selection" && (
           <Card className="mb-6">
             <CardHeader>
@@ -267,62 +329,20 @@ export default function Goals() {
             </CardContent>
           </Card>
         )}
-
-        {currentStep === "goal-details" && (
+        
+        {currentStep === "basic-info" && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                {userGoal.goalType === "gain" ? "Weight Gain Details" : 
-                 userGoal.goalType === "lose" ? "Weight Loss Details" : 
-                 "Maintenance Details"}
+                Basic Information
               </CardTitle>
               <CardDescription>
-                Help us create a personalized plan for you
+                Let's start with some basic details
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentWeight">Current Weight (kg)</Label>
-                  <Input
-                    id="currentWeight"
-                    name="currentWeight"
-                    type="number"
-                    value={userGoal.currentWeight}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 70"
-                  />
-                </div>
-                
-                {userGoal.goalType !== "maintain" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="targetWeight">Target Weight (kg)</Label>
-                    <Input
-                      id="targetWeight"
-                      name="targetWeight"
-                      type="number"
-                      value={userGoal.targetWeight}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 75"
-                    />
-                  </div>
-                )}
-                
-                {userGoal.goalType !== "maintain" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="timeframe">Timeframe (months)</Label>
-                    <Input
-                      id="timeframe"
-                      name="timeframe"
-                      type="number"
-                      value={userGoal.timeframe}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 3"
-                    />
-                  </div>
-                )}
-                
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="age">Age</Label>
                   <Input
@@ -346,22 +366,102 @@ export default function Goals() {
                     placeholder="e.g., 175"
                   />
                 </div>
-                
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep("goal-selection")}>
+                Back
+              </Button>
+              <Button 
+                onClick={() => handleNextStep("basic-info")}
+                disabled={!userGoal.age || !userGoal.height}
+              >
+                Next <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+        
+        {currentStep === "weight-details" && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                Weight Details
+              </CardTitle>
+              <CardDescription>
+                Tell us about your weight goals
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mealsPerDay">Meals Per Day</Label>
+                  <Label htmlFor="currentWeight">Current Weight (kg)</Label>
                   <Input
-                    id="mealsPerDay"
-                    name="mealsPerDay"
+                    id="currentWeight"
+                    name="currentWeight"
                     type="number"
-                    value={userGoal.mealsPerDay}
+                    value={userGoal.currentWeight}
                     onChange={handleInputChange}
-                    placeholder="e.g., 3"
-                    min="1"
-                    max="6"
+                    placeholder="e.g., 70"
                   />
                 </div>
+                
+                {userGoal.goalType !== "maintain" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="targetWeight">Target Weight (kg)</Label>
+                      <Input
+                        id="targetWeight"
+                        name="targetWeight"
+                        type="number"
+                        value={userGoal.targetWeight}
+                        onChange={handleInputChange}
+                        placeholder="e.g., 75"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="timeframe">Timeframe (months)</Label>
+                      <Input
+                        id="timeframe"
+                        name="timeframe"
+                        type="number"
+                        value={userGoal.timeframe}
+                        onChange={handleInputChange}
+                        placeholder="e.g., 3"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-              
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => handlePreviousStep("weight-details")}>
+                Back
+              </Button>
+              <Button 
+                onClick={() => handleNextStep("weight-details")}
+                disabled={!userGoal.currentWeight || (userGoal.goalType !== "maintain" && (!userGoal.targetWeight || !userGoal.timeframe))}
+              >
+                Next <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+
+        {currentStep === "activity-details" && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                Activity Level
+              </CardTitle>
+              <CardDescription>
+                Tell us about your physical activity
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Activity Level</Label>
                 <RadioGroup 
@@ -391,31 +491,73 @@ export default function Goals() {
                   </div>
                 </RadioGroup>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="dietaryRestrictions">Dietary Restrictions (Optional)</Label>
-                <Textarea
-                  id="dietaryRestrictions"
-                  name="dietaryRestrictions"
-                  value={userGoal.dietaryRestrictions}
-                  onChange={handleInputChange}
-                  placeholder="e.g., vegetarian, lactose intolerant, gluten-free"
-                  className="min-h-[80px]"
-                />
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => handlePreviousStep("activity-details")}>
+                Back
+              </Button>
+              <Button onClick={() => handleNextStep("activity-details")}>
+                Next <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+        
+        {currentStep === "dietary-details" && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                Meal Preferences
+              </CardTitle>
+              <CardDescription>
+                Tell us about your dietary preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mealsPerDay">Meals Per Day</Label>
+                  <Input
+                    id="mealsPerDay"
+                    name="mealsPerDay"
+                    type="number"
+                    value={userGoal.mealsPerDay}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 3"
+                    min="1"
+                    max="6"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="dietaryRestrictions">Dietary Restrictions (Optional)</Label>
+                  <Textarea
+                    id="dietaryRestrictions"
+                    name="dietaryRestrictions"
+                    value={userGoal.dietaryRestrictions}
+                    onChange={handleInputChange}
+                    placeholder="e.g., vegetarian, lactose intolerant, gluten-free"
+                    className="min-h-[80px]"
+                  />
+                </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep("goal-selection")}>
+              <Button variant="outline" onClick={() => handlePreviousStep("dietary-details")}>
                 Back
               </Button>
-              <Button onClick={handleSubmitGoal} disabled={calculating}>
+              <Button 
+                onClick={handleSubmitGoal} 
+                disabled={calculating || !userGoal.mealsPerDay}
+              >
                 {calculating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Calculating...
                   </>
                 ) : (
-                  "Calculate Calories"
+                  <>Calculate Calories</>
                 )}
               </Button>
             </CardFooter>
@@ -494,7 +636,7 @@ export default function Goals() {
               )}
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep("goal-details")}>
+              <Button variant="outline" onClick={() => setCurrentStep("dietary-details")}>
                 Back
               </Button>
               <Button onClick={handleGenerateMealPlan} disabled={generatingMealPlan}>
