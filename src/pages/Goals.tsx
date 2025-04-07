@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +15,8 @@ import { calculateCalorieIntake, generateMealPlan } from "@/lib/api-client";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Meal, MealPlan } from "@/types/goals";
+import { Json } from "@/integrations/supabase/types";
 
 type GoalType = "gain" | "lose" | "maintain" | "";
 type FormStep = "goal-selection" | "basic-info" | "weight-details" | "activity-details" | "dietary-details" | "results" | "meal-plan";
@@ -46,21 +47,6 @@ interface CalorieResults {
   };
 }
 
-interface MealPlan {
-  total_daily_calories: number;
-  meals: {
-    id: number;
-    name: string;
-    time: string;
-    calories: number;
-    description: string;
-    foods: string[];
-    macros: { protein: number; carbs: number; fat: number };
-    image_url?: string;
-  }[];
-  notes: string;
-}
-
 interface SavedGoal {
   id: string;
   goal_type: string;
@@ -83,7 +69,7 @@ interface SavedMealPlan {
   id: string;
   goal_id: string;
   total_daily_calories: number;
-  meals: MealPlan['meals'];
+  meals: Meal[];
   notes?: string;
   created_at: string;
 }
@@ -164,7 +150,17 @@ export default function Goals() {
         } else if (mealPlansData) {
           const mealPlansMap: Record<string, SavedMealPlan> = {};
           mealPlansData.forEach(plan => {
-            mealPlansMap[plan.goal_id] = plan as SavedMealPlan;
+            // Convert the JSON meals to the typed Meal[] array
+            const typedMeals = (plan.meals as unknown) as Meal[];
+            
+            mealPlansMap[plan.goal_id] = {
+              id: plan.id,
+              goal_id: plan.goal_id,
+              total_daily_calories: plan.total_daily_calories,
+              meals: typedMeals,
+              notes: plan.notes || undefined,
+              created_at: plan.created_at
+            };
           });
           setSavedMealPlans(mealPlansMap);
         }
