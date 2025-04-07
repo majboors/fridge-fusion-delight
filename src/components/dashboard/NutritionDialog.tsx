@@ -80,11 +80,11 @@ export function NutritionDialog({
       if (nutritionDbData && nutritionDbData.length > 0) {
         const currentData = nutritionDbData[0];
         
-        // Calculate new values
-        const newCaloriesConsumed = currentData.calories_consumed + nutritionData.calorie_count;
-        const newCarbsConsumed = currentData.carbs_consumed + nutritionData.macronutrients.carbs.value;
-        const newProteinConsumed = currentData.protein_consumed + nutritionData.macronutrients.protein.value;
-        const newFatConsumed = currentData.fat_consumed + nutritionData.macronutrients.fat.value;
+        // Calculate new values - ensure all values are integers
+        const newCaloriesConsumed = currentData.calories_consumed + Math.round(nutritionData.calorie_count);
+        const newCarbsConsumed = currentData.carbs_consumed + Math.round(nutritionData.macronutrients.carbs.value);
+        const newProteinConsumed = currentData.protein_consumed + Math.round(nutritionData.macronutrients.protein.value);
+        const newFatConsumed = currentData.fat_consumed + Math.round(nutritionData.macronutrients.fat.value);
         
         // Calculate weekly progress as percentage of goals met
         const caloriePercentage = Math.min((newCaloriesConsumed / currentData.calories_goal) * 100, 100);
@@ -117,21 +117,21 @@ export function NutritionDialog({
         ? nutritionData.food_items.join(", ")
         : "Meal";
         
-      const title = `${foodItemsTitle} (${nutritionData.calorie_count} calories)`;
+      const title = `${foodItemsTitle} (${Math.round(nutritionData.calorie_count)} calories)`;
 
       // Create steps with nutrition information - format to ensure micronutrient data is parsable
       const steps = [
-        `This meal contains approximately ${nutritionData.calorie_count} calories.`,
-        `Protein: ${nutritionData.macronutrients.protein.value}${nutritionData.macronutrients.protein.unit} (${nutritionData.macronutrients.protein.percentage}%)`,
-        `Carbs: ${nutritionData.macronutrients.carbs.value}${nutritionData.macronutrients.carbs.unit} (${nutritionData.macronutrients.carbs.percentage}%)`,
-        `Fat: ${nutritionData.macronutrients.fat.value}${nutritionData.macronutrients.fat.unit} (${nutritionData.macronutrients.fat.percentage}%)`,
-        `Fiber: ${nutritionData.macronutrients.fiber.value}${nutritionData.macronutrients.fiber.unit} (${nutritionData.macronutrients.fiber.percentage}%)`,
-        `Vitamin A: ${nutritionData.micronutrients.vitamin_a.value}${nutritionData.micronutrients.vitamin_a.unit} (${nutritionData.micronutrients.vitamin_a.percentage}%)`,
-        `Vitamin C: ${nutritionData.micronutrients.vitamin_c.value}${nutritionData.micronutrients.vitamin_c.unit} (${nutritionData.micronutrients.vitamin_c.percentage}%)`,
-        `Calcium: ${nutritionData.micronutrients.calcium.value}${nutritionData.micronutrients.calcium.unit} (${nutritionData.micronutrients.calcium.percentage}%)`,
-        `Iron: ${nutritionData.micronutrients.iron.value}${nutritionData.micronutrients.iron.unit} (${nutritionData.micronutrients.iron.percentage}%)`,
-        `Potassium: ${nutritionData.micronutrients.potassium.value}${nutritionData.micronutrients.potassium.unit} (${nutritionData.micronutrients.potassium.percentage}%)`,
-        `Sodium: ${nutritionData.micronutrients.sodium.value}${nutritionData.micronutrients.sodium.unit} (${nutritionData.micronutrients.sodium.percentage}%)`,
+        `This meal contains approximately ${Math.round(nutritionData.calorie_count)} calories.`,
+        `Protein: ${Math.round(nutritionData.macronutrients.protein.value)}${nutritionData.macronutrients.protein.unit} (${Math.round(nutritionData.macronutrients.protein.percentage)}%)`,
+        `Carbs: ${Math.round(nutritionData.macronutrients.carbs.value)}${nutritionData.macronutrients.carbs.unit} (${Math.round(nutritionData.macronutrients.carbs.percentage)}%)`,
+        `Fat: ${Math.round(nutritionData.macronutrients.fat.value)}${nutritionData.macronutrients.fat.unit} (${Math.round(nutritionData.macronutrients.fat.percentage)}%)`,
+        `Fiber: ${Math.round(nutritionData.macronutrients.fiber.value)}${nutritionData.macronutrients.fiber.unit} (${Math.round(nutritionData.macronutrients.fiber.percentage)}%)`,
+        `Vitamin A: ${Math.round(nutritionData.micronutrients.vitamin_a.value)}${nutritionData.micronutrients.vitamin_a.unit} (${Math.round(nutritionData.micronutrients.vitamin_a.percentage)}%)`,
+        `Vitamin C: ${Math.round(nutritionData.micronutrients.vitamin_c.value)}${nutritionData.micronutrients.vitamin_c.unit} (${Math.round(nutritionData.micronutrients.vitamin_c.percentage)}%)`,
+        `Calcium: ${Math.round(nutritionData.micronutrients.calcium.value)}${nutritionData.micronutrients.calcium.unit} (${Math.round(nutritionData.micronutrients.calcium.percentage)}%)`,
+        `Iron: ${Math.round(nutritionData.micronutrients.iron.value)}${nutritionData.micronutrients.iron.unit} (${Math.round(nutritionData.micronutrients.iron.percentage)}%)`,
+        `Potassium: ${Math.round(nutritionData.micronutrients.potassium.value)}${nutritionData.micronutrients.potassium.unit} (${Math.round(nutritionData.micronutrients.potassium.percentage)}%)`,
+        `Sodium: ${Math.round(nutritionData.micronutrients.sodium.value)}${nutritionData.micronutrients.sodium.unit} (${Math.round(nutritionData.micronutrients.sodium.percentage)}%)`,
       ];
 
       // Save to recipes table

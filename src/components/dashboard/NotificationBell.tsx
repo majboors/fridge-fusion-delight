@@ -119,7 +119,7 @@ export function NotificationBell() {
             className="w-full text-xs justify-center"
             onClick={() => setOpen(false)}
           >
-            View all notifications
+            Close notifications
           </Button>
         </div>
       </PopoverContent>
