@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Target, Check, ChevronRight, ArrowRight, RefreshCw, FileText, Calendar } from "lucide-react";
+import { Loader2, Target, Check, ChevronRight, ArrowRight, RefreshCw, FileText } from "lucide-react";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -118,7 +118,6 @@ export default function Goals() {
     try {
       setLoading(true);
       
-      // Fetch user goals
       const { data: goalsData, error: goalsError } = await supabase
         .from('user_goals')
         .select('*')
@@ -138,7 +137,6 @@ export default function Goals() {
       
       setSavedGoals(goalsData || []);
       
-      // Fetch meal plans for each goal
       if (goalsData && goalsData.length > 0) {
         const { data: mealPlansData, error: mealPlansError } = await supabase
           .from('meal_plans')
@@ -150,7 +148,6 @@ export default function Goals() {
         } else if (mealPlansData) {
           const mealPlansMap: Record<string, SavedMealPlan> = {};
           mealPlansData.forEach(plan => {
-            // Convert the JSON meals to the typed Meal[] array
             const typedMeals = (plan.meals as unknown) as Meal[];
             
             mealPlansMap[plan.goal_id] = {
@@ -219,7 +216,6 @@ export default function Goals() {
       const result = await calculateCalorieIntake(goalDescription);
       setCalorieResults(result);
       
-      // First, save the goal data to Supabase
       if (user) {
         const { data: goalData, error: goalError } = await supabase
           .from('user_goals')
@@ -252,7 +248,6 @@ export default function Goals() {
         } else if (goalData) {
           setSavedGoalId(goalData.id);
           
-          // Also update nutrition_data
           const { error: nutritionError } = await supabase.from('nutrition_data')
             .upsert({
               user_id: user.id,
@@ -272,7 +267,6 @@ export default function Goals() {
             description: "Your goal has been saved",
           });
           
-          // Refresh the goals list
           fetchUserGoals();
         }
       }
@@ -297,9 +291,17 @@ export default function Goals() {
       const requirements = `I need a ${calorieResults?.daily_calories} calorie meal plan with ${userGoal.mealsPerDay} meals throughout the day. ${userGoal.goalType === 'gain' ? 'I am trying to gain weight and build muscle.' : userGoal.goalType === 'lose' ? 'I am trying to lose weight.' : 'I want to maintain my current weight.'} ${userGoal.dietaryRestrictions ? `My dietary restrictions are: ${userGoal.dietaryRestrictions}` : ''}`;
       
       const result = await generateMealPlan(requirements, true);
-      setMealPlan(result);
       
-      // Save meal plan if we have a saved goal
+      if (user) {
+        const mealPlanData: MealPlan = {
+          user_id: user.id,
+          total_daily_calories: result.total_daily_calories,
+          meals: result.meals,
+          notes: result.notes,
+        };
+        setMealPlan(mealPlanData);
+      }
+      
       if (savedGoalId && user) {
         const { error } = await supabase
           .from('meal_plans')
@@ -307,7 +309,7 @@ export default function Goals() {
             user_id: user.id,
             goal_id: savedGoalId,
             total_daily_calories: result.total_daily_calories,
-            meals: result.meals,
+            meals: result.meals as unknown as Json,
             notes: result.notes || null,
           });
           
@@ -324,7 +326,6 @@ export default function Goals() {
             description: "Your meal plan has been saved",
           });
           
-          // Refresh the meal plans
           fetchUserGoals();
         }
       }
@@ -355,7 +356,6 @@ export default function Goals() {
     try {
       setSaving(true);
       
-      // Check if meal plan already exists for this goal
       const { data: existingPlan, error: queryError } = await supabase
         .from('meal_plans')
         .select('id')
@@ -374,24 +374,22 @@ export default function Goals() {
       
       let result;
       if (existingPlan) {
-        // Update existing meal plan
         result = await supabase
           .from('meal_plans')
           .update({
             total_daily_calories: mealPlan.total_daily_calories,
-            meals: mealPlan.meals,
+            meals: mealPlan.meals as unknown as Json,
             notes: mealPlan.notes || null,
           })
           .eq('id', existingPlan.id);
       } else {
-        // Insert new meal plan
         result = await supabase
           .from('meal_plans')
           .insert({
             user_id: user.id,
             goal_id: savedGoalId,
             total_daily_calories: mealPlan.total_daily_calories,
-            meals: mealPlan.meals,
+            meals: mealPlan.meals as unknown as Json,
             notes: mealPlan.notes || null,
           });
       }
@@ -409,10 +407,8 @@ export default function Goals() {
           description: "Your meal plan has been saved",
         });
         
-        // Refresh data
         fetchUserGoals();
         
-        // Move to saved tab
         setActiveTab("saved");
       }
     } catch (error) {
@@ -426,7 +422,7 @@ export default function Goals() {
       setSaving(false);
     }
   };
-  
+
   const handleGenerateGoalsAgain = () => {
     setMealPlan(null);
     setCalorieResults(null);
