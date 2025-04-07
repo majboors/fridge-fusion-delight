@@ -36,6 +36,44 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_plans: {
+        Row: {
+          created_at: string
+          goal_id: string | null
+          id: string
+          meals: Json
+          notes: string | null
+          total_daily_calories: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          meals: Json
+          notes?: string | null
+          total_daily_calories: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          meals?: Json
+          notes?: string | null
+          total_daily_calories?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plans_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "user_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nutrition_data: {
         Row: {
           calories_consumed: number
@@ -222,6 +260,66 @@ export type Database = {
           payment_reference?: string | null
           presentations_generated?: number
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          activity_level: string
+          age: number
+          carbs_grams: number | null
+          created_at: string
+          current_weight: number
+          daily_calories: number | null
+          dietary_restrictions: string | null
+          fat_grams: number | null
+          goal_type: string
+          height: number
+          id: string
+          meals_per_day: number
+          protein_grams: number | null
+          target_weight: number | null
+          timeframe: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_level: string
+          age: number
+          carbs_grams?: number | null
+          created_at?: string
+          current_weight: number
+          daily_calories?: number | null
+          dietary_restrictions?: string | null
+          fat_grams?: number | null
+          goal_type: string
+          height: number
+          id?: string
+          meals_per_day: number
+          protein_grams?: number | null
+          target_weight?: number | null
+          timeframe?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_level?: string
+          age?: number
+          carbs_grams?: number | null
+          created_at?: string
+          current_weight?: number
+          daily_calories?: number | null
+          dietary_restrictions?: string | null
+          fat_grams?: number | null
+          goal_type?: string
+          height?: number
+          id?: string
+          meals_per_day?: number
+          protein_grams?: number | null
+          target_weight?: number | null
+          timeframe?: number | null
           updated_at?: string
           user_id?: string
         }
