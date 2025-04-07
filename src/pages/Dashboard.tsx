@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +24,7 @@ import { NotificationCard } from "@/components/dashboard/NotificationCard";
 import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { NutritionDialog } from "@/components/dashboard/NutritionDialog";
 import { FeatureSelectionDialog } from "@/components/dashboard/FeatureSelectionDialog";
+import { useNotifications } from "@/contexts/NotificationsContext";
 
 interface NutritionData {
   id: string;
@@ -88,6 +88,7 @@ export default function Dashboard() {
     iron: 0,
     calcium: 0
   });
+  const { addNotification } = useNotifications();
 
   const fetchNutritionData = async () => {
     if (!user) return;
@@ -119,7 +120,6 @@ export default function Dashboard() {
     if (!user) return;
     
     try {
-      // Fetch the most recent recipe entry that has micronutrient data
       const { data, error } = await supabase
         .from('recipes')
         .select('steps')
@@ -132,7 +132,6 @@ export default function Dashboard() {
         return;
       }
       
-      // Process the recipe data to extract micronutrient values
       let vitaminC = 0;
       let iron = 0;
       let calcium = 0;
@@ -142,7 +141,6 @@ export default function Dashboard() {
         for (const recipe of data) {
           if (recipe.steps && Array.isArray(recipe.steps)) {
             for (const step of recipe.steps) {
-              // Extract micronutrients percentages
               const vitaminCMatch = step.match(/Vitamin C:?\s*\d+\.?\d*\s*mg\s*\((\d+)%\)/i);
               if (vitaminCMatch && !vitaminC) {
                 vitaminC = parseInt(vitaminCMatch[1]);
@@ -163,7 +161,6 @@ export default function Dashboard() {
             }
           }
           
-          // If we found all micronutrients, break the loop
           if (vitaminC && iron && calcium) {
             break;
           }
@@ -190,6 +187,19 @@ export default function Dashboard() {
     
     fetchNutritionData();
     fetchMicronutrientData();
+    
+    setTimeout(() => {
+      addNotification({
+        message: "Don't forget to log dinner!",
+        type: "meal",
+        time: "8:00 PM"
+      });
+      
+      addNotification({
+        message: "You're 20% away from your protein goal today",
+        type: "goal"
+      });
+    }, 1000);
   }, [user, navigate, toast]);
 
   const handleAddMeal = () => {
@@ -379,7 +389,7 @@ export default function Dashboard() {
           </div>
           
           <div>
-            <NotificationCard message="Don't forget to log dinner!" />
+            <NotificationCard />
             <div className="mt-4">
               <Button 
                 variant="outline" 

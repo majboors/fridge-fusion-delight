@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Home, BarChart2, Camera, Goal, BookOpen, Radar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FeatureSelectionDialog } from "./FeatureSelectionDialog";
+import { NotificationBell } from "./NotificationBell";
 
 export function NavigationBar() {
   const navigate = useNavigate();
@@ -19,6 +20,9 @@ export function NavigationBar() {
   
   return (
     <>
+      <div className="fixed top-0 right-0 z-50 bg-background p-2 flex items-center gap-2">
+        <NotificationBell />
+      </div>
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-2 px-4">
         <div className="flex justify-around items-center">
           <NavItem 
