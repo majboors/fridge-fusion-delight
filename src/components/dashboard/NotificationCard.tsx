@@ -4,7 +4,7 @@ import { AlertCircle, ChevronRight } from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 
 interface NotificationCardProps {
   message?: string;
@@ -31,7 +31,15 @@ export function NotificationCard({
     
   const formatNotificationTime = (timestamp: string) => {
     try {
-      return format(new Date(timestamp), 'h:mm a');
+      const date = new Date(timestamp);
+      
+      if (isToday(date)) {
+        return format(date, 'h:mm a');
+      } else if (isYesterday(date)) {
+        return `Yesterday, ${format(date, 'h:mm a')}`;
+      } else {
+        return format(date, 'MMM d');
+      }
     } catch (e) {
       return '';
     }

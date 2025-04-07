@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
 export function NotificationBell() {
@@ -31,9 +31,25 @@ export function NotificationBell() {
 
   const formatNotificationTime = (timestamp: string) => {
     try {
-      return format(new Date(timestamp), 'MMM d, h:mm a');
+      const date = new Date(timestamp);
+      
+      if (isToday(date)) {
+        return `Today, ${format(date, 'h:mm a')}`;
+      } else if (isYesterday(date)) {
+        return `Yesterday, ${format(date, 'h:mm a')}`;
+      } else {
+        return format(date, 'MMM d, h:mm a');
+      }
     } catch (e) {
       return '';
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case "goal": return "Goal Reminder";
+      case "meal": return "Meal Log";
+      default: return "System";
     }
   };
 
@@ -74,8 +90,7 @@ export function NotificationBell() {
                 >
                   <div className="flex justify-between mb-1">
                     <span className="text-xs text-muted-foreground">
-                      {notification.type === "goal" ? "Goal Reminder" : 
-                       notification.type === "meal" ? "Meal Log" : "System"}
+                      {getTypeLabel(notification.type)}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {formatNotificationTime(notification.createdAt)}

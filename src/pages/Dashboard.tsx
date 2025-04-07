@@ -88,7 +88,7 @@ export default function Dashboard() {
     iron: 0,
     calcium: 0
   });
-  const { addNotification } = useNotifications();
+  const { fetchNotifications } = useNotifications();
 
   const fetchNutritionData = async () => {
     if (!user) return;
@@ -187,20 +187,8 @@ export default function Dashboard() {
     
     fetchNutritionData();
     fetchMicronutrientData();
-    
-    setTimeout(() => {
-      addNotification({
-        message: "Don't forget to log dinner!",
-        type: "meal",
-        time: "8:00 PM"
-      });
-      
-      addNotification({
-        message: "You're 20% away from your protein goal today",
-        type: "goal"
-      });
-    }, 1000);
-  }, [user, navigate, toast]);
+    fetchNotifications();
+  }, [user, navigate]);
 
   const handleAddMeal = () => {
     const mockNutritionData: NutritionResponseData = {
