@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -28,6 +29,8 @@ interface MicronutrientRadarChartProps {
   clickable?: boolean;
   scanDate?: string;
   onClick?: () => void;
+  onToggleExpand?: () => void;
+  isExpanded?: boolean;
 }
 
 export function MicronutrientRadarChart({ 
@@ -35,7 +38,9 @@ export function MicronutrientRadarChart({
   showScanButton = true,
   clickable = false,
   scanDate,
-  onClick
+  onClick,
+  onToggleExpand,
+  isExpanded
 }: MicronutrientRadarChartProps) {
   const navigate = useNavigate();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -96,14 +101,20 @@ export function MicronutrientRadarChart({
     }
   };
 
+  const handleToggleExpand = () => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    }
+  };
+
   const cardProps = clickable ? { 
     onClick: handleCardClick,
     className: "cursor-pointer transition-shadow hover:shadow-md h-full"
   } : { className: "h-full" };
 
   return (
-    <>
-      <Card {...cardProps}>
+    <div className="flex flex-col h-full">
+      <Card {...cardProps} className={`${cardProps.className} flex-1`}>
         <CardHeader className="pb-2">
           <CardTitle className="flex justify-between items-center">
             <span>Micronutrients</span>
@@ -115,7 +126,7 @@ export function MicronutrientRadarChart({
             </div>
           )}
         </CardHeader>
-        <CardContent className="space-y-3 pb-4">
+        <CardContent className="space-y-3 pb-4 h-[calc(100%-80px)] min-h-[160px]">
           {hasNoData ? (
             <div className="text-center py-4 space-y-3">
               <div className="text-muted-foreground">
@@ -131,7 +142,7 @@ export function MicronutrientRadarChart({
               )}
             </div>
           ) : (
-            <ScrollArea className="h-[160px] pr-4">
+            <ScrollArea className="h-full pr-4">
               <div className="space-y-3 pb-2">
                 {micronutrients.map((nutrient) => (
                   <div key={nutrient.name} className="space-y-1">
@@ -153,6 +164,17 @@ export function MicronutrientRadarChart({
           )}
         </CardContent>
       </Card>
+
+      {onToggleExpand && (
+        <Button 
+          variant="outline" 
+          onClick={handleToggleExpand}
+          className="mt-3 flex items-center justify-center gap-1 w-full"
+          size="sm"
+        >
+          {isExpanded ? "Hide Meals" : "Show Meals"}
+        </Button>
+      )}
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -187,7 +209,7 @@ export function MicronutrientRadarChart({
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
 

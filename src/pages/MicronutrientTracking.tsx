@@ -483,38 +483,26 @@ export default function MicronutrientTracking() {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 pb-3">
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-[200px]">
+            <div className="h-[240px]">
               <MacronutrientPieChart 
                 data={day.averageData.macronutrients} 
                 containerClassName="h-full"
               />
             </div>
-            <div className="h-[200px] mb-6">
-              <div className="h-full flex flex-col">
-                <MicronutrientRadarChart 
-                  data={day.averageData.micronutrients}
-                  showScanButton={false}
-                />
-                <Button 
-                  variant="outline" 
-                  onClick={() => toggleDayExpanded(day.day)}
-                  className="mt-4 flex items-center justify-center gap-1 self-center"
-                  size="sm"
-                >
-                  {isExpanded ? (
-                    <>Hide Meals <ChevronUp className="h-4 w-4" /></>
-                  ) : (
-                    <>Show Meals <ChevronDown className="h-4 w-4" /></>
-                  )}
-                </Button>
-              </div>
+            <div className="h-[240px] mb-2">
+              <MicronutrientRadarChart 
+                data={day.averageData.micronutrients}
+                showScanButton={false}
+                onToggleExpand={() => toggleDayExpanded(day.day)}
+                isExpanded={isExpanded}
+              />
             </div>
           </div>
           
-          <Collapsible>
-            <CollapsibleContent className="mt-2">
+          <Collapsible open={isExpanded}>
+            <CollapsibleContent className="mt-4">
               {isExpanded && (
                 <div className="space-y-2 pt-2">
                   <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
@@ -595,11 +583,11 @@ export default function MicronutrientTracking() {
                           />
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-0 pb-3 px-6">
+                      <CardFooter className="pt-0 pb-4 px-6">
                         <Button
-                          variant="ghost" 
-                          size="sm" 
-                          className="w-full text-xs"
+                          variant="soft" 
+                          size="wide" 
+                          className="w-full text-sm"
                           onClick={() => {
                             setExpandedDays(prev => ({ ...prev, [day.day]: true }));
                             document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
@@ -639,15 +627,15 @@ export default function MicronutrientTracking() {
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 pb-4">
-                        <div className="h-[160px]">
+                        <div className="h-[180px]">
                           <MacronutrientPieChart data={day.averageData.macronutrients} />
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-0 pb-3 px-6">
+                      <CardFooter className="pt-0 pb-4 px-6">
                         <Button
-                          variant="ghost" 
-                          size="sm" 
-                          className="w-full text-xs"
+                          variant="soft" 
+                          size="wide" 
+                          className="w-full text-sm"
                           onClick={() => {
                             setExpandedDays(prev => ({ ...prev, [day.day]: true }));
                             document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
