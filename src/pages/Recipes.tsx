@@ -49,12 +49,12 @@ export default function Recipes() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT', 
+          event: '*', 
           schema: 'public',
           table: 'recipes'
         },
-        () => {
-          console.log("Recipe inserted, refreshing...");
+        (payload) => {
+          console.log("Recipe changed, refreshing...");
           fetchRecipes();
         }
       )
