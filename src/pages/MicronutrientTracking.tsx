@@ -430,42 +430,36 @@ export default function MicronutrientTracking() {
               </div>
             </TabsContent>
             
-            <TabsContent value="table" className="mt-2 max-h-[300px] overflow-y-auto">
-              <ScrollArea className="h-full">
+            <TabsContent value="table" className="mt-2 max-h-[300px]">
+              <ScrollArea className="h-[250px]">
                 {renderMealNutrientTable(meal)}
               </ScrollArea>
             </TabsContent>
             
             <TabsContent value="charts" className="mt-2">
-              <div className="grid gap-3">
-                <div>
-                  <h5 className="text-xs font-medium mb-1">Macronutrients</h5>
-                  <div className="h-[200px] w-full mb-4">
-                    <MacronutrientPieChart data={meal.macronutrients} />
-                  </div>
+              <div className="grid gap-4">
+                <div className="h-[180px]">
+                  <MacronutrientPieChart data={meal.macronutrients} />
                 </div>
-                <div>
-                  <h5 className="text-xs font-medium mb-1">Micronutrients</h5>
-                  <div className="h-[200px] w-full mb-4">
-                    <MicronutrientRadarChart 
-                      data={meal.micronutrients}
-                      showScanButton={false}
-                    />
-                  </div>
+                <div className="h-[220px] mt-4">
+                  <MicronutrientRadarChart 
+                    data={meal.micronutrients}
+                    showScanButton={false}
+                  />
                 </div>
               </div>
             </TabsContent>
           </Tabs>
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="h-[250px] w-full">
+            <div className="h-[220px]">
               <MicronutrientRadarChart 
                 data={meal.micronutrients}
                 showScanButton={false}
                 clickable={true}
               />
             </div>
-            <div className="h-[250px] w-full">
+            <div className="h-[220px]">
               <MacronutrientPieChart data={meal.macronutrients} />
             </div>
           </div>
@@ -488,10 +482,10 @@ export default function MicronutrientTracking() {
         
         <CardContent className="pt-4">
           <div className="grid md:grid-cols-2 gap-4 mb-4">
-            <div className="h-[250px] w-full">
+            <div className="h-[220px]">
               <MacronutrientPieChart data={day.averageData.macronutrients} />
             </div>
-            <div className="h-[250px] w-full">
+            <div className="h-[220px]">
               <MicronutrientRadarChart 
                 data={day.averageData.micronutrients}
                 showScanButton={false}
@@ -536,104 +530,110 @@ export default function MicronutrientTracking() {
             <TabsTrigger value="macro">Macronutrients</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="history" className="space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-medium">Nutrition History</h2>
-              <Button onClick={() => setCameraDialogOpen(true)}>
-                <Camera className="mr-2 h-4 w-4" /> Scan Food
-              </Button>
-            </div>
-            
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <TabsContent value="history" className="space-y-4">
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-medium">Nutrition History</h2>
+                <Button onClick={() => setCameraDialogOpen(true)}>
+                  <Camera className="mr-2 h-4 w-4" /> Scan Food
+                </Button>
               </div>
-            ) : nutrientHistory.length > 0 ? (
-              <div className="space-y-6">
-                {nutrientHistory.map((day, index) => renderDayCard(day, index))}
-              </div>
-            ) : renderNoDataMessage()}
+              
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : nutrientHistory.length > 0 ? (
+                <div className="space-y-6 pb-16">
+                  {nutrientHistory.map((day, index) => renderDayCard(day, index))}
+                </div>
+              ) : renderNoDataMessage()}
+            </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="micro" className="mt-2 pt-2 overflow-y-auto max-h-[calc(100vh-200px)]">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium">Micronutrient History</h2>
-              <Button onClick={() => setCameraDialogOpen(true)}>
-                <Camera className="mr-2 h-4 w-4" /> Scan Food
-              </Button>
-            </div>
-            
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <TabsContent value="micro" className="mt-2 pt-2">
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-medium">Micronutrient History</h2>
+                <Button onClick={() => setCameraDialogOpen(true)}>
+                  <Camera className="mr-2 h-4 w-4" /> Scan Food
+                </Button>
               </div>
-            ) : nutrientHistory.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {nutrientHistory.map((day, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{day.day}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-6">
-                      <div className="h-[250px] w-full">
-                        <MicronutrientRadarChart 
-                          data={day.averageData.micronutrients}
-                          showScanButton={false}
-                          clickable={true}
-                          scanDate={day.day}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : renderNoDataMessage()}
+              
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : nutrientHistory.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16">
+                  {nutrientHistory.map((day, index) => (
+                    <Card key={index} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">{day.day}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pb-6">
+                        <div className="h-[220px]">
+                          <MicronutrientRadarChart 
+                            data={day.averageData.micronutrients}
+                            showScanButton={false}
+                            clickable={true}
+                            scanDate={day.day}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : renderNoDataMessage()}
+            </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="macro" className="mt-2 pt-2 overflow-y-auto max-h-[calc(100vh-200px)]">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium">Macronutrient History</h2>
-              <Button onClick={() => setCameraDialogOpen(true)}>
-                <Camera className="mr-2 h-4 w-4" /> Scan Food
-              </Button>
-            </div>
-            
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <TabsContent value="macro" className="mt-2 pt-2">
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-medium">Macronutrient History</h2>
+                <Button onClick={() => setCameraDialogOpen(true)}>
+                  <Camera className="mr-2 h-4 w-4" /> Scan Food
+                </Button>
               </div>
-            ) : nutrientHistory.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {nutrientHistory.map((day, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">{day.day}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-4">
-                      <div className="h-[250px] w-full">
-                        <MacronutrientPieChart data={day.averageData.macronutrients} />
-                      </div>
-                    </CardContent>
-                    <CardFooter className="pt-0 pb-3 px-6">
-                      <Button
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full text-xs"
-                        onClick={() => {
-                          setExpandedDays(prev => ({ ...prev, [day.day]: true }));
-                          document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'start'
-                          });
-                        }}
-                      >
-                        View Daily Breakdown
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            ) : renderNoDataMessage()}
+              
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : nutrientHistory.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16">
+                  {nutrientHistory.map((day, index) => (
+                    <Card key={index} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">{day.day}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pb-4">
+                        <div className="h-[180px]">
+                          <MacronutrientPieChart data={day.averageData.macronutrients} />
+                        </div>
+                      </CardContent>
+                      <CardFooter className="pt-0 pb-3 px-6">
+                        <Button
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-xs"
+                          onClick={() => {
+                            setExpandedDays(prev => ({ ...prev, [day.day]: true }));
+                            document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
+                              behavior: 'smooth',
+                              block: 'start'
+                            });
+                          }}
+                        >
+                          View Daily Breakdown
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              ) : renderNoDataMessage()}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </div>
