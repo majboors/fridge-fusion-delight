@@ -42,7 +42,7 @@ export function MacronutrientPieChart({ data, containerClassName }: Macronutrien
         <CardTitle>Macronutrients</CardTitle>
       </CardHeader>
       <CardContent className="p-0 pb-4">
-        <div className="h-[160px] w-full">
+        <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 0, right: 0, bottom: 20, left: 0 }}>
               <Pie
@@ -50,7 +50,7 @@ export function MacronutrientPieChart({ data, containerClassName }: Macronutrien
                 cx="50%"
                 cy="50%"
                 innerRadius={25}
-                outerRadius={40}
+                outerRadius={45}
                 paddingAngle={2}
                 dataKey="value"
                 label={({ name, percentage }) => `${name} ${percentage}%`}

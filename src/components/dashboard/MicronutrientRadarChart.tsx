@@ -126,7 +126,7 @@ export function MicronutrientRadarChart({
             </div>
           )}
         </CardHeader>
-        <CardContent className="space-y-3 pb-4 h-[calc(100%-80px)] min-h-[200px]">
+        <CardContent className="space-y-3 pb-4 h-[calc(100%-80px)] min-h-[240px]">
           {hasNoData ? (
             <div className="text-center py-4 space-y-3">
               <div className="text-muted-foreground">
@@ -166,11 +166,11 @@ export function MicronutrientRadarChart({
       </Card>
 
       {onToggleExpand && (
-        <div className="mt-3 w-full">
+        <div className="mt-3 w-full z-10">
           <Button 
             variant="highlight"
             onClick={handleToggleExpand}
-            className="flex items-center justify-center gap-2 w-full"
+            className="flex items-center justify-center gap-2 w-full relative"
             size="full"
           >
             {isExpanded ? "Hide Meals" : "Show Meals"}
