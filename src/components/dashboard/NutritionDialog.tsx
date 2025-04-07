@@ -186,7 +186,7 @@ export function NutritionDialog({
         }
       };
       
-      // Create steps with nutrition information - format to ensure micronutrient data is parsable
+      // Create steps with detailed, clearly formatted nutrition information to ensure parsing works correctly
       const steps = [
         `This meal contains approximately ${roundedNutritionData.calorie_count} calories.`,
         `Protein: ${roundedNutritionData.macronutrients.protein.value}${roundedNutritionData.macronutrients.protein.unit} (${roundedNutritionData.macronutrients.protein.percentage}%)`,
@@ -202,8 +202,9 @@ export function NutritionDialog({
       ];
 
       console.log("Saving to recipes table...");
+      console.log("Steps to save:", steps);
       
-      // Save to recipes table
+      // Save to recipes table with consistent format for parsing
       const { data: newRecipe, error: recipeSaveError } = await supabase
         .from('recipes')
         .insert({

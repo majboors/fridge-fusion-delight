@@ -1,5 +1,4 @@
 
-
 # This file configures Supabase (https://create.supabase.com/). 
 # For detailed instructions, visit: https://supabase.com/docs/guides/local-development
 
@@ -51,4 +50,3 @@ enable_confirmations = false
 
 [functions]
 enabled = true
-
