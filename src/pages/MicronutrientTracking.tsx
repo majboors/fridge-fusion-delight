@@ -455,14 +455,14 @@ export default function MicronutrientTracking() {
           </Tabs>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-[200px]">
+            <div className="h-[220px]">
               <MicronutrientRadarChart 
                 data={meal.micronutrients}
                 showScanButton={false}
                 clickable={true}
               />
             </div>
-            <div className="h-[200px]">
+            <div className="h-[220px]">
               <MacronutrientPieChart data={meal.macronutrients} />
             </div>
           </div>
@@ -485,13 +485,13 @@ export default function MicronutrientTracking() {
         
         <CardContent className="pt-4 pb-3">
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-[240px]">
+            <div className="h-[260px]">
               <MacronutrientPieChart 
                 data={day.averageData.macronutrients} 
                 containerClassName="h-full"
               />
             </div>
-            <div className="h-[240px] mb-2">
+            <div className="h-[260px]">
               <MicronutrientRadarChart 
                 data={day.averageData.micronutrients}
                 showScanButton={false}
@@ -501,7 +501,7 @@ export default function MicronutrientTracking() {
             </div>
           </div>
           
-          <Collapsible open={isExpanded}>
+          <Collapsible open={isExpanded} className="mt-3">
             <CollapsibleContent className="mt-4">
               {isExpanded && (
                 <div className="space-y-2 pt-2">
@@ -569,12 +569,12 @@ export default function MicronutrientTracking() {
               ) : nutrientHistory.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
-                    <Card key={index} className="hover:shadow-md transition-shadow">
+                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[320px] flex flex-col">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
-                      <CardContent className="pb-4 pt-0">
-                        <div className="h-[180px]">
+                      <CardContent className="pb-3 pt-0 flex-1">
+                        <div className="h-[220px] mb-3">
                           <MicronutrientRadarChart 
                             data={day.averageData.micronutrients}
                             showScanButton={false}
@@ -587,7 +587,7 @@ export default function MicronutrientTracking() {
                         <Button
                           variant="soft" 
                           size="wide" 
-                          className="w-full text-sm"
+                          className="w-full"
                           onClick={() => {
                             setExpandedDays(prev => ({ ...prev, [day.day]: true }));
                             document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
@@ -622,12 +622,12 @@ export default function MicronutrientTracking() {
               ) : nutrientHistory.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
-                    <Card key={index} className="hover:shadow-md transition-shadow">
+                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[320px] flex flex-col">
                       <CardHeader className="pb-0">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
-                      <CardContent className="pt-0 pb-4">
-                        <div className="h-[180px]">
+                      <CardContent className="pt-0 pb-3 flex-1">
+                        <div className="h-[220px] mb-3">
                           <MacronutrientPieChart data={day.averageData.macronutrients} />
                         </div>
                       </CardContent>
@@ -635,7 +635,7 @@ export default function MicronutrientTracking() {
                         <Button
                           variant="soft" 
                           size="wide" 
-                          className="w-full text-sm"
+                          className="w-full"
                           onClick={() => {
                             setExpandedDays(prev => ({ ...prev, [day.day]: true }));
                             document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
