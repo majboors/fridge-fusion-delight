@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { MacroChart } from "@/components/dashboard/MacroChart";
 import { CalorieGauge } from "@/components/dashboard/CalorieGauge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,11 +17,9 @@ import { AchievementBadges } from "@/components/dashboard/AchievementBadges";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FeatureSelectionDialog } from "@/components/dashboard/FeatureSelectionDialog";
 import { Utensils, Apple, BarChart3, Calendar, Calculator, Camera } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, signOut } = useAuth();
   const { notifications } = useNotifications();
   const isMobile = useIsMobile();
@@ -37,11 +35,6 @@ const Dashboard = () => {
     { name: "Dinner", calories: 800, percentage: 40 },
     { name: "Snacks", calories: 400, percentage: 20 },
   ]);
-  const [achievements, setAchievements] = useState([
-    { name: "First Entry", description: "Logged your first meal", achieved: true },
-    { name: "Calorie Consistency", description: "Stayed within calorie goal for 3 days", achieved: false },
-    { name: "Macro Master", description: "Balanced your macros for a week", achieved: false },
-  ]);
 
   useEffect(() => {
     if (!user) {
@@ -50,11 +43,8 @@ const Dashboard = () => {
 
     const fetchDailyCalories = async () => {
       if (user) {
-        const today = new Date().toISOString().split('T')[0];
-    
         try {
-          // For now, we'll use mock data since the 'daily_calories' table doesn't appear to exist
-          // This prevents TypeScript errors while maintaining existing functionality
+          // Using mock data for now
           setTotalCalories(1700);
           setProtein(75);
           setCarbs(150);
@@ -82,10 +72,8 @@ const Dashboard = () => {
     // Refresh data in parent components
     const fetchDailyCalories = async () => {
       if (user) {
-        const today = new Date().toISOString().split('T')[0];
-    
         try {
-          // For now, we'll use mock data since the 'daily_calories' table doesn't appear to exist
+          // Using mock data for now
           setTotalCalories(1700);
           setProtein(75);
           setCarbs(150);
@@ -226,9 +214,11 @@ const Dashboard = () => {
       <FeatureSelectionDialog
         open={showFeatureDialog}
         onOpenChange={setShowFeatureDialog}
-        featureType={null}
+        featureType="calorie"
         onSuccess={handleLogNutritionSuccess}
       />
+
+      {isMobile && <div className="h-24" />}
     </div>
   );
 };
