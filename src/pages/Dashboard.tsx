@@ -341,9 +341,9 @@ export default function Dashboard() {
       <div className="px-6 mb-8">
         <Button 
           className="w-full py-6 text-lg flex items-center justify-center gap-2" 
-          onClick={handleAddMeal}
+          onClick={() => setFeatureDialogOpen(true)}
         >
-          <Plus className="h-5 w-5" /> Log Meal
+          <Plus className="h-5 w-5" /> Try AI
         </Button>
       </div>
 
