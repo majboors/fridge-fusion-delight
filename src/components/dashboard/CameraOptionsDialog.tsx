@@ -204,6 +204,7 @@ export function CameraOptionsDialog({
   };
 
   const handleNutritionLogSuccess = () => {
+    console.log("Nutrition logged successfully, calling onSuccess");
     // Refresh data in parent components
     if (onSuccess) {
       onSuccess();

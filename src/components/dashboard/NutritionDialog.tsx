@@ -67,6 +67,7 @@ export function NutritionDialog({
 
     try {
       setIsSaving(true);
+      console.log("Starting to log meal...");
 
       // Update nutrition data for today
       const { data: nutritionDbData, error: nutritionError } = await supabase.rpc('get_or_create_todays_nutrition_data', {
@@ -114,6 +115,8 @@ export function NutritionDialog({
         if (updateError) {
           throw updateError;
         }
+        
+        console.log("Updated nutrition_data successfully");
       }
 
       // Save as a meal recipe
@@ -198,6 +201,8 @@ export function NutritionDialog({
         `Sodium: ${roundedNutritionData.micronutrients.sodium.value}${roundedNutritionData.micronutrients.sodium.unit} (${roundedNutritionData.micronutrients.sodium.percentage}%)`,
       ];
 
+      console.log("Saving to recipes table...");
+      
       // Save to recipes table
       const { data: newRecipe, error: recipeSaveError } = await supabase
         .from('recipes')
@@ -213,6 +218,8 @@ export function NutritionDialog({
       if (recipeSaveError) {
         throw recipeSaveError;
       }
+      
+      console.log("Recipe saved successfully, ID:", newRecipe?.[0]?.id);
 
       setIsLogged(true);
       toast({
@@ -220,8 +227,9 @@ export function NutritionDialog({
         description: "Meal logged successfully",
       });
       
-      // Call the onMealLogged callback ONLY if it exists AND the meal was successfully logged
+      // Call the onMealLogged callback IMMEDIATELY if it exists
       if (onMealLogged) {
+        console.log("Calling onMealLogged callback");
         onMealLogged();
       }
 

@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +33,7 @@ export default function Recipes() {
   const [selectedOption, setSelectedOption] = useState<"camera" | "text" | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [recipeDetailsOpen, setRecipeDetailsOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key to force re-fetching
 
   useEffect(() => {
     if (!user) {
@@ -40,7 +42,28 @@ export default function Recipes() {
     }
     
     fetchRecipes();
-  }, [user, navigate]);
+    
+    // Set up real-time subscription for recipes table
+    const channel = supabase
+      .channel('recipes_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT', 
+          schema: 'public',
+          table: 'recipes'
+        },
+        () => {
+          console.log("Recipe inserted, refreshing...");
+          fetchRecipes();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, navigate, refreshKey]);
 
   const fetchRecipes = useCallback(async () => {
     if (!user) return;
@@ -83,6 +106,12 @@ export default function Recipes() {
   const handleViewRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setRecipeDetailsOpen(true);
+  };
+  
+  const handleSuccessfulAction = () => {
+    // Force refresh by updating refresh key
+    setRefreshKey(prev => prev + 1);
+    fetchRecipes();
   };
   
   return (
@@ -171,7 +200,7 @@ export default function Recipes() {
       <CameraOptionsDialog 
         open={cameraDialogOpen}
         onOpenChange={setCameraDialogOpen}
-        onSuccess={fetchRecipes}
+        onSuccess={handleSuccessfulAction}
         featureType="recipe"
       />
 
@@ -179,7 +208,7 @@ export default function Recipes() {
       <TextRecipeDialog
         open={textRecipeDialogOpen}
         onOpenChange={setTextRecipeDialogOpen}
-        onSuccess={fetchRecipes}
+        onSuccess={handleSuccessfulAction}
       />
 
       {/* Recipe Details Dialog */}

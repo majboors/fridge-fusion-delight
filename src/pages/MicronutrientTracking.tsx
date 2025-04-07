@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +6,7 @@ import { MicronutrientRadarChart } from "@/components/dashboard/MicronutrientRad
 import { MacronutrientPieChart } from "@/components/dashboard/MacronutrientPieChart";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { Loader2, Info, ChevronDown, ChevronUp, Settings, Camera } from "lucide-react";
+import { Loader2, Info, ChevronDown, ChevronUp, Settings, Camera, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -123,37 +123,12 @@ export default function MicronutrientTracking() {
   
   const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-
-    fetchNutrientData();
+  const fetchNutrientData = useCallback(async () => {
+    if (!user) return;
     
-    const channel = supabase
-      .channel('recipe_updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT', 
-          schema: 'public',
-          table: 'recipes'
-        },
-        () => {
-          fetchNutrientData();
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, navigate, historyLimit, refreshKey]);
-
-  const fetchNutrientData = async () => {
     try {
       setLoading(true);
+      console.log("Fetching nutrient data...");
       
       const { count, error: countError } = await supabase
         .from('recipes')
@@ -176,6 +151,8 @@ export default function MicronutrientTracking() {
       if (error) {
         throw error;
       }
+      
+      console.log(`Fetched ${recipes?.length || 0} recipes for nutrient data`);
 
       const micronutrientHistory: MicronutrientHistory[] = [];
       const macronutrientHistory: MacronutrientHistory[] = [];
@@ -301,8 +278,8 @@ export default function MicronutrientTracking() {
               macroData.protein || macroData.carbs || macroData.fat || macroData.fiber) {
             
             if (processedDates.has(dateStr)) {
-              const existingMicroIndex = micronutrientHistory.findIndex(item => item.date === dateStr);
-              const existingMacroIndex = macronutrientHistory.findIndex(item => item.date === dateStr);
+              const existingMicroIndex = micronutrientHistory.findIndex(item => item.date === dateStr && !item.recipe_id);
+              const existingMacroIndex = macronutrientHistory.findIndex(item => item.date === dateStr && !item.recipe_id);
               
               if (existingMicroIndex >= 0) {
                 micronutrientHistory[existingMicroIndex].vitamin_a += microData.vitamin_a;
@@ -311,6 +288,16 @@ export default function MicronutrientTracking() {
                 micronutrientHistory[existingMicroIndex].iron += microData.iron;
                 micronutrientHistory[existingMicroIndex].potassium += microData.potassium;
                 micronutrientHistory[existingMicroIndex].sodium += microData.sodium;
+              } else {
+                micronutrientHistory.push({
+                  date: dateStr,
+                  vitamin_a: microData.vitamin_a,
+                  vitamin_c: microData.vitamin_c,
+                  calcium: microData.calcium,
+                  iron: microData.iron,
+                  potassium: microData.potassium,
+                  sodium: microData.sodium
+                });
               }
               
               if (existingMacroIndex >= 0) {
@@ -318,13 +305,37 @@ export default function MicronutrientTracking() {
                 macronutrientHistory[existingMacroIndex].carbs += macroData.carbs;
                 macronutrientHistory[existingMacroIndex].fat += macroData.fat;
                 macronutrientHistory[existingMacroIndex].fiber += macroData.fiber;
+              } else {
+                macronutrientHistory.push({
+                  date: dateStr,
+                  protein: macroData.protein,
+                  carbs: macroData.carbs,
+                  fat: macroData.fat,
+                  fiber: macroData.fiber
+                });
               }
               
               const existingIds = processedDates.get(dateStr) || [];
               processedDates.set(dateStr, [...existingIds, recipe.id]);
             } else {
-              micronutrientHistory.push(microData);
-              macronutrientHistory.push(macroData);
+              micronutrientHistory.push({
+                date: dateStr,
+                vitamin_a: microData.vitamin_a,
+                vitamin_c: microData.vitamin_c,
+                calcium: microData.calcium,
+                iron: microData.iron,
+                potassium: microData.potassium,
+                sodium: microData.sodium
+              });
+              
+              macronutrientHistory.push({
+                date: dateStr,
+                protein: macroData.protein,
+                carbs: macroData.carbs,
+                fat: macroData.fat,
+                fiber: macroData.fiber
+              });
+              
               processedDates.set(dateStr, [recipe.id]);
             }
             
@@ -333,9 +344,11 @@ export default function MicronutrientTracking() {
             macronutrientHistory.push({...macroData, date: formattedDate});
           }
         });
+        
+        console.log(`Processed ${micronutrientHistory.length} entries for nutrient history`);
       }
       
-      if (micronutrientHistory.length === 0) {
+      if (micronutrientHistory.filter(day => !day.date.includes(":")).length === 0) {
         setNoDataFound(true);
         const today = new Date();
         
@@ -372,6 +385,7 @@ export default function MicronutrientTracking() {
         setNoDataFound(false);
       }
       
+      console.log("Setting history data");
       setMicroHistoryData(micronutrientHistory);
       setMacroHistoryData(macronutrientHistory);
       
@@ -407,6 +421,7 @@ export default function MicronutrientTracking() {
         fiber: calculateMacroAverage('fiber', 'g', 28),
       };
       
+      console.log("Setting averages");
       setMicroAverages(microAvgValues);
       setMacroAverages(macroAvgValues);
       
@@ -418,6 +433,8 @@ export default function MicronutrientTracking() {
         { name: "Potassium", value: microAvgValues.potassium.percentage, fullMark: 100 },
         { name: "Sodium", value: microAvgValues.sodium.percentage, fullMark: 100 },
       ]);
+      
+      console.log("Fetch completed successfully");
       
     } catch (error) {
       console.error("Error fetching nutrient data:", error);
@@ -490,7 +507,36 @@ export default function MicronutrientTracking() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, historyLimit, toast]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    fetchNutrientData();
+    
+    const channel = supabase
+      .channel('recipe_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT', 
+          schema: 'public',
+          table: 'recipes'
+        },
+        (payload) => {
+          console.log("New recipe detected:", payload);
+          fetchNutrientData();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, navigate, historyLimit, refreshKey, fetchNutrientData]);
 
   const loadMoreHistory = () => {
     setHistoryLimit(prev => prev + 7);
@@ -651,7 +697,12 @@ export default function MicronutrientTracking() {
   };
 
   const refreshData = () => {
+    console.log("Manual refresh triggered");
     setRefreshKey(prevKey => prevKey + 1);
+    toast({
+      title: "Refreshing",
+      description: "Updating nutrient data...",
+    });
   };
 
   if (loading) {
@@ -664,7 +715,16 @@ export default function MicronutrientTracking() {
 
   return (
     <div className="bg-background min-h-screen pb-20">
-      <PageHeader title="Nutrient Tracking" />
+      <PageHeader title="Nutrient Tracking">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={refreshData} 
+          className="ml-auto"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      </PageHeader>
 
       <div className="px-6 py-6 space-y-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
