@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -187,7 +188,14 @@ export default function Dashboard() {
     
     fetchNutritionData();
     fetchMicronutrientData();
-    fetchNotifications();
+    
+    // Add a small delay to fetch notifications after initial data load
+    // This ensures we have checked for meal plans and goals first
+    const timer = setTimeout(() => {
+      fetchNotifications();
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [user, navigate]);
 
   const handleAddMeal = () => {
@@ -377,7 +385,7 @@ export default function Dashboard() {
           </div>
           
           <div>
-            <NotificationCard />
+            <NotificationCard message="Welcome to nutrition tracking! Add your first meal to get started." />
             <div className="mt-4">
               <Button 
                 variant="outline" 
