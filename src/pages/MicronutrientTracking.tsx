@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -484,10 +483,13 @@ export default function MicronutrientTracking() {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="pt-4">
-          <div className="grid md:grid-cols-2 gap-6 mb-4">
+        <CardContent className="pt-4 pb-6">
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div className="h-[220px]">
-              <MacronutrientPieChart data={day.averageData.macronutrients} />
+              <MacronutrientPieChart 
+                data={day.averageData.macronutrients} 
+                containerClassName="h-full"
+              />
             </div>
             <div className="h-[220px]">
               <MicronutrientRadarChart 
@@ -497,34 +499,36 @@ export default function MicronutrientTracking() {
             </div>
           </div>
           
-          <Collapsible>
-            <CollapsibleTrigger asChild>
-              <Button 
-                variant="outline" 
-                onClick={() => toggleDayExpanded(day.day)}
-                className="w-full mt-4 flex items-center justify-center gap-1"
-              >
-                {isExpanded ? (
-                  <>Hide Meals <ChevronUp className="h-4 w-4" /></>
-                ) : (
-                  <>Show Meals <ChevronDown className="h-4 w-4" /></>
+          <div className="mt-8 pt-4">
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  onClick={() => toggleDayExpanded(day.day)}
+                  className="w-full mt-4 flex items-center justify-center gap-1"
+                >
+                  {isExpanded ? (
+                    <>Hide Meals <ChevronUp className="h-4 w-4" /></>
+                  ) : (
+                    <>Show Meals <ChevronDown className="h-4 w-4" /></>
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="mt-6">
+                {isExpanded && (
+                  <div className="space-y-2 pt-2">
+                    <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
+                    <ScrollArea className="max-h-[500px]">
+                      <div className="space-y-4 pb-4 pr-2">
+                        {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
+                      </div>
+                    </ScrollArea>
+                  </div>
                 )}
-              </Button>
-            </CollapsibleTrigger>
-            
-            <CollapsibleContent className="mt-4">
-              {isExpanded && (
-                <div className="space-y-2 pt-2">
-                  <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
-                  <ScrollArea className="max-h-[500px]">
-                    <div className="space-y-4 pb-2">
-                      {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         </CardContent>
       </Card>
     );
@@ -593,6 +597,22 @@ export default function MicronutrientTracking() {
                           />
                         </div>
                       </CardContent>
+                      <CardFooter className="pt-0 pb-3 px-6">
+                        <Button
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-xs"
+                          onClick={() => {
+                            setExpandedDays(prev => ({ ...prev, [day.day]: true }));
+                            document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
+                              behavior: 'smooth',
+                              block: 'start'
+                            });
+                          }}
+                        >
+                          View Daily Breakdown
+                        </Button>
+                      </CardFooter>
                     </Card>
                   ))}
                 </div>
@@ -620,12 +640,12 @@ export default function MicronutrientTracking() {
                       <CardHeader className="pb-0">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
-                      <CardContent className="pt-0 pb-0">
+                      <CardContent className="pt-0 pb-4">
                         <div className="h-[180px]">
                           <MacronutrientPieChart data={day.averageData.macronutrients} />
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-2 pb-3 px-6">
+                      <CardFooter className="pt-0 pb-3 px-6">
                         <Button
                           variant="ghost" 
                           size="sm" 

@@ -27,7 +27,7 @@ export function MacroChart({ protein, carbs, fat }: MacroChartProps) {
   const fatOffset = circumference - proteinDash - carbsDash;
 
   return (
-    <div className="relative flex justify-center items-center w-36 h-36">
+    <div className="relative flex justify-center items-center w-36 h-36 mx-auto">
       <svg className="w-full h-full transform -rotate-90">
         <circle 
           cx="72" 

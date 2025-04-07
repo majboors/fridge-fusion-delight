@@ -17,9 +17,10 @@ interface MacronutrientPieChartProps {
     fat: { value: number; percentage: number };
     fiber?: { value: number; percentage: number };
   };
+  containerClassName?: string;
 }
 
-export function MacronutrientPieChart({ data }: MacronutrientPieChartProps) {
+export function MacronutrientPieChart({ data, containerClassName }: MacronutrientPieChartProps) {
   const chartData: MacronutrientData[] = [
     { name: "Protein", value: data.protein.value, percentage: data.protein.percentage, color: "#4ade80" },
     { name: "Carbs", value: data.carbs.value, percentage: data.carbs.percentage, color: "#facc15" },
@@ -36,7 +37,7 @@ export function MacronutrientPieChart({ data }: MacronutrientPieChartProps) {
   }
 
   return (
-    <Card className="h-full">
+    <Card className={`h-full ${containerClassName || ''}`}>
       <CardHeader className="pb-2">
         <CardTitle>Macronutrients</CardTitle>
       </CardHeader>
