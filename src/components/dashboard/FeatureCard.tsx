@@ -9,14 +9,15 @@ interface FeatureCardProps {
   icon: LucideIcon;
   onClick?: () => void;
   route?: string;
+  routeState?: Record<string, any>;
 }
 
-export function FeatureCard({ title, icon: Icon, onClick, route }: FeatureCardProps) {
+export function FeatureCard({ title, icon: Icon, onClick, route, routeState }: FeatureCardProps) {
   const navigate = useNavigate();
   
   const handleClick = () => {
     if (route) {
-      navigate(route);
+      navigate(route, { state: routeState });
     } else if (onClick) {
       onClick();
     }

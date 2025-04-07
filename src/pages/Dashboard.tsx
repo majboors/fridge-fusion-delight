@@ -23,6 +23,7 @@ import { FeatureCard } from "@/components/dashboard/FeatureCard";
 import { NotificationCard } from "@/components/dashboard/NotificationCard";
 import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { NutritionDialog } from "@/components/dashboard/NutritionDialog";
+import { FeatureSelectionDialog } from "@/components/dashboard/FeatureSelectionDialog";
 
 interface NutritionData {
   id: string;
@@ -74,6 +75,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [nutritionAnalysis, setNutritionAnalysis] = useState<NutritionResponseData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [featureDialogOpen, setFeatureDialogOpen] = useState(false);
 
   const fetchNutritionData = async () => {
     if (!user) return;
@@ -138,6 +140,10 @@ export default function Dashboard() {
     
     setNutritionAnalysis(mockNutritionData);
     setIsDialogOpen(true);
+  };
+
+  const handleOpenCalorieCounter = () => {
+    setFeatureDialogOpen(true);
   };
 
   if (loading) {
@@ -259,17 +265,19 @@ export default function Dashboard() {
           <FeatureCard 
             title="Calorie Count" 
             icon={BarChart3} 
-            route="/dashboard"
+            onClick={handleOpenCalorieCounter}
           />
           <FeatureCard 
             title="Macronutrient Details" 
             icon={PieChart} 
             route="/micronutrients"
+            routeState={{ activeTab: "macronutrients" }}
           />
           <FeatureCard 
             title="Micronutrient Tracking" 
             icon={Pill} 
             route="/micronutrients"
+            routeState={{ activeTab: "micronutrients" }}
           />
           <FeatureCard 
             title="Daily Meal Suggestions" 
@@ -311,6 +319,11 @@ export default function Dashboard() {
         onOpenChange={setIsDialogOpen} 
         nutritionData={nutritionAnalysis}
         onMealLogged={fetchNutritionData} 
+      />
+
+      <FeatureSelectionDialog 
+        open={featureDialogOpen}
+        onOpenChange={setFeatureDialogOpen}
       />
 
       <NavigationBar />

@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { MicronutrientRadarChart } from "@/components/dashboard/MicronutrientRadarChart";
 import { MacronutrientPieChart } from "@/components/dashboard/MacronutrientPieChart";
@@ -10,7 +10,6 @@ import { Loader2, Info, ChevronDown, ChevronUp, Settings, Camera } from "lucide-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +58,16 @@ interface MacronutrientAverages {
 }
 
 export default function MicronutrientTracking() {
+  const location = useLocation();
+  const locationState = location.state as { activeTab?: string } | null;
+  const [activeTab, setActiveTab] = useState(locationState?.activeTab || "macronutrients");
+  
+  useEffect(() => {
+    if (locationState?.activeTab) {
+      setActiveTab(locationState.activeTab);
+    }
+  }, [locationState]);
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -439,155 +448,13 @@ export default function MicronutrientTracking() {
       <PageHeader title="Nutrient Tracking" />
 
       <div className="px-6 py-6 space-y-8">
-        <Tabs defaultValue="micro" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="micro">Micronutrients</TabsTrigger>
-            <TabsTrigger value="macro">Macronutrients</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger value="macronutrients">Macronutrients</TabsTrigger>
+            <TabsTrigger value="micronutrients">Micronutrients</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="micro" className="space-y-8">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  Micronutrient Balance <Info className="h-4 w-4 text-muted-foreground" />
-                </CardTitle>
-                <CardDescription>
-                  {noDataFound 
-                    ? "No micronutrient data available. Log your meals to see your data." 
-                    : "Your micronutrient intake summary"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex justify-center">
-                <div className="w-full h-[300px]">
-                  <ChartContainer 
-                    config={{
-                      vitamin_a: { color: "#f97316" },
-                      vitamin_c: { color: "#84cc16" },
-                      calcium: { color: "#06b6d4" },
-                      iron: { color: "#a855f7" },
-                      potassium: { color: "#ec4899" },
-                      sodium: { color: "#64748b" }
-                    }}
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                        <PolarGrid />
-                        <PolarAngleAxis dataKey="name" />
-                        <Radar
-                          name="Micronutrients"
-                          dataKey="value"
-                          stroke="#8884d8"
-                          fill="#8884d8"
-                          fillOpacity={0.6}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
-              </CardContent>
-              {noDataFound && (
-                <CardContent className="pt-0">
-                  <Button 
-                    onClick={navigateToScanPage} 
-                    className="w-full flex items-center justify-center gap-2"
-                  >
-                    <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
-                  </Button>
-                </CardContent>
-              )}
-            </Card>
-
-            <MicronutrientRadarChart data={microAverages} />
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Micronutrient History</CardTitle>
-                <CardDescription>
-                  {noDataFound 
-                    ? "No historical data available. Log your meals to build your nutrition history." 
-                    : "Your daily micronutrient intake based on logged meals"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Date</TableHead>
-                        <TableHead>Vitamin A (mcg)</TableHead>
-                        <TableHead>Vitamin C (mg)</TableHead>
-                        <TableHead>Calcium (mg)</TableHead>
-                        <TableHead>Iron (mg)</TableHead>
-                        <TableHead>Potassium (mg)</TableHead>
-                        <TableHead>Sodium (mg)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {microHistoryData.length > 0 ? (
-                        microHistoryData.map((day) => (
-                          <TableRow key={day.date}>
-                            <TableCell className="font-medium">{day.date}</TableCell>
-                            <TableCell>{day.vitamin_a}</TableCell>
-                            <TableCell>{day.vitamin_c}</TableCell>
-                            <TableCell>{day.calcium}</TableCell>
-                            <TableCell>{day.iron}</TableCell>
-                            <TableCell>{day.potassium}</TableCell>
-                            <TableCell>{day.sodium}</TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-6">
-                            No nutrition data available
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {!noDataFound && totalHistoryCount > 0 && (
-                  <div className="mt-4 flex justify-center space-x-2">
-                    {historyLimit > 7 && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={loadLessHistory}
-                        className="flex items-center gap-1"
-                      >
-                        <ChevronUp className="h-4 w-4" /> Show Less
-                      </Button>
-                    )}
-                    
-                    {historyLimit < totalHistoryCount && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={loadMoreHistory}
-                        className="flex items-center gap-1"
-                      >
-                        <ChevronDown className="h-4 w-4" /> Show More
-                      </Button>
-                    )}
-                  </div>
-                )}
-                
-                {noDataFound && (
-                  <div className="mt-4">
-                    <Button 
-                      onClick={navigateToScanPage} 
-                      className="w-full flex items-center justify-center gap-2"
-                    >
-                      <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="macro" className="space-y-8">
+          <TabsContent value="macronutrients" className="space-y-8">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
@@ -703,6 +570,148 @@ export default function MicronutrientTracking() {
                       ) : (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-6">
+                            No nutrition data available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {!noDataFound && totalHistoryCount > 0 && (
+                  <div className="mt-4 flex justify-center space-x-2">
+                    {historyLimit > 7 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={loadLessHistory}
+                        className="flex items-center gap-1"
+                      >
+                        <ChevronUp className="h-4 w-4" /> Show Less
+                      </Button>
+                    )}
+                    
+                    {historyLimit < totalHistoryCount && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={loadMoreHistory}
+                        className="flex items-center gap-1"
+                      >
+                        <ChevronDown className="h-4 w-4" /> Show More
+                      </Button>
+                    )}
+                  </div>
+                )}
+                
+                {noDataFound && (
+                  <div className="mt-4">
+                    <Button 
+                      onClick={navigateToScanPage} 
+                      className="w-full flex items-center justify-center gap-2"
+                    >
+                      <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="micronutrients" className="space-y-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  Micronutrient Balance <Info className="h-4 w-4 text-muted-foreground" />
+                </CardTitle>
+                <CardDescription>
+                  {noDataFound 
+                    ? "No micronutrient data available. Log your meals to see your data." 
+                    : "Your micronutrient intake summary"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <div className="w-full h-[300px]">
+                  <ChartContainer 
+                    config={{
+                      vitamin_a: { color: "#f97316" },
+                      vitamin_c: { color: "#84cc16" },
+                      calcium: { color: "#06b6d4" },
+                      iron: { color: "#a855f7" },
+                      potassium: { color: "#ec4899" },
+                      sodium: { color: "#64748b" }
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="name" />
+                        <Radar
+                          name="Micronutrients"
+                          dataKey="value"
+                          stroke="#8884d8"
+                          fill="#8884d8"
+                          fillOpacity={0.6}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+              {noDataFound && (
+                <CardContent className="pt-0">
+                  <Button 
+                    onClick={navigateToScanPage} 
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                  </Button>
+                </CardContent>
+              )}
+            </Card>
+
+            <MicronutrientRadarChart data={microAverages} />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Micronutrient History</CardTitle>
+                <CardDescription>
+                  {noDataFound 
+                    ? "No historical data available. Log your meals to build your nutrition history." 
+                    : "Your daily micronutrient intake based on logged meals"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Date</TableHead>
+                        <TableHead>Vitamin A (mcg)</TableHead>
+                        <TableHead>Vitamin C (mg)</TableHead>
+                        <TableHead>Calcium (mg)</TableHead>
+                        <TableHead>Iron (mg)</TableHead>
+                        <TableHead>Potassium (mg)</TableHead>
+                        <TableHead>Sodium (mg)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {microHistoryData.length > 0 ? (
+                        microHistoryData.map((day) => (
+                          <TableRow key={day.date}>
+                            <TableCell className="font-medium">{day.date}</TableCell>
+                            <TableCell>{day.vitamin_a}</TableCell>
+                            <TableCell>{day.vitamin_c}</TableCell>
+                            <TableCell>{day.calcium}</TableCell>
+                            <TableCell>{day.iron}</TableCell>
+                            <TableCell>{day.potassium}</TableCell>
+                            <TableCell>{day.sodium}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-6">
                             No nutrition data available
                           </TableCell>
                         </TableRow>
