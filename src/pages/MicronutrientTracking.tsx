@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -65,6 +66,7 @@ export default function MicronutrientTracking() {
   const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
   const [nutrientHistory, setNutrientHistory] = useState<NutrientData[]>([]);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState('history');
 
   const handleScanSuccess = useCallback(() => {
     console.log("Scan successful, refreshing nutrient data");
@@ -76,6 +78,26 @@ export default function MicronutrientTracking() {
       ...prev,
       [day]: !prev[day]
     }));
+  }, []);
+
+  // Function to switch to history tab and expand a specific day
+  const viewDailyBreakdown = useCallback((day: string) => {
+    setActiveTab('history');
+    setExpandedDays(prev => ({
+      ...prev,
+      [day]: true
+    }));
+    // Add a small delay to ensure tab switch happens before scrolling
+    setTimeout(() => {
+      // Find the day card and scroll to it
+      const dayElement = document.querySelector(`[data-day="${day}"]`);
+      if (dayElement) {
+        dayElement.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
   }, []);
 
   const fetchNutrientData = useCallback(async () => {
@@ -475,7 +497,7 @@ export default function MicronutrientTracking() {
     const isExpanded = expandedDays[day.day] || false;
     
     return (
-      <Card key={index} className="overflow-hidden mb-6">
+      <Card key={index} className="overflow-hidden mb-6" data-day={day.day}>
         <CardHeader className="bg-muted/30 pb-3">
           <CardTitle className="text-lg">{day.day}</CardTitle>
           <CardDescription>
@@ -483,7 +505,7 @@ export default function MicronutrientTracking() {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="pt-4 pb-6">
+        <CardContent className="pt-4 pb-2">
           <div className="grid md:grid-cols-2 gap-6 relative">
             <div className="h-[300px]">
               <MacronutrientPieChart 
@@ -500,7 +522,7 @@ export default function MicronutrientTracking() {
           </div>
         </CardContent>
         
-        <CardFooter className="pt-0 pb-4 px-6 flex justify-center">
+        <CardFooter className="pt-2 pb-4 px-6 flex justify-center">
           <Button 
             variant="highlight" 
             onClick={() => toggleDayExpanded(day.day)}
@@ -508,6 +530,7 @@ export default function MicronutrientTracking() {
             size="xl"
           >
             {isExpanded ? "Hide Meals" : "Show Meals"}
+            {isExpanded ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
           </Button>
         </CardFooter>
         
@@ -534,7 +557,12 @@ export default function MicronutrientTracking() {
       <PageHeader title="Micronutrient Tracking" />
       
       <div className="container px-4 py-6 max-w-6xl">
-        <Tabs defaultValue="history" className="w-full">
+        <Tabs 
+          defaultValue="history" 
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-3 mb-6">
             <TabsTrigger value="history">Tracking History</TabsTrigger>
             <TabsTrigger value="micro">Micronutrients</TabsTrigger>
@@ -597,15 +625,10 @@ export default function MicronutrientTracking() {
                           variant="highlight" 
                           size="xl" 
                           className="w-full"
-                          onClick={() => {
-                            setExpandedDays(prev => ({ ...prev, [day.day]: true }));
-                            document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
-                              behavior: 'smooth',
-                              block: 'start'
-                            });
-                          }}
+                          onClick={() => viewDailyBreakdown(day.day)}
                         >
                           View Daily Breakdown
+                          <ChevronDown className="h-4 w-4 ml-1" />
                         </Button>
                       </CardFooter>
                     </Card>
@@ -645,15 +668,10 @@ export default function MicronutrientTracking() {
                           variant="highlight" 
                           size="xl" 
                           className="w-full"
-                          onClick={() => {
-                            setExpandedDays(prev => ({ ...prev, [day.day]: true }));
-                            document.querySelector('[data-state="active"][value="history"]')?.scrollIntoView({ 
-                              behavior: 'smooth',
-                              block: 'start'
-                            });
-                          }}
+                          onClick={() => viewDailyBreakdown(day.day)}
                         >
                           View Daily Breakdown
+                          <ChevronDown className="h-4 w-4 ml-1" />
                         </Button>
                       </CardFooter>
                     </Card>
