@@ -222,23 +222,46 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         const hour = now.getHours();
         
         // Get meals for today from the meal plan
-        const meals = mealPlans[0].meals;
+        const meals = mealPlans[0].meals as Array<{
+          name: string;
+          time: string;
+          foods: string[];
+        }>;
+        
         if (Array.isArray(meals)) {
           let relevantMeal = null;
           
           // Find appropriate meal based on time of day
           if (hour >= 5 && hour < 10) {
-            relevantMeal = meals.find(m => m.name.toLowerCase().includes('breakfast'));
+            relevantMeal = meals.find(m => 
+              typeof m === 'object' && 
+              m !== null && 
+              'name' in m && 
+              typeof m.name === 'string' && 
+              m.name.toLowerCase().includes('breakfast')
+            );
           } else if (hour >= 11 && hour < 14) {
-            relevantMeal = meals.find(m => m.name.toLowerCase().includes('lunch'));
+            relevantMeal = meals.find(m => 
+              typeof m === 'object' && 
+              m !== null && 
+              'name' in m && 
+              typeof m.name === 'string' && 
+              m.name.toLowerCase().includes('lunch')
+            );
           } else if (hour >= 17 && hour < 21) {
-            relevantMeal = meals.find(m => m.name.toLowerCase().includes('dinner'));
+            relevantMeal = meals.find(m => 
+              typeof m === 'object' && 
+              m !== null && 
+              'name' in m && 
+              typeof m.name === 'string' && 
+              m.name.toLowerCase().includes('dinner')
+            );
           }
           
           // Create notification for the relevant meal if found
           if (relevantMeal) {
-            const mealType = relevantMeal.name.toLowerCase();
-            const notifId = `planned-meal-${mealType}-${now.toISOString().split('T')[0]}`;
+            const mealName = relevantMeal.name.toLowerCase();
+            const notifId = `planned-meal-${mealName}-${now.toISOString().split('T')[0]}`;
             
             // Check if this specific notification already exists
             if (!notifications.some(n => n.id === notifId)) {
