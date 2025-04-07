@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MicronutrientData {
   name: string;
@@ -40,7 +40,6 @@ export function MicronutrientRadarChart({
   const navigate = useNavigate();
   const [detailsOpen, setDetailsOpen] = useState(false);
   
-  // Ensure all values are at least 0, not undefined
   const safeData = {
     vitamin_a: { 
       value: data.vitamin_a?.value || 0, 
@@ -155,7 +154,6 @@ export function MicronutrientRadarChart({
         </CardContent>
       </Card>
 
-      {/* Detailed view dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -193,7 +191,6 @@ export function MicronutrientRadarChart({
   );
 }
 
-// Helper function to get recommended daily values
 function getRecommendedValue(nutrient: string): string {
   switch (nutrient) {
     case "Vitamin A":
