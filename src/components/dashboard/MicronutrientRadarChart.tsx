@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Camera, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface MicronutrientData {
   name: string;
@@ -99,8 +99,8 @@ export function MicronutrientRadarChart({
 
   const cardProps = clickable ? { 
     onClick: handleCardClick,
-    className: "cursor-pointer transition-shadow hover:shadow-md"
-  } : {};
+    className: "cursor-pointer transition-shadow hover:shadow-md h-full"
+  } : { className: "h-full" };
 
   return (
     <>
@@ -116,7 +116,7 @@ export function MicronutrientRadarChart({
             </div>
           )}
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 pb-4">
           {hasNoData ? (
             <div className="text-center py-4 space-y-3">
               <div className="text-muted-foreground">
@@ -132,21 +132,25 @@ export function MicronutrientRadarChart({
               )}
             </div>
           ) : (
-            micronutrients.map((nutrient) => (
-              <div key={nutrient.name} className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>{nutrient.name}</span>
-                  <span>
-                    {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
-                  </span>
-                </div>
-                <Progress 
-                  value={nutrient.percentage} 
-                  className="h-2"
-                  indicatorStyle={{ backgroundColor: nutrient.color }}
-                />
+            <ScrollArea className="h-[160px] pr-4">
+              <div className="space-y-3 pb-2">
+                {micronutrients.map((nutrient) => (
+                  <div key={nutrient.name} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>{nutrient.name}</span>
+                      <span>
+                        {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
+                      </span>
+                    </div>
+                    <Progress 
+                      value={nutrient.percentage} 
+                      className="h-2"
+                      indicatorStyle={{ backgroundColor: nutrient.color }}
+                    />
+                  </div>
+                ))}
               </div>
-            ))
+            </ScrollArea>
           )}
         </CardContent>
       </Card>
@@ -156,6 +160,7 @@ export function MicronutrientRadarChart({
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Micronutrient Details</DialogTitle>
+            <DialogDescription>Detailed breakdown of your micronutrients</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {scanDate && (

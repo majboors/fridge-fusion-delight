@@ -14,7 +14,7 @@ export function MacroChart({ protein, carbs, fat }: MacroChartProps) {
   const fatPercentage = (fat / total) * 100;
 
   // Calculate the strokeDasharray values for the SVG circle
-  const radius = 60;
+  const radius = 50;
   const circumference = 2 * Math.PI * radius;
   
   const proteinDash = (proteinPercentage / 100) * circumference;
@@ -27,35 +27,35 @@ export function MacroChart({ protein, carbs, fat }: MacroChartProps) {
   const fatOffset = circumference - proteinDash - carbsDash;
 
   return (
-    <div className="relative flex justify-center items-center w-36 h-36 mx-auto">
+    <div className="relative flex justify-center items-center w-32 h-32 mx-auto">
       <svg className="w-full h-full transform -rotate-90">
         <circle 
-          cx="72" 
-          cy="72" 
+          cx="64" 
+          cy="64" 
           r={radius} 
           fill="transparent"
           stroke="#4ade80" 
-          strokeWidth="16"
+          strokeWidth="12"
           strokeDasharray={circumference}
           strokeDashoffset={proteinOffset}
         />
         <circle 
-          cx="72" 
-          cy="72" 
+          cx="64" 
+          cy="64" 
           r={radius} 
           fill="transparent"
           stroke="#facc15" 
-          strokeWidth="16"
+          strokeWidth="12"
           strokeDasharray={circumference}
           strokeDashoffset={carbsOffset}
         />
         <circle 
-          cx="72" 
-          cy="72" 
+          cx="64" 
+          cy="64" 
           r={radius} 
           fill="transparent"
           stroke="#60a5fa" 
-          strokeWidth="16"
+          strokeWidth="12"
           strokeDasharray={circumference}
           strokeDashoffset={fatOffset}
         />
