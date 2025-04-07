@@ -41,19 +41,19 @@ export function MacronutrientPieChart({ data }: MacronutrientPieChartProps) {
         <CardTitle>Macronutrients</CardTitle>
       </CardHeader>
       <CardContent className="p-0 pb-2">
-        <div className="h-[160px] w-full">
+        <div className="h-[180px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+            <PieChart margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
                 innerRadius={25}
-                outerRadius={50}
+                outerRadius={45}
                 paddingAngle={2}
                 dataKey="value"
-                label={({ name, percentage }) => `${name} (${percentage}%)`}
-                labelLine={false}
+                label={({ name, percentage }) => `${name} ${percentage}%`}
+                labelLine={{ strokeWidth: 0.5, stroke: '#888' }}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -62,8 +62,9 @@ export function MacronutrientPieChart({ data }: MacronutrientPieChartProps) {
               <Tooltip 
                 formatter={(value, name) => [`${value}g`, name]}
                 labelFormatter={() => ""} 
+                wrapperStyle={{ zIndex: 100 }}
               />
-              <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+              <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: "10px" }} />
             </PieChart>
           </ResponsiveContainer>
         </div>

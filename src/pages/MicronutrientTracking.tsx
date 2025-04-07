@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface NutrientData {
   day: string;
@@ -392,7 +394,7 @@ export default function MicronutrientTracking() {
   );
 
   const renderMeal = (meal, index) => (
-    <Card key={index} className="border border-border/50 overflow-hidden">
+    <Card key={index} className="border border-border/50 overflow-hidden mb-4">
       <CardHeader className="py-3 bg-muted/30">
         <CardTitle className="text-base flex items-center justify-between">
           <span>Meal at {meal.timestamp}</span>
@@ -439,10 +441,10 @@ export default function MicronutrientTracking() {
             <TabsContent value="charts" className="mt-2">
               <ScrollArea className="h-[250px]">
                 <div className="grid gap-4 pb-4">
-                  <div className="h-[160px]">
+                  <div className="h-[200px]">
                     <MacronutrientPieChart data={meal.macronutrients} />
                   </div>
-                  <div className="h-[200px] pt-2">
+                  <div className="h-[240px] pt-2">
                     <MicronutrientRadarChart 
                       data={meal.micronutrients}
                       showScanButton={false}
@@ -453,15 +455,15 @@ export default function MicronutrientTracking() {
             </TabsContent>
           </Tabs>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="h-[200px]">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="h-[220px]">
               <MicronutrientRadarChart 
                 data={meal.micronutrients}
                 showScanButton={false}
                 clickable={true}
               />
             </div>
-            <div className="h-[200px]">
+            <div className="h-[220px]">
               <MacronutrientPieChart data={meal.macronutrients} />
             </div>
           </div>
@@ -474,7 +476,7 @@ export default function MicronutrientTracking() {
     const isExpanded = expandedDays[day.day] || false;
     
     return (
-      <Card key={index} className="overflow-hidden">
+      <Card key={index} className="overflow-hidden mb-6">
         <CardHeader className="bg-muted/30 pb-3">
           <CardTitle className="text-lg">{day.day}</CardTitle>
           <CardDescription>
@@ -483,11 +485,11 @@ export default function MicronutrientTracking() {
         </CardHeader>
         
         <CardContent className="pt-4">
-          <div className="grid md:grid-cols-2 gap-4 mb-4">
-            <div className="h-[200px]">
+          <div className="grid md:grid-cols-2 gap-6 mb-4">
+            <div className="h-[220px]">
               <MacronutrientPieChart data={day.averageData.macronutrients} />
             </div>
-            <div className="h-[200px]">
+            <div className="h-[220px]">
               <MicronutrientRadarChart 
                 data={day.averageData.micronutrients}
                 showScanButton={false}
@@ -495,26 +497,34 @@ export default function MicronutrientTracking() {
             </div>
           </div>
           
-          <Button 
-            variant="outline" 
-            onClick={() => toggleDayExpanded(day.day)}
-            className="w-full mt-2 flex items-center justify-center gap-1"
-          >
-            {isExpanded ? (
-              <>Hide Meals <ChevronUp className="h-4 w-4" /></>
-            ) : (
-              <>Show Meals <ChevronDown className="h-4 w-4" /></>
-            )}
-          </Button>
-          
-          {isExpanded && (
-            <div className="space-y-4 mt-4">
-              <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
-              <div className="space-y-4">
-                {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
-              </div>
-            </div>
-          )}
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="outline" 
+                onClick={() => toggleDayExpanded(day.day)}
+                className="w-full mt-4 flex items-center justify-center gap-1"
+              >
+                {isExpanded ? (
+                  <>Hide Meals <ChevronUp className="h-4 w-4" /></>
+                ) : (
+                  <>Show Meals <ChevronDown className="h-4 w-4" /></>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="mt-4">
+              {isExpanded && (
+                <div className="space-y-2 pt-2">
+                  <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
+                  <ScrollArea className="max-h-[500px]">
+                    <div className="space-y-4 pb-2">
+                      {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
         </CardContent>
       </Card>
     );
@@ -546,7 +556,7 @@ export default function MicronutrientTracking() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : nutrientHistory.length > 0 ? (
-                <div className="space-y-6 pb-16">
+                <div className="space-y-6 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => renderDayCard(day, index))}
                 </div>
               ) : renderNoDataMessage()}
@@ -567,7 +577,7 @@ export default function MicronutrientTracking() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : nutrientHistory.length > 0 ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
                     <Card key={index} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-2">
@@ -604,18 +614,18 @@ export default function MicronutrientTracking() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : nutrientHistory.length > 0 ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
                     <Card key={index} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-0">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 pb-0">
-                        <div className="h-[160px]">
+                        <div className="h-[180px]">
                           <MacronutrientPieChart data={day.averageData.macronutrients} />
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-0 pb-3 px-6">
+                      <CardFooter className="pt-2 pb-3 px-6">
                         <Button
                           variant="ghost" 
                           size="sm" 
