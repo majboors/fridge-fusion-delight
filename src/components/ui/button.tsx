@@ -21,6 +21,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         action: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow",
         soft: "bg-primary/10 text-primary hover:bg-primary/20 font-medium",
+        highlight: "bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium border border-blue-200",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -28,6 +29,7 @@ const buttonVariants = cva(
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
         wide: "h-9 rounded-md px-6 py-2.5",
+        full: "h-10 w-full rounded-md px-4 py-2",
       },
     },
     defaultVariants: {

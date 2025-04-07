@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -483,7 +484,7 @@ export default function MicronutrientTracking() {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="pt-4 pb-3">
+        <CardContent className="pt-4 pb-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="h-[260px]">
               <MacronutrientPieChart 
@@ -500,22 +501,33 @@ export default function MicronutrientTracking() {
               />
             </div>
           </div>
-          
-          <Collapsible open={isExpanded} className="mt-3">
-            <CollapsibleContent className="mt-4">
-              {isExpanded && (
-                <div className="space-y-2 pt-2">
-                  <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
-                  <ScrollArea className="max-h-[500px]">
-                    <div className="space-y-4 pb-4 pr-2">
-                      {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
         </CardContent>
+        
+        <CardFooter className="pt-0 pb-4 px-6 flex justify-center">
+          <Button 
+            variant="highlight" 
+            onClick={() => toggleDayExpanded(day.day)}
+            className="w-full max-w-xs"
+            size="full"
+          >
+            {isExpanded ? "Hide Meals" : "Show Meals"}
+          </Button>
+        </CardFooter>
+        
+        <Collapsible open={isExpanded} className="px-6 pb-4">
+          <CollapsibleContent className="mt-0">
+            {isExpanded && (
+              <div className="space-y-2 pt-2">
+                <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
+                <ScrollArea className="max-h-[500px]">
+                  <div className="space-y-4 pb-4 pr-2">
+                    {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
     );
   };
@@ -569,12 +581,12 @@ export default function MicronutrientTracking() {
               ) : nutrientHistory.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
-                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[320px] flex flex-col">
+                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[380px] flex flex-col">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
                       <CardContent className="pb-3 pt-0 flex-1">
-                        <div className="h-[220px] mb-3">
+                        <div className="h-[280px] mb-3">
                           <MicronutrientRadarChart 
                             data={day.averageData.micronutrients}
                             showScanButton={false}
@@ -585,8 +597,8 @@ export default function MicronutrientTracking() {
                       </CardContent>
                       <CardFooter className="pt-0 pb-4 px-6">
                         <Button
-                          variant="soft" 
-                          size="wide" 
+                          variant="highlight" 
+                          size="full" 
                           className="w-full"
                           onClick={() => {
                             setExpandedDays(prev => ({ ...prev, [day.day]: true }));
@@ -622,19 +634,19 @@ export default function MicronutrientTracking() {
               ) : nutrientHistory.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
-                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[320px] flex flex-col">
+                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[380px] flex flex-col">
                       <CardHeader className="pb-0">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 pb-3 flex-1">
-                        <div className="h-[220px] mb-3">
+                        <div className="h-[280px] mb-3">
                           <MacronutrientPieChart data={day.averageData.macronutrients} />
                         </div>
                       </CardContent>
                       <CardFooter className="pt-0 pb-4 px-6">
                         <Button
-                          variant="soft" 
-                          size="wide" 
+                          variant="highlight" 
+                          size="full" 
                           className="w-full"
                           onClick={() => {
                             setExpandedDays(prev => ({ ...prev, [day.day]: true }));

@@ -168,10 +168,10 @@ export function MicronutrientRadarChart({
       {onToggleExpand && (
         <div className="mt-3 w-full">
           <Button 
-            variant="soft" 
+            variant="highlight"
             onClick={handleToggleExpand}
             className="flex items-center justify-center gap-2 w-full"
-            size="wide"
+            size="full"
           >
             {isExpanded ? "Hide Meals" : "Show Meals"}
           </Button>
