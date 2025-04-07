@@ -1,5 +1,4 @@
-
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -67,6 +66,7 @@ export default function MicronutrientTracking() {
   const [nutrientHistory, setNutrientHistory] = useState<NutrientData[]>([]);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState('history');
+  const mealsEndRef = useRef<HTMLDivElement>(null);
 
   const handleScanSuccess = useCallback(() => {
     console.log("Scan successful, refreshing nutrient data");
@@ -74,28 +74,42 @@ export default function MicronutrientTracking() {
   }, []);
 
   const toggleDayExpanded = useCallback((day: string) => {
-    setExpandedDays(prev => ({
-      ...prev,
-      [day]: !prev[day]
-    }));
+    setExpandedDays(prev => {
+      const newState = {
+        ...prev,
+        [day]: !prev[day]
+      };
+      
+      const isExpanding = newState[day];
+      
+      if (isExpanding) {
+        setTimeout(() => {
+          mealsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+      }
+      
+      return newState;
+    });
   }, []);
 
-  // Function to switch to history tab and expand a specific day
   const viewDailyBreakdown = useCallback((day: string) => {
     setActiveTab('history');
     setExpandedDays(prev => ({
       ...prev,
       [day]: true
     }));
-    // Add a small delay to ensure tab switch happens before scrolling
+    
     setTimeout(() => {
-      // Find the day card and scroll to it
       const dayElement = document.querySelector(`[data-day="${day}"]`);
       if (dayElement) {
         dayElement.scrollIntoView({ 
           behavior: 'smooth',
           block: 'start'
         });
+        
+        setTimeout(() => {
+          mealsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 500);
       }
     }, 100);
   }, []);
@@ -460,12 +474,12 @@ export default function MicronutrientTracking() {
             </TabsContent>
             
             <TabsContent value="charts" className="mt-2">
-              <ScrollArea className="h-[220px]">
+              <ScrollArea className="h-[250px]">
                 <div className="grid gap-4 pb-4">
-                  <div className="h-[180px]">
+                  <div className="h-[200px]">
                     <MacronutrientPieChart data={meal.macronutrients} />
                   </div>
-                  <div className="h-[220px] pt-2">
+                  <div className="h-[240px] pt-2">
                     <MicronutrientRadarChart 
                       data={meal.micronutrients}
                       showScanButton={false}
@@ -477,14 +491,14 @@ export default function MicronutrientTracking() {
           </Tabs>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-[220px]">
+            <div className="h-[240px]">
               <MicronutrientRadarChart 
                 data={meal.micronutrients}
                 showScanButton={false}
                 clickable={true}
               />
             </div>
-            <div className="h-[220px]">
+            <div className="h-[240px]">
               <MacronutrientPieChart data={meal.macronutrients} />
             </div>
           </div>
@@ -507,13 +521,13 @@ export default function MicronutrientTracking() {
         
         <CardContent className="pt-4 pb-2">
           <div className="grid md:grid-cols-2 gap-6 relative">
-            <div className="h-[300px]">
+            <div className="h-[320px]">
               <MacronutrientPieChart 
                 data={day.averageData.macronutrients} 
                 containerClassName="h-full"
               />
             </div>
-            <div className="h-[300px]">
+            <div className="h-[320px]">
               <MicronutrientRadarChart 
                 data={day.averageData.micronutrients}
                 showScanButton={false}
@@ -539,9 +553,10 @@ export default function MicronutrientTracking() {
             {isExpanded && (
               <div className="space-y-2 pt-2">
                 <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
-                <ScrollArea className="max-h-[500px]">
+                <ScrollArea className="max-h-[600px]">
                   <div className="space-y-4 pb-4 pr-2">
                     {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
+                    <div ref={mealsEndRef} />
                   </div>
                 </ScrollArea>
               </div>
@@ -606,12 +621,12 @@ export default function MicronutrientTracking() {
               ) : nutrientHistory.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
-                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[420px] flex flex-col">
+                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[450px] flex flex-col">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
                       <CardContent className="pb-3 pt-0 flex-1">
-                        <div className="h-[320px] mb-3">
+                        <div className="h-[350px] mb-3">
                           <MicronutrientRadarChart 
                             data={day.averageData.micronutrients}
                             showScanButton={false}
@@ -654,12 +669,12 @@ export default function MicronutrientTracking() {
               ) : nutrientHistory.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-16 pr-4">
                   {nutrientHistory.map((day, index) => (
-                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[420px] flex flex-col">
+                    <Card key={index} className="hover:shadow-md transition-shadow min-h-[450px] flex flex-col">
                       <CardHeader className="pb-0">
                         <CardTitle className="text-lg">{day.day}</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 pb-3 flex-1">
-                        <div className="h-[320px] mb-3">
+                        <div className="h-[350px] mb-3">
                           <MacronutrientPieChart data={day.averageData.macronutrients} />
                         </div>
                       </CardContent>

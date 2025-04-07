@@ -41,8 +41,8 @@ export function MacronutrientPieChart({ data, containerClassName }: Macronutrien
       <CardHeader className="pb-2">
         <CardTitle>Macronutrients</CardTitle>
       </CardHeader>
-      <CardContent className="p-0 pb-4">
-        <div className="h-[200px] w-full">
+      <CardContent className="p-0 pb-4 flex-1 flex flex-col">
+        <div className="flex-1 min-h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 0, right: 0, bottom: 20, left: 0 }}>
               <Pie

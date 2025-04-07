@@ -114,7 +114,7 @@ export function MicronutrientRadarChart({
 
   return (
     <div className="flex flex-col h-full">
-      <Card {...cardProps} className={`${cardProps.className} flex-1`}>
+      <Card {...cardProps} className={`${cardProps.className} flex-1 flex flex-col`}>
         <CardHeader className="pb-2">
           <CardTitle className="flex justify-between items-center">
             <span>Micronutrients</span>
@@ -126,23 +126,23 @@ export function MicronutrientRadarChart({
             </div>
           )}
         </CardHeader>
-        <CardContent className="space-y-3 pb-4 h-[calc(100%-80px)] min-h-[240px]">
+        <CardContent className="space-y-3 pb-4 flex-1 flex flex-col overflow-hidden">
           {hasNoData ? (
-            <div className="text-center py-4 space-y-3">
+            <div className="text-center py-4 space-y-3 flex-1 flex flex-col justify-center">
               <div className="text-muted-foreground">
                 No micronutrient data available
               </div>
               {showScanButton && (
                 <Button 
                   onClick={handleScanButtonClick} 
-                  className="flex items-center justify-center gap-2"
+                  className="flex items-center justify-center gap-2 mx-auto"
                 >
                   <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
                 </Button>
               )}
             </div>
           ) : (
-            <ScrollArea className="h-full pr-4">
+            <ScrollArea className="flex-1 pr-4">
               <div className="space-y-3 pb-2">
                 {micronutrients.map((nutrient) => (
                   <div key={nutrient.name} className="space-y-1">
