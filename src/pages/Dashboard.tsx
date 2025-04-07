@@ -24,7 +24,7 @@ const Dashboard = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { notifications } = useNotifications();
-  const [isMobile] = useIsMobile();
+  const isMobile = useIsMobile();
   const [showFeatureDialog, setShowFeatureDialog] = useState(false);
   const [totalCalories, setTotalCalories] = useState(0);
   const [calorieGoal, setCalorieGoal] = useState(2000);
@@ -32,10 +32,10 @@ const Dashboard = () => {
   const [carbs, setCarbs] = useState(0);
   const [fat, setFat] = useState(0);
   const [calorieBreakdown, setCalorieBreakdown] = useState([
-    { label: "Breakfast", value: 300 },
-    { label: "Lunch", value: 500 },
-    { label: "Dinner", value: 800 },
-    { label: "Snacks", value: 400 },
+    { name: "Breakfast", calories: 300, percentage: 15 },
+    { name: "Lunch", calories: 500, percentage: 25 },
+    { name: "Dinner", calories: 800, percentage: 40 },
+    { name: "Snacks", calories: 400, percentage: 20 },
   ]);
   const [achievements, setAchievements] = useState([
     { name: "First Entry", description: "Logged your first meal", achieved: true },
@@ -101,7 +101,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <PageHeader />
+      <PageHeader title="Dashboard" />
       
       <div className="flex flex-grow p-4">
         <div className="w-full max-w-7xl mx-auto flex">
@@ -119,7 +119,7 @@ const Dashboard = () => {
                   <Card className="bg-white shadow-md">
                     <div className="p-6">
                       <h2 className="text-lg font-semibold mb-4">Daily Calories</h2>
-                      <CalorieGauge value={totalCalories} max={calorieGoal} />
+                      <CalorieGauge calories={totalCalories} dailyGoal={calorieGoal} />
                       <div className="mt-4">
                         <p className="text-sm text-gray-500">
                           Track your daily calorie intake to reach your goals.
@@ -183,7 +183,7 @@ const Dashboard = () => {
                   <h2 className="text-xl font-semibold mb-4">Calorie Breakdown</h2>
                   <Card className="bg-white shadow-md">
                     <div className="p-6">
-                      <CalorieBreakdownChart />
+                      <CalorieBreakdownChart items={calorieBreakdown} />
                     </div>
                   </Card>
                 </div>
@@ -198,7 +198,11 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   {notifications.length > 0 ? (
                     notifications.map((notification) => (
-                      <NotificationCard key={notification.id} notification={notification} />
+                      <NotificationCard 
+                        key={notification.id} 
+                        message={notification.message}
+                        filterType={notification.type}
+                      />
                     ))
                   ) : (
                     <Card className="bg-white shadow-md p-4">
@@ -222,6 +226,7 @@ const Dashboard = () => {
       <FeatureSelectionDialog
         open={showFeatureDialog}
         onOpenChange={setShowFeatureDialog}
+        featureType={null}
         onSuccess={handleLogNutritionSuccess}
       />
     </div>
