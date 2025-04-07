@@ -63,10 +63,13 @@ export function MacroChart({ protein, carbs, fat }: MacroChartProps) {
       
       <div className="absolute flex flex-col items-center justify-center text-center">
         <div className="font-semibold text-sm text-gray-900">
-          {protein}g
+          {protein}g P
         </div>
         <div className="text-primary text-base font-bold">
-          {carbs}g
+          {carbs}g C
+        </div>
+        <div className="font-semibold text-sm text-blue-500">
+          {fat}g F
         </div>
       </div>
     </div>

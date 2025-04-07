@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MacronutrientPieChart } from "@/components/dashboard/MacronutrientPieChart";
 import { MicronutrientRadarChart } from "@/components/dashboard/MicronutrientRadarChart";
 import { Button } from "@/components/ui/button";
-import { Camera, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Camera, ChevronDown, ChevronUp, Loader2, ChartPie } from "lucide-react";
 import { CameraOptionsDialog } from "@/components/dashboard/CameraOptionsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -73,6 +73,17 @@ export default function MicronutrientTracking() {
     setRefreshKey(prev => prev + 1);
   }, []);
 
+  const scrollToMealsEnd = useCallback(() => {
+    setTimeout(() => {
+      if (mealsEndRef.current) {
+        mealsEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 500);
+  }, []);
+
   const toggleDayExpanded = useCallback((day: string) => {
     setExpandedDays(prev => {
       const newState = {
@@ -83,14 +94,12 @@ export default function MicronutrientTracking() {
       const isExpanding = newState[day];
       
       if (isExpanding) {
-        setTimeout(() => {
-          mealsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 300);
+        scrollToMealsEnd();
       }
       
       return newState;
     });
-  }, []);
+  }, [scrollToMealsEnd]);
 
   const viewDailyBreakdown = useCallback((day: string) => {
     setActiveTab('history');
@@ -107,12 +116,10 @@ export default function MicronutrientTracking() {
           block: 'start'
         });
         
-        setTimeout(() => {
-          mealsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 500);
+        scrollToMealsEnd();
       }
     }, 100);
-  }, []);
+  }, [scrollToMealsEnd]);
 
   const fetchNutrientData = useCallback(async () => {
     if (!user) return;
@@ -474,12 +481,12 @@ export default function MicronutrientTracking() {
             </TabsContent>
             
             <TabsContent value="charts" className="mt-2">
-              <ScrollArea className="h-[250px]">
+              <ScrollArea className="h-[280px]">
                 <div className="grid gap-4 pb-4">
-                  <div className="h-[200px]">
+                  <div className="h-[250px]">
                     <MacronutrientPieChart data={meal.macronutrients} />
                   </div>
-                  <div className="h-[240px] pt-2">
+                  <div className="h-[250px] pt-2">
                     <MicronutrientRadarChart 
                       data={meal.micronutrients}
                       showScanButton={false}
@@ -491,14 +498,14 @@ export default function MicronutrientTracking() {
           </Tabs>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-[240px]">
+            <div className="h-[280px]">
               <MicronutrientRadarChart 
                 data={meal.micronutrients}
                 showScanButton={false}
                 clickable={true}
               />
             </div>
-            <div className="h-[240px]">
+            <div className="h-[280px]">
               <MacronutrientPieChart data={meal.macronutrients} />
             </div>
           </div>
@@ -556,7 +563,7 @@ export default function MicronutrientTracking() {
                 <ScrollArea className="max-h-[600px]">
                   <div className="space-y-4 pb-4 pr-2">
                     {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
-                    <div ref={mealsEndRef} />
+                    <div ref={mealsEndRef} className="py-1" />
                   </div>
                 </ScrollArea>
               </div>
@@ -642,6 +649,7 @@ export default function MicronutrientTracking() {
                           className="w-full"
                           onClick={() => viewDailyBreakdown(day.day)}
                         >
+                          <ChartPie className="h-4 w-4 mr-1" />
                           View Daily Breakdown
                           <ChevronDown className="h-4 w-4 ml-1" />
                         </Button>
@@ -685,6 +693,7 @@ export default function MicronutrientTracking() {
                           className="w-full"
                           onClick={() => viewDailyBreakdown(day.day)}
                         >
+                          <ChartPie className="h-4 w-4 mr-1" />
                           View Daily Breakdown
                           <ChevronDown className="h-4 w-4 ml-1" />
                         </Button>
