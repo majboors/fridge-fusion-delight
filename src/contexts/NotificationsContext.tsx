@@ -73,90 +73,75 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     
     const generateTimeBasedNotifications = async () => {
       const hour = new Date().getHours();
-      let mealType = "";
-      let mealTime = "";
-      let actionMessage = "";
       
-      // Determine meal type based on time of day
-      if (hour >= 5 && hour < 10) {
-        mealType = "breakfast";
-        mealTime = "8:00 AM";
-        actionMessage = "Log your breakfast";
-      } else if (hour >= 11 && hour < 14) {
-        mealType = "lunch";
-        mealTime = "12:00 PM";
-        actionMessage = "Log your lunch";
-      } else if (hour >= 17 && hour < 21) {
-        mealType = "dinner";
-        mealTime = "7:00 PM";
-        actionMessage = "Log your dinner";
-      }
-      
-      // Only add notification if a mealType was determined
-      if (mealType) {
-        const notifId = `meal-reminder-${mealType}-${new Date().toISOString().split('T')[0]}`;
+      try {
+        // Fetch the most recent meal plan for this user
+        const { data: mealPlans, error } = await supabase
+          .from('meal_plans')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+          
+        if (error) {
+          console.error('Error fetching meal plans:', error);
+          return;
+        }
         
-        // Check if this specific notification already exists
-        if (!hasNotificationWithId(notifId)) {
-          const capitalizedMealType = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+        if (mealPlans && mealPlans.length > 0 && mealPlans[0].meals) {
+          const meals = mealPlans[0].meals as any[];
           
-          // First check if user has a meal plan
-          const { data: mealPlans, error } = await supabase
-            .from('meal_plans')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1);
-            
-          if (error) {
-            console.error('Error checking meal plans:', error);
-            // Default notification if error or no meal plan
-            addNotification({
-              id: notifId,
-              message: `Don't forget to ${actionMessage.toLowerCase()}!`,
-              type: "meal",
-              time: mealTime
-            });
-            return;
-          }
-          
-          // Generate notification based on meal plan if it exists
-          if (mealPlans && mealPlans.length > 0 && mealPlans[0].meals) {
-            // Find the specific meal from the meal plan
-            try {
-              const meals = mealPlans[0].meals as any[];
-              let relevantMeal = null;
-              
-              if (Array.isArray(meals)) {
-                // Find meal based on type
-                relevantMeal = meals.find(m => 
-                  typeof m === 'object' && 
-                  m !== null && 
-                  'name' in m && 
-                  typeof m.name === 'string' && 
-                  m.name.toLowerCase().includes(mealType)
-                );
+          if (Array.isArray(meals)) {
+            // Process all meals in the meal plan
+            for (const meal of meals) {
+              if (typeof meal === 'object' && meal !== null && 'name' in meal && 'time' in meal && 'foods' in meal) {
+                // Generate a unique ID for this meal notification
+                const mealName = meal.name.toLowerCase();
+                const notifId = `meal-reminder-${mealName}-${new Date().toISOString().split('T')[0]}`;
                 
-                if (relevantMeal && 'foods' in relevantMeal && Array.isArray(relevantMeal.foods)) {
+                // Only add if this notification doesn't already exist
+                if (!hasNotificationWithId(notifId)) {
+                  const mealTime = meal.time;
+                  const formattedFoods = Array.isArray(meal.foods) ? meal.foods.join(', ') : '';
+                  
                   addNotification({
                     id: notifId,
-                    message: `${capitalizedMealType} time: Save your ${mealType} - ${relevantMeal.foods.join(', ')}`,
-                    type: "meal",
-                    time: relevantMeal.time || mealTime
-                  });
-                } else {
-                  // Fallback if no matching meal found
-                  addNotification({
-                    id: notifId,
-                    message: `Don't forget to ${actionMessage.toLowerCase()}!`,
+                    message: `${meal.name} time: ${formattedFoods}`,
                     type: "meal",
                     time: mealTime
                   });
                 }
               }
-            } catch (e) {
-              console.error('Error parsing meal plan:', e);
-              // Fallback notification
+            }
+          }
+        } else {
+          // No meal plan, generate default meal notifications based on time
+          let mealType = "";
+          let mealTime = "";
+          let actionMessage = "";
+          
+          // Determine meal type based on time of day
+          if (hour >= 5 && hour < 10) {
+            mealType = "breakfast";
+            mealTime = "8:00 AM";
+            actionMessage = "Log your breakfast";
+          } else if (hour >= 11 && hour < 14) {
+            mealType = "lunch";
+            mealTime = "12:00 PM";
+            actionMessage = "Log your lunch";
+          } else if (hour >= 17 && hour < 21) {
+            mealType = "dinner";
+            mealTime = "7:00 PM";
+            actionMessage = "Log your dinner";
+          }
+          
+          // Only add notification if a mealType was determined
+          if (mealType) {
+            const notifId = `meal-reminder-${mealType}-${new Date().toISOString().split('T')[0]}`;
+            
+            if (!hasNotificationWithId(notifId)) {
+              const capitalizedMealType = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+              
               addNotification({
                 id: notifId,
                 message: `Don't forget to ${actionMessage.toLowerCase()}!`,
@@ -164,67 +149,61 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
                 time: mealTime
               });
             }
-          } else {
-            // No meal plan found - send default notification
-            addNotification({
-              id: notifId,
-              message: `Don't forget to ${actionMessage.toLowerCase()}!`,
-              type: "meal",
-              time: mealTime
-            });
           }
         }
-      }
-      
-      // Check for meal plan once per day
-      if (!hasNotificationByTypeToday("goal")) {
-        try {
-          // Check if user has a meal plan
-          const { data: mealPlans, error } = await supabase
-            .from('meal_plans')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          
-          if (error) throw error;
-          
-          if (!mealPlans || mealPlans.length === 0) {
-            // No meal plan, remind user to create one
-            addNotification({
-              message: "Create a meal plan to track your nutrition goals better!",
-              type: "goal"
-            });
-          } else {
-            // User has a meal plan, check their goal progress
-            const { data: nutritionData, error: nutritionError } = await supabase
-              .from('nutrition_data')
+        
+        // Check for goal notifications once per day
+        if (!hasNotificationByTypeToday("goal")) {
+          try {
+            // Check if user has a meal plan
+            const { data: mealPlans, error } = await supabase
+              .from('meal_plans')
               .select('*')
               .eq('user_id', user.id)
-              .eq('date', new Date().toISOString().split('T')[0])
-              .maybeSingle();
-              
-            if (nutritionError) {
-              console.error('Error fetching nutrition data:', nutritionError);
-              return;
-            }
+              .order('created_at', { ascending: false })
+              .limit(1);
             
-            if (nutritionData) {
-              // Calculate how far they are from their protein goal
-              const proteinPercentage = Math.round((nutritionData.protein_consumed / nutritionData.protein_goal) * 100);
+            if (error) throw error;
+            
+            if (!mealPlans || mealPlans.length === 0) {
+              // No meal plan, remind user to create one
+              addNotification({
+                message: "Create a meal plan to track your nutrition goals better!",
+                type: "goal"
+              });
+            } else {
+              // User has a meal plan, check their goal progress
+              const { data: nutritionData, error: nutritionError } = await supabase
+                .from('nutrition_data')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('date', new Date().toISOString().split('T')[0])
+                .maybeSingle();
+                
+              if (nutritionError) {
+                console.error('Error fetching nutrition data:', nutritionError);
+                return;
+              }
               
-              if (proteinPercentage < 80) {
-                const remaining = 100 - proteinPercentage;
-                addNotification({
-                  message: `You're ${remaining}% away from your protein goal today`,
-                  type: "goal"
-                });
+              if (nutritionData) {
+                // Calculate how far they are from their protein goal
+                const proteinPercentage = Math.round((nutritionData.protein_consumed / nutritionData.protein_goal) * 100);
+                
+                if (proteinPercentage < 80) {
+                  const remaining = 100 - proteinPercentage;
+                  addNotification({
+                    message: `You're ${remaining}% away from your protein goal today`,
+                    type: "goal"
+                  });
+                }
               }
             }
+          } catch (error) {
+            console.error('Error checking meal plans:', error);
           }
-        } catch (error) {
-          console.error('Error checking meal plans:', error);
         }
+      } catch (error) {
+        console.error('Error generating notifications:', error);
       }
     };
     
@@ -275,6 +254,52 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
           if (prev.some(n => n.id === goalNotification.id)) return prev;
           return [...prev, goalNotification];
         });
+      }
+      
+      // Fetch meal plans to generate notifications
+      const { data: mealPlans, error: mealPlansError } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+      if (mealPlansError) {
+        console.error('Error fetching meal plans:', mealPlansError);
+        return;
+      }
+      
+      if (mealPlans && mealPlans.length > 0 && mealPlans[0].meals) {
+        const meals = mealPlans[0].meals as any[];
+        
+        if (Array.isArray(meals)) {
+          // Process each meal to create a notification
+          meals.forEach(meal => {
+            if (typeof meal === 'object' && meal !== null && 'name' in meal && 'time' in meal && 'foods' in meal) {
+              const mealName = meal.name.toLowerCase();
+              const notifId = `meal-reminder-${mealName}-${new Date().toISOString().split('T')[0]}`;
+              
+              if (!hasNotificationWithId(notifId)) {
+                const mealTime = meal.time;
+                const formattedFoods = Array.isArray(meal.foods) ? meal.foods.join(', ') : '';
+                
+                const mealNotification: Notification = {
+                  id: notifId,
+                  message: `${meal.name} time: ${formattedFoods}`,
+                  type: "meal",
+                  time: mealTime,
+                  isRead: false,
+                  createdAt: new Date().toISOString()
+                };
+                
+                setNotifications(prev => {
+                  if (prev.some(n => n.id === notifId)) return prev;
+                  return [mealNotification, ...prev];
+                });
+              }
+            }
+          });
+        }
       }
     } catch (error) {
       console.error('Error in fetchNotifications:', error);

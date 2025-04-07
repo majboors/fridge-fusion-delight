@@ -14,11 +14,12 @@ import { Badge } from "@/components/ui/badge";
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
-      // When opening, don't automatically mark as read
+      // Refresh notifications when opening the panel
+      fetchNotifications();
       setOpen(true);
     } else {
       setOpen(false);
