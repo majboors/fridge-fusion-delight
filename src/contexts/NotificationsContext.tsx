@@ -41,6 +41,11 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     );
   };
 
+  // Helper to check if a specific notification ID already exists
+  const hasNotificationWithId = (id: string) => {
+    return notifications.some(n => n.id === id);
+  };
+
   // Fetch notifications from local storage initially and then from Supabase
   useEffect(() => {
     const loadLocalNotifications = () => {
@@ -70,17 +75,21 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
       const hour = new Date().getHours();
       let mealType = "";
       let mealTime = "";
+      let actionMessage = "";
       
       // Determine meal type based on time of day
       if (hour >= 5 && hour < 10) {
         mealType = "breakfast";
         mealTime = "8:00 AM";
+        actionMessage = "Log your breakfast";
       } else if (hour >= 11 && hour < 14) {
         mealType = "lunch";
         mealTime = "12:00 PM";
+        actionMessage = "Log your lunch";
       } else if (hour >= 17 && hour < 21) {
         mealType = "dinner";
         mealTime = "7:00 PM";
+        actionMessage = "Log your dinner";
       }
       
       // Only add notification if a mealType was determined and a similar notification hasn't been added today
@@ -88,11 +97,11 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         const notifId = `meal-reminder-${mealType}-${new Date().toISOString().split('T')[0]}`;
         
         // Check if this specific notification already exists
-        if (!notifications.some(n => n.id === notifId)) {
+        if (!hasNotificationWithId(notifId)) {
           const capitalizedMealType = mealType.charAt(0).toUpperCase() + mealType.slice(1);
           addNotification({
             id: notifId,
-            message: `Don't forget to log your ${mealType}!`,
+            message: `Don't forget to ${actionMessage.toLowerCase()}!`,
             type: "meal",
             time: mealTime
           });
@@ -230,6 +239,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         
         if (Array.isArray(meals)) {
           let relevantMeal = null;
+          let mealAction = "";
           
           // Find appropriate meal based on time of day
           if (hour >= 5 && hour < 10) {
@@ -240,6 +250,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
               typeof m.name === 'string' && 
               m.name.toLowerCase().includes('breakfast')
             );
+            mealAction = "Save your breakfast";
           } else if (hour >= 11 && hour < 14) {
             relevantMeal = meals.find(m => 
               typeof m === 'object' && 
@@ -248,6 +259,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
               typeof m.name === 'string' && 
               m.name.toLowerCase().includes('lunch')
             );
+            mealAction = "Save your lunch";
           } else if (hour >= 17 && hour < 21) {
             relevantMeal = meals.find(m => 
               typeof m === 'object' && 
@@ -256,6 +268,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
               typeof m.name === 'string' && 
               m.name.toLowerCase().includes('dinner')
             );
+            mealAction = "Save your dinner";
           }
           
           // Create notification for the relevant meal if found
@@ -267,7 +280,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
             if (!notifications.some(n => n.id === notifId)) {
               addNotification({
                 id: notifId,
-                message: `Time for ${relevantMeal.name}: ${relevantMeal.foods.join(', ')}`,
+                message: `${mealAction}: ${relevantMeal.foods.join(', ')}`,
                 type: "meal",
                 time: relevantMeal.time
               });
