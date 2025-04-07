@@ -22,6 +22,7 @@ export function NotificationCard({
   const { notifications, markAsRead } = useNotifications();
   
   // Filter notifications if filterType is provided (e.g., "meal")
+  // Note: We don't filter by time/date for meal notifications
   const filteredNotifications = filterType 
     ? notifications.filter(n => n.type === filterType)
     : notifications;
