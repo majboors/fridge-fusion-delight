@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -154,6 +155,7 @@ export default function MicronutrientTracking() {
       
       console.log(`Fetched ${recipes?.length || 0} recipes for nutrient data`);
 
+      // Initialize with empty arrays
       const micronutrientHistory: MicronutrientHistory[] = [];
       const macronutrientHistory: MacronutrientHistory[] = [];
       
@@ -173,14 +175,21 @@ export default function MicronutrientTracking() {
         fiber: { total: 0, count: 0 },
       };
       
-      const processedDates = new Map(); // Changed to Map to store recipe IDs per date
+      // Track dates to aggregate data by day
+      const processedDates = new Map();
+      const dailyData = new Map<string, {
+        micro: MicronutrientHistory,
+        macro: MacronutrientHistory
+      }>();
       
       if (recipes && recipes.length > 0) {
         recipes.forEach(recipe => {
           const dateStr = new Date(recipe.created_at).toISOString().split('T')[0];
+          const formattedDate = new Date(recipe.created_at).toLocaleString();
           
-          let microData = {
-            date: dateStr,
+          // Initialize empty data structures for this recipe
+          let microData: MicronutrientHistory = {
+            date: formattedDate,
             vitamin_a: 0,
             vitamin_c: 0,
             calcium: 0,
@@ -190,8 +199,8 @@ export default function MicronutrientTracking() {
             recipe_id: recipe.id
           };
           
-          let macroData = {
-            date: dateStr,
+          let macroData: MacronutrientHistory = {
+            date: formattedDate,
             protein: 0,
             carbs: 0,
             fat: 0,
@@ -199,165 +208,153 @@ export default function MicronutrientTracking() {
             recipe_id: recipe.id
           };
           
-          if (recipe.steps && Array.isArray(recipe.steps)) {
-            recipe.steps.forEach(step => {
-              const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg/i);
-              if (vitaminAMatch) {
-                microData.vitamin_a = parseFloat(vitaminAMatch[1]);
-                micronutrientTotals.vitamin_a.total += microData.vitamin_a;
-                micronutrientTotals.vitamin_a.count += 1;
-              }
-              
-              const vitaminCMatch = step.match(/Vitamin C:?\s*(\d+\.?\d*)\s*mg/i);
-              if (vitaminCMatch) {
-                microData.vitamin_c = parseFloat(vitaminCMatch[1]);
-                micronutrientTotals.vitamin_c.total += microData.vitamin_c;
-                micronutrientTotals.vitamin_c.count += 1;
-              }
-              
-              const calciumMatch = step.match(/Calcium:?\s*(\d+\.?\d*)\s*mg/i);
-              if (calciumMatch) {
-                microData.calcium = parseFloat(calciumMatch[1]);
-                micronutrientTotals.calcium.total += microData.calcium;
-                micronutrientTotals.calcium.count += 1;
-              }
-              
-              const ironMatch = step.match(/Iron:?\s*(\d+\.?\d*)\s*mg/i);
-              if (ironMatch) {
-                microData.iron = parseFloat(ironMatch[1]);
-                micronutrientTotals.iron.total += microData.iron;
-                micronutrientTotals.iron.count += 1;
-              }
-              
-              const potassiumMatch = step.match(/Potassium:?\s*(\d+\.?\d*)\s*mg/i);
-              if (potassiumMatch) {
-                microData.potassium = parseFloat(potassiumMatch[1]);
-                micronutrientTotals.potassium.total += microData.potassium;
-                micronutrientTotals.potassium.count += 1;
-              }
-              
-              const sodiumMatch = step.match(/Sodium:?\s*(\d+\.?\d*)\s*mg/i);
-              if (sodiumMatch) {
-                microData.sodium = parseFloat(sodiumMatch[1]);
-                micronutrientTotals.sodium.total += microData.sodium;
-                micronutrientTotals.sodium.count += 1;
-              }
-              
-              const proteinMatch = step.match(/Protein:?\s*(\d+\.?\d*)\s*g/i);
-              if (proteinMatch) {
-                macroData.protein = parseFloat(proteinMatch[1]);
-                macronutrientTotals.protein.total += macroData.protein;
-                macronutrientTotals.protein.count += 1;
-              }
-              
-              const carbsMatch = step.match(/Carbs:?\s*(\d+\.?\d*)\s*g/i);
-              if (carbsMatch) {
-                macroData.carbs = parseFloat(carbsMatch[1]);
-                macronutrientTotals.carbs.total += macroData.carbs;
-                macronutrientTotals.carbs.count += 1;
-              }
-              
-              const fatMatch = step.match(/Fat:?\s*(\d+\.?\d*)\s*g/i);
-              if (fatMatch) {
-                macroData.fat = parseFloat(fatMatch[1]);
-                macronutrientTotals.fat.total += macroData.fat;
-                macronutrientTotals.fat.count += 1;
-              }
-              
-              const fiberMatch = step.match(/Fiber:?\s*(\d+\.?\d*)\s*g/i);
-              if (fiberMatch) {
-                macroData.fiber = parseFloat(fiberMatch[1]);
-                macronutrientTotals.fiber.total += macroData.fiber;
-                macronutrientTotals.fiber.count += 1;
+          // Initialize daily aggregates if they don't exist yet
+          if (!dailyData.has(dateStr)) {
+            dailyData.set(dateStr, {
+              micro: {
+                date: dateStr,
+                vitamin_a: 0,
+                vitamin_c: 0,
+                calcium: 0,
+                iron: 0,
+                potassium: 0,
+                sodium: 0
+              },
+              macro: {
+                date: dateStr,
+                protein: 0,
+                carbs: 0,
+                fat: 0,
+                fiber: 0
               }
             });
           }
           
+          if (recipe.steps && Array.isArray(recipe.steps)) {
+            // More precise regex patterns to match nutrient values
+            const extractNutrients = (steps: string[]) => {
+              for (const step of steps) {
+                // Micronutrients
+                const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg\s*\(?(\d+\.?\d*)%\)?/i);
+                if (vitaminAMatch) {
+                  microData.vitamin_a = parseFloat(vitaminAMatch[1]);
+                  dailyData.get(dateStr)!.micro.vitamin_a += microData.vitamin_a;
+                  micronutrientTotals.vitamin_a.total += microData.vitamin_a;
+                  micronutrientTotals.vitamin_a.count += 1;
+                }
+                
+                const vitaminCMatch = step.match(/Vitamin C:?\s*(\d+\.?\d*)\s*mg\s*\(?(\d+\.?\d*)%\)?/i);
+                if (vitaminCMatch) {
+                  microData.vitamin_c = parseFloat(vitaminCMatch[1]);
+                  dailyData.get(dateStr)!.micro.vitamin_c += microData.vitamin_c;
+                  micronutrientTotals.vitamin_c.total += microData.vitamin_c;
+                  micronutrientTotals.vitamin_c.count += 1;
+                }
+                
+                const calciumMatch = step.match(/Calcium:?\s*(\d+\.?\d*)\s*mg\s*\(?(\d+\.?\d*)%\)?/i);
+                if (calciumMatch) {
+                  microData.calcium = parseFloat(calciumMatch[1]);
+                  dailyData.get(dateStr)!.micro.calcium += microData.calcium;
+                  micronutrientTotals.calcium.total += microData.calcium;
+                  micronutrientTotals.calcium.count += 1;
+                }
+                
+                const ironMatch = step.match(/Iron:?\s*(\d+\.?\d*)\s*mg\s*\(?(\d+\.?\d*)%\)?/i);
+                if (ironMatch) {
+                  microData.iron = parseFloat(ironMatch[1]);
+                  dailyData.get(dateStr)!.micro.iron += microData.iron;
+                  micronutrientTotals.iron.total += microData.iron;
+                  micronutrientTotals.iron.count += 1;
+                }
+                
+                const potassiumMatch = step.match(/Potassium:?\s*(\d+\.?\d*)\s*mg\s*\(?(\d+\.?\d*)%\)?/i);
+                if (potassiumMatch) {
+                  microData.potassium = parseFloat(potassiumMatch[1]);
+                  dailyData.get(dateStr)!.micro.potassium += microData.potassium;
+                  micronutrientTotals.potassium.total += microData.potassium;
+                  micronutrientTotals.potassium.count += 1;
+                }
+                
+                const sodiumMatch = step.match(/Sodium:?\s*(\d+\.?\d*)\s*mg\s*\(?(\d+\.?\d*)%\)?/i);
+                if (sodiumMatch) {
+                  microData.sodium = parseFloat(sodiumMatch[1]);
+                  dailyData.get(dateStr)!.micro.sodium += microData.sodium;
+                  micronutrientTotals.sodium.total += microData.sodium;
+                  micronutrientTotals.sodium.count += 1;
+                }
+                
+                // Macronutrients
+                const proteinMatch = step.match(/Protein:?\s*(\d+\.?\d*)\s*g\s*\(?(\d+\.?\d*)%\)?/i);
+                if (proteinMatch) {
+                  macroData.protein = parseFloat(proteinMatch[1]);
+                  dailyData.get(dateStr)!.macro.protein += macroData.protein;
+                  macronutrientTotals.protein.total += macroData.protein;
+                  macronutrientTotals.protein.count += 1;
+                }
+                
+                const carbsMatch = step.match(/Carbs:?\s*(\d+\.?\d*)\s*g\s*\(?(\d+\.?\d*)%\)?/i);
+                if (carbsMatch) {
+                  macroData.carbs = parseFloat(carbsMatch[1]);
+                  dailyData.get(dateStr)!.macro.carbs += macroData.carbs;
+                  macronutrientTotals.carbs.total += macroData.carbs;
+                  macronutrientTotals.carbs.count += 1;
+                }
+                
+                const fatMatch = step.match(/Fat:?\s*(\d+\.?\d*)\s*g\s*\(?(\d+\.?\d*)%\)?/i);
+                if (fatMatch) {
+                  macroData.fat = parseFloat(fatMatch[1]);
+                  dailyData.get(dateStr)!.macro.fat += macroData.fat;
+                  macronutrientTotals.fat.total += macroData.fat;
+                  macronutrientTotals.fat.count += 1;
+                }
+                
+                const fiberMatch = step.match(/Fiber:?\s*(\d+\.?\d*)\s*g\s*\(?(\d+\.?\d*)%\)?/i);
+                if (fiberMatch) {
+                  macroData.fiber = parseFloat(fiberMatch[1]);
+                  dailyData.get(dateStr)!.macro.fiber += macroData.fiber;
+                  macronutrientTotals.fiber.total += macroData.fiber;
+                  macronutrientTotals.fiber.count += 1;
+                }
+              }
+            };
+            
+            // Extract nutrients from recipe steps
+            extractNutrients(recipe.steps);
+          }
+          
+          // Only add this recipe to the history if it has any nutrient data
           if (microData.vitamin_a || microData.vitamin_c || microData.calcium || 
               microData.iron || microData.potassium || microData.sodium ||
               macroData.protein || macroData.carbs || macroData.fat || macroData.fiber) {
             
-            if (processedDates.has(dateStr)) {
-              const existingMicroIndex = micronutrientHistory.findIndex(item => item.date === dateStr && !item.recipe_id);
-              const existingMacroIndex = macronutrientHistory.findIndex(item => item.date === dateStr && !item.recipe_id);
-              
-              if (existingMicroIndex >= 0) {
-                micronutrientHistory[existingMicroIndex].vitamin_a += microData.vitamin_a;
-                micronutrientHistory[existingMicroIndex].vitamin_c += microData.vitamin_c;
-                micronutrientHistory[existingMicroIndex].calcium += microData.calcium;
-                micronutrientHistory[existingMicroIndex].iron += microData.iron;
-                micronutrientHistory[existingMicroIndex].potassium += microData.potassium;
-                micronutrientHistory[existingMicroIndex].sodium += microData.sodium;
-              } else {
-                micronutrientHistory.push({
-                  date: dateStr,
-                  vitamin_a: microData.vitamin_a,
-                  vitamin_c: microData.vitamin_c,
-                  calcium: microData.calcium,
-                  iron: microData.iron,
-                  potassium: microData.potassium,
-                  sodium: microData.sodium
-                });
-              }
-              
-              if (existingMacroIndex >= 0) {
-                macronutrientHistory[existingMacroIndex].protein += macroData.protein;
-                macronutrientHistory[existingMacroIndex].carbs += macroData.carbs;
-                macronutrientHistory[existingMacroIndex].fat += macroData.fat;
-                macronutrientHistory[existingMacroIndex].fiber += macroData.fiber;
-              } else {
-                macronutrientHistory.push({
-                  date: dateStr,
-                  protein: macroData.protein,
-                  carbs: macroData.carbs,
-                  fat: macroData.fat,
-                  fiber: macroData.fiber
-                });
-              }
-              
-              const existingIds = processedDates.get(dateStr) || [];
-              processedDates.set(dateStr, [...existingIds, recipe.id]);
-            } else {
-              micronutrientHistory.push({
-                date: dateStr,
-                vitamin_a: microData.vitamin_a,
-                vitamin_c: microData.vitamin_c,
-                calcium: microData.calcium,
-                iron: microData.iron,
-                potassium: microData.potassium,
-                sodium: microData.sodium
-              });
-              
-              macronutrientHistory.push({
-                date: dateStr,
-                protein: macroData.protein,
-                carbs: macroData.carbs,
-                fat: macroData.fat,
-                fiber: macroData.fiber
-              });
-              
-              processedDates.set(dateStr, [recipe.id]);
-            }
+            micronutrientHistory.push(microData);
+            macronutrientHistory.push(macroData);
             
-            const formattedDate = new Date(recipe.created_at).toLocaleString();
-            micronutrientHistory.push({...microData, date: formattedDate});
-            macronutrientHistory.push({...macroData, date: formattedDate});
+            processedDates.set(dateStr, (processedDates.get(dateStr) || []).concat(recipe.id));
           }
+        });
+        
+        // Add daily aggregated data to the history arrays
+        dailyData.forEach((data, date) => {
+          microHistoryData.push(data.micro);
+          macroHistoryData.push(data.macro);
         });
         
         console.log(`Processed ${micronutrientHistory.length} entries for nutrient history`);
       }
       
+      // Handle case when no data is available
       if (micronutrientHistory.filter(day => !day.date.includes(":")).length === 0) {
         setNoDataFound(true);
         const today = new Date();
         
+        // Create empty history data for the last 7 days
         for (let i = 6; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(today.getDate() - i);
           const dateStr = date.toISOString().split('T')[0];
           
-          micronutrientHistory.push({
+          microHistoryData.push({
             date: dateStr,
             vitamin_a: 0,
             vitamin_c: 0,
@@ -367,7 +364,7 @@ export default function MicronutrientTracking() {
             sodium: 0,
           });
           
-          macronutrientHistory.push({
+          macroHistoryData.push({
             date: dateStr,
             protein: 0,
             carbs: 0,
@@ -386,9 +383,10 @@ export default function MicronutrientTracking() {
       }
       
       console.log("Setting history data");
-      setMicroHistoryData(micronutrientHistory);
-      setMacroHistoryData(macronutrientHistory);
+      setMicroHistoryData(microHistoryData);
+      setMacroHistoryData(macroHistoryData);
       
+      // Calculate average nutrient values
       const calculateMicroAverage = (nutrient: keyof typeof micronutrientTotals, unit: string, daily: number) => {
         const total = micronutrientTotals[nutrient].total;
         const count = micronutrientTotals[nutrient].count || 1;
@@ -405,6 +403,7 @@ export default function MicronutrientTracking() {
         return { value: Math.round(average), unit, percentage };
       };
       
+      // Set the calculated averages
       const microAvgValues = {
         vitamin_a: calculateMicroAverage('vitamin_a', 'mcg', 900),
         vitamin_c: calculateMicroAverage('vitamin_c', 'mg', 90),
@@ -425,6 +424,7 @@ export default function MicronutrientTracking() {
       setMicroAverages(microAvgValues);
       setMacroAverages(macroAvgValues);
       
+      // Set radar chart data
       setRadarData([
         { name: "Vitamin A", value: microAvgValues.vitamin_a.percentage, fullMark: 100 },
         { name: "Vitamin C", value: microAvgValues.vitamin_c.percentage, fullMark: 100 },
@@ -446,6 +446,7 @@ export default function MicronutrientTracking() {
       
       setNoDataFound(true);
       
+      // Create empty history data for the last 7 days
       const emptyMicroHistory: MicronutrientHistory[] = [];
       const emptyMacroHistory: MacronutrientHistory[] = [];
       const today = new Date();
@@ -477,6 +478,7 @@ export default function MicronutrientTracking() {
       setMicroHistoryData(emptyMicroHistory);
       setMacroHistoryData(emptyMacroHistory);
       
+      // Set zero values for averages when error occurs
       const zeroMicroValues = {
         vitamin_a: { value: 0, unit: "mcg", percentage: 0 },
         vitamin_c: { value: 0, unit: "mg", percentage: 0 },
@@ -517,6 +519,7 @@ export default function MicronutrientTracking() {
 
     fetchNutrientData();
     
+    // Enable real-time updates for recipe additions
     const channel = supabase
       .channel('recipe_updates')
       .on(
@@ -528,7 +531,7 @@ export default function MicronutrientTracking() {
         },
         (payload) => {
           console.log("New recipe detected:", payload);
-          fetchNutrientData();
+          setRefreshKey(prev => prev + 1); // Force refresh
         }
       )
       .subscribe();
@@ -565,6 +568,7 @@ export default function MicronutrientTracking() {
       if (error) throw error;
       
       if (data) {
+        // Initialize empty nutrient data structures
         const micronutrients: any = {
           vitamin_a: { value: 0, unit: 'mcg', percentage: 0 },
           vitamin_c: { value: 0, unit: 'mg', percentage: 0 },
@@ -581,8 +585,10 @@ export default function MicronutrientTracking() {
           fiber: { value: 0, unit: 'g', percentage: 0 },
         };
         
+        // Extract nutrient data from steps
         if (data.steps && Array.isArray(data.steps)) {
           data.steps.forEach(step => {
+            // Extract micronutrients with improved regex
             const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg\s*\((\d+\.?\d*)%\)/i);
             if (vitaminAMatch) {
               micronutrients.vitamin_a = { 
@@ -637,6 +643,7 @@ export default function MicronutrientTracking() {
               };
             }
             
+            // Extract macronutrients
             const proteinMatch = step.match(/Protein:?\s*(\d+\.?\d*)\s*g\s*\((\d+\.?\d*)%\)/i);
             if (proteinMatch) {
               macronutrients.protein = { 
