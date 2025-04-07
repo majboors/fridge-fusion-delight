@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -64,14 +63,12 @@ export default function MicronutrientTracking() {
   const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
   const [nutrientHistory, setNutrientHistory] = useState<NutrientData[]>([]);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
-  
-  // Force refresh when scanning food
+
   const handleScanSuccess = useCallback(() => {
     console.log("Scan successful, refreshing nutrient data");
     setRefreshKey(prev => prev + 1);
   }, []);
 
-  // Toggle expanded state for a day
   const toggleDayExpanded = useCallback((day: string) => {
     setExpandedDays(prev => ({
       ...prev,
@@ -79,7 +76,6 @@ export default function MicronutrientTracking() {
     }));
   }, []);
 
-  // Fetch nutrient data from recipes with steps containing nutrient info
   const fetchNutrientData = useCallback(async () => {
     if (!user) return;
     
@@ -88,7 +84,6 @@ export default function MicronutrientTracking() {
       setLoading(true);
       console.log("Fetching nutrient data...");
       
-      // Fetch all recipe data that contains nutrition information
       const { data: recipesData, error } = await supabase
         .from('recipes')
         .select('*')
@@ -106,18 +101,14 @@ export default function MicronutrientTracking() {
         return;
       }
       
-      // Process recipe data to extract nutrient information
       const dailyData = new Map<string, NutrientData>();
       console.log("Processing recipes:", recipesData.length);
       
-      // Process each recipe to extract nutrient information
       recipesData.forEach(recipe => {
-        // Check if recipe has steps that contain nutrient data
         if (!recipe.steps || recipe.steps.length === 0) return;
         
         console.log("Processing recipe", recipe.id, "with", recipe.steps.length, "steps");
         
-        // Initialize nutrient data objects
         const micronutrients: any = {
           vitamin_a: { value: 0, unit: 'mcg', percentage: 0 },
           vitamin_c: { value: 0, unit: 'mg', percentage: 0 },
@@ -134,9 +125,7 @@ export default function MicronutrientTracking() {
           fiber: { value: 0, unit: 'g', percentage: 0 }
         };
         
-        // Extract nutrient information from recipe steps
         recipe.steps.forEach(step => {
-          // Extract Vitamin A
           const vitaminAMatch = step.match(/Vitamin A: (\d+)mcg \((\d+)%\)/i);
           if (vitaminAMatch) {
             micronutrients.vitamin_a = {
@@ -146,7 +135,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Vitamin C
           const vitaminCMatch = step.match(/Vitamin C: (\d+)mg \((\d+)%\)/i);
           if (vitaminCMatch) {
             micronutrients.vitamin_c = {
@@ -156,7 +144,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Calcium
           const calciumMatch = step.match(/Calcium: (\d+)mg \((\d+)%\)/i);
           if (calciumMatch) {
             micronutrients.calcium = {
@@ -166,7 +153,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Iron
           const ironMatch = step.match(/Iron: (\d+)mg \((\d+)%\)/i);
           if (ironMatch) {
             micronutrients.iron = {
@@ -176,7 +162,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Potassium
           const potassiumMatch = step.match(/Potassium: (\d+)mg \((\d+)%\)/i);
           if (potassiumMatch) {
             micronutrients.potassium = {
@@ -186,7 +171,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Sodium
           const sodiumMatch = step.match(/Sodium: (\d+)mg \((\d+)%\)/i);
           if (sodiumMatch) {
             micronutrients.sodium = {
@@ -196,7 +180,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Protein
           const proteinMatch = step.match(/Protein: (\d+)g \((\d+)%\)/i);
           if (proteinMatch) {
             macronutrients.protein = {
@@ -206,7 +189,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Carbs
           const carbsMatch = step.match(/Carbs: (\d+)g \((\d+)%\)/i);
           if (carbsMatch) {
             macronutrients.carbs = {
@@ -216,7 +198,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Fat
           const fatMatch = step.match(/Fat: (\d+)g \((\d+)%\)/i);
           if (fatMatch) {
             macronutrients.fat = {
@@ -226,7 +207,6 @@ export default function MicronutrientTracking() {
             };
           }
           
-          // Extract Fiber
           const fiberMatch = step.match(/Fiber: (\d+)g \((\d+)%\)/i);
           if (fiberMatch) {
             macronutrients.fiber = {
@@ -237,7 +217,6 @@ export default function MicronutrientTracking() {
           }
         });
         
-        // Check if we extracted any nutrient data
         const hasNutrientData = 
           micronutrients.vitamin_a.value > 0 || 
           micronutrients.vitamin_c.value > 0 ||
@@ -252,7 +231,6 @@ export default function MicronutrientTracking() {
         
         if (!hasNutrientData) return;
         
-        // Group by date
         const date = new Date(recipe.created_at);
         const dayKey = format(date, 'yyyy-MM-dd');
         
@@ -267,7 +245,6 @@ export default function MicronutrientTracking() {
           });
         }
         
-        // Add this meal to the day's data
         dailyData.get(dayKey)?.meals.push({
           id: recipe.id,
           timestamp: format(date, 'h:mm a'),
@@ -278,11 +255,8 @@ export default function MicronutrientTracking() {
       
       console.log("Daily data map size:", dailyData.size);
       
-      // Process the daily data to calculate averages
       const nutrientHistoryData: NutrientData[] = [];
       dailyData.forEach(dayData => {
-        // For average data calculation, we'll use the most recent meal's data for now
-        // In a real app, you might want to aggregate all meals for the day
         if (dayData.meals.length > 0) {
           nutrientHistoryData.push({
             day: dayData.day,
@@ -297,18 +271,14 @@ export default function MicronutrientTracking() {
       
       console.log("Processed microhistory entries:", nutrientHistoryData.length);
       
-      // Sort by date (newest first)
       nutrientHistoryData.sort((a, b) => {
-        // Assuming day format is "MMM d"
         const dateA = new Date(`${a.day} 2025`);
         const dateB = new Date(`${b.day} 2025`);
         return dateB.getTime() - dateA.getTime();
       });
       
-      // Update state with the processed data
       setNutrientHistory(nutrientHistoryData);
       
-      // If we have data, log the first entry to verify
       if (nutrientHistoryData.length > 0) {
         console.log("Setting averages:", 
           nutrientHistoryData[0].averageData.micronutrients,
@@ -323,8 +293,7 @@ export default function MicronutrientTracking() {
       setLoading(false);
     }
   }, [user, refreshKey]);
-  
-  // Initialize Supabase realtime subscription for recipes updates
+
   useEffect(() => {
     if (!user) {
       navigate("/auth");
@@ -333,7 +302,6 @@ export default function MicronutrientTracking() {
     
     fetchNutrientData();
     
-    // Set up real-time subscription for recipes table
     const channel = supabase
       .channel('recipes_changes')
       .on(
@@ -366,7 +334,6 @@ export default function MicronutrientTracking() {
     </div>
   );
 
-  // Helper function to render nutrient values in a compact way
   const renderNutrientValue = (value: number, unit: string, percentage: number) => {
     return (
       <TooltipProvider>
@@ -382,7 +349,6 @@ export default function MicronutrientTracking() {
     );
   };
 
-  // Render a table of meal nutrient data
   const renderMealNutrientTable = (meal) => (
     <div className="overflow-x-auto w-full">
       <Table className="w-full text-xs sm:text-sm">
@@ -424,7 +390,6 @@ export default function MicronutrientTracking() {
     </div>
   );
 
-  // Render a meal card
   const renderMeal = (meal, index) => (
     <Card key={index} className="border border-border/50 overflow-hidden">
       <CardHeader className="py-3 bg-muted/30">
@@ -502,7 +467,6 @@ export default function MicronutrientTracking() {
     </Card>
   );
 
-  // Render a day card with accordion functionality
   const renderDayCard = (day, index) => {
     const isExpanded = expandedDays[day.day] || false;
     
@@ -586,8 +550,8 @@ export default function MicronutrientTracking() {
             ) : renderNoDataMessage()}
           </TabsContent>
           
-          <TabsContent value="micro">
-            <div className="flex justify-between items-center mb-4">
+          <TabsContent value="micro" className="mt-2 pt-2">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-medium">Micronutrient History</h2>
               <Button onClick={() => setCameraDialogOpen(true)}>
                 <Camera className="mr-2 h-4 w-4" /> Scan Food
@@ -605,13 +569,15 @@ export default function MicronutrientTracking() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg">{day.day}</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <MicronutrientRadarChart 
-                        data={day.averageData.micronutrients}
-                        showScanButton={false}
-                        clickable={true}
-                        scanDate={day.day}
-                      />
+                    <CardContent className="pb-6">
+                      <div className="h-[250px] flex items-center justify-center">
+                        <MicronutrientRadarChart 
+                          data={day.averageData.micronutrients}
+                          showScanButton={false}
+                          clickable={true}
+                          scanDate={day.day}
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -619,8 +585,8 @@ export default function MicronutrientTracking() {
             ) : renderNoDataMessage()}
           </TabsContent>
           
-          <TabsContent value="macro">
-            <div className="flex justify-between items-center mb-4">
+          <TabsContent value="macro" className="mt-2 pt-2">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-medium">Macronutrient History</h2>
               <Button onClick={() => setCameraDialogOpen(true)}>
                 <Camera className="mr-2 h-4 w-4" /> Scan Food
@@ -638,8 +604,10 @@ export default function MicronutrientTracking() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg">{day.day}</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <MacronutrientPieChart data={day.averageData.macronutrients} />
+                    <CardContent className="pb-4">
+                      <div className="h-[250px] flex items-center justify-center">
+                        <MacronutrientPieChart data={day.averageData.macronutrients} />
+                      </div>
                     </CardContent>
                     <CardFooter className="pt-0 pb-3 px-6">
                       <Button
