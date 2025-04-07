@@ -81,10 +81,14 @@ export function NutritionDialog({
         const currentData = nutritionDbData[0];
         
         // Calculate new values - ensure all values are integers
-        const newCaloriesConsumed = currentData.calories_consumed + Math.round(nutritionData.calorie_count);
-        const newCarbsConsumed = currentData.carbs_consumed + Math.round(nutritionData.macronutrients.carbs.value);
-        const newProteinConsumed = currentData.protein_consumed + Math.round(nutritionData.macronutrients.protein.value);
-        const newFatConsumed = currentData.fat_consumed + Math.round(nutritionData.macronutrients.fat.value);
+        const newCaloriesConsumed = Math.round(currentData.calories_consumed + Math.round(nutritionData.calorie_count));
+        const newCarbsConsumed = Math.round(currentData.carbs_consumed + Math.round(nutritionData.macronutrients.carbs.value));
+        const newProteinConsumed = Math.round(currentData.protein_consumed + Math.round(nutritionData.macronutrients.protein.value));
+        const newFatConsumed = Math.round(currentData.fat_consumed + Math.round(nutritionData.macronutrients.fat.value));
+        
+        console.log('Current data:', currentData);
+        console.log('Adding new calories:', Math.round(nutritionData.calorie_count));
+        console.log('New calories consumed:', newCaloriesConsumed);
         
         // Calculate weekly progress as percentage of goals met
         const caloriePercentage = Math.min((newCaloriesConsumed / currentData.calories_goal) * 100, 100);

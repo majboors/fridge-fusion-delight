@@ -1,9 +1,11 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Camera } from "lucide-react";
+import { Camera, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface MicronutrientData {
   name: string;
@@ -23,10 +25,20 @@ interface MicronutrientRadarChartProps {
     sodium: { value: number; unit: string; percentage: number };
   };
   showScanButton?: boolean;
+  clickable?: boolean;
+  scanDate?: string;
+  onClick?: () => void;
 }
 
-export function MicronutrientRadarChart({ data, showScanButton = true }: MicronutrientRadarChartProps) {
+export function MicronutrientRadarChart({ 
+  data, 
+  showScanButton = true,
+  clickable = false,
+  scanDate,
+  onClick
+}: MicronutrientRadarChartProps) {
   const navigate = useNavigate();
+  const [detailsOpen, setDetailsOpen] = useState(false);
   
   // Ensure all values are at least 0, not undefined
   const safeData = {
@@ -77,44 +89,121 @@ export function MicronutrientRadarChart({ data, showScanButton = true }: Micronu
     navigate("/recipes");
   };
 
+  const handleCardClick = () => {
+    if (clickable && onClick) {
+      onClick();
+    } else if (clickable) {
+      setDetailsOpen(true);
+    }
+  };
+
+  const cardProps = clickable ? { 
+    onClick: handleCardClick,
+    className: "cursor-pointer transition-shadow hover:shadow-md"
+  } : {};
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle>Micronutrients</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {hasNoData ? (
-          <div className="text-center py-4 space-y-3">
-            <div className="text-muted-foreground">
-              No micronutrient data available
+    <>
+      <Card {...cardProps}>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex justify-between items-center">
+            <span>Micronutrients</span>
+            {clickable && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          </CardTitle>
+          {scanDate && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {scanDate}
             </div>
-            {showScanButton && (
-              <Button 
-                onClick={handleScanButtonClick} 
-                className="flex items-center justify-center gap-2"
-              >
-                <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
-              </Button>
-            )}
-          </div>
-        ) : (
-          micronutrients.map((nutrient) => (
-            <div key={nutrient.name} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>{nutrient.name}</span>
-                <span>
-                  {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
-                </span>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {hasNoData ? (
+            <div className="text-center py-4 space-y-3">
+              <div className="text-muted-foreground">
+                No micronutrient data available
               </div>
-              <Progress 
-                value={nutrient.percentage} 
-                className="h-2"
-                indicatorStyle={{ backgroundColor: nutrient.color }}
-              />
+              {showScanButton && (
+                <Button 
+                  onClick={handleScanButtonClick} 
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Camera className="w-4 h-4" /> Scan Food to Track Nutrients
+                </Button>
+              )}
             </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
+          ) : (
+            micronutrients.map((nutrient) => (
+              <div key={nutrient.name} className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>{nutrient.name}</span>
+                  <span>
+                    {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
+                  </span>
+                </div>
+                <Progress 
+                  value={nutrient.percentage} 
+                  className="h-2"
+                  indicatorStyle={{ backgroundColor: nutrient.color }}
+                />
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Detailed view dialog */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Micronutrient Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {scanDate && (
+              <div className="text-sm font-medium">
+                Scan date: {scanDate}
+              </div>
+            )}
+            {micronutrients.map((nutrient) => (
+              <div key={nutrient.name} className="space-y-2">
+                <div className="flex justify-between text-sm font-medium">
+                  <span>{nutrient.name}</span>
+                  <span>
+                    {nutrient.value}{nutrient.unit} ({nutrient.percentage}%)
+                  </span>
+                </div>
+                <Progress 
+                  value={nutrient.percentage} 
+                  className="h-3"
+                  indicatorStyle={{ backgroundColor: nutrient.color }}
+                />
+                <div className="text-xs text-muted-foreground">
+                  Daily recommended value: {getRecommendedValue(nutrient.name)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
+}
+
+// Helper function to get recommended daily values
+function getRecommendedValue(nutrient: string): string {
+  switch (nutrient) {
+    case "Vitamin A":
+      return "900 mcg";
+    case "Vitamin C":
+      return "90 mg";
+    case "Calcium":
+      return "1000 mg";
+    case "Iron":
+      return "18 mg";
+    case "Potassium":
+      return "3500 mg";
+    case "Sodium":
+      return "2300 mg";
+    default:
+      return "";
+  }
 }

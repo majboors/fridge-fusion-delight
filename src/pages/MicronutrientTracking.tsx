@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,6 +32,7 @@ interface MicronutrientHistory {
   iron: number;
   potassium: number;
   sodium: number;
+  recipe_id?: string;
 }
 
 interface MacronutrientHistory {
@@ -39,6 +41,7 @@ interface MacronutrientHistory {
   carbs: number;
   fat: number;
   fiber: number;
+  recipe_id?: string;
 }
 
 interface MicronutrientAverages {
@@ -55,6 +58,27 @@ interface MacronutrientAverages {
   carbs: { value: number; percentage: number; unit: string };
   fat: { value: number; percentage: number; unit: string };
   fiber: { value: number; percentage: number; unit: string };
+}
+
+interface RecipeDetail {
+  id: string;
+  title: string;
+  image_url: string | null;
+  created_at: string;
+  micronutrients?: {
+    vitamin_a: { value: number; unit: string; percentage: number };
+    vitamin_c: { value: number; unit: string; percentage: number };
+    calcium: { value: number; unit: string; percentage: number };
+    iron: { value: number; unit: string; percentage: number };
+    potassium: { value: number; unit: string; percentage: number };
+    sodium: { value: number; unit: string; percentage: number };
+  };
+  macronutrients?: {
+    protein: { value: number; percentage: number; unit: string };
+    carbs: { value: number; percentage: number; unit: string };
+    fat: { value: number; percentage: number; unit: string };
+    fiber: { value: number; percentage: number; unit: string };
+  };
 }
 
 export default function MicronutrientTracking() {
@@ -93,6 +117,9 @@ export default function MicronutrientTracking() {
   const [historyLimit, setHistoryLimit] = useState(7); // Default to showing last 7 days
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
   const [noDataFound, setNoDataFound] = useState(false);
+  
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeDetail | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -148,15 +175,11 @@ export default function MicronutrientTracking() {
         fiber: { total: 0, count: 0 },
       };
       
-      const processedDates = new Set();
+      const processedDates = new Map(); // Changed to Map to store recipe IDs per date
       
       if (recipes && recipes.length > 0) {
         recipes.forEach(recipe => {
           const dateStr = new Date(recipe.created_at).toISOString().split('T')[0];
-          
-          if (processedDates.has(dateStr)) {
-            return;
-          }
           
           let microData = {
             date: dateStr,
@@ -165,7 +188,8 @@ export default function MicronutrientTracking() {
             calcium: 0,
             iron: 0,
             potassium: 0,
-            sodium: 0
+            sodium: 0,
+            recipe_id: recipe.id
           };
           
           let macroData = {
@@ -173,7 +197,8 @@ export default function MicronutrientTracking() {
             protein: 0,
             carbs: 0,
             fat: 0,
-            fiber: 0
+            fiber: 0,
+            recipe_id: recipe.id
           };
           
           if (recipe.steps && Array.isArray(recipe.steps)) {
@@ -255,9 +280,37 @@ export default function MicronutrientTracking() {
           if (microData.vitamin_a || microData.vitamin_c || microData.calcium || 
               microData.iron || microData.potassium || microData.sodium ||
               macroData.protein || macroData.carbs || macroData.fat || macroData.fiber) {
-            micronutrientHistory.push(microData);
-            macronutrientHistory.push(macroData);
-            processedDates.add(dateStr);
+            
+            // For daily aggregation, we merge values for the same date
+            if (processedDates.has(dateStr)) {
+              const existingMicroIndex = micronutrientHistory.findIndex(item => item.date === dateStr);
+              const existingMacroIndex = macronutrientHistory.findIndex(item => item.date === dateStr);
+              
+              if (existingMicroIndex >= 0) {
+                micronutrientHistory[existingMicroIndex].vitamin_a += microData.vitamin_a;
+                micronutrientHistory[existingMicroIndex].vitamin_c += microData.vitamin_c;
+                micronutrientHistory[existingMicroIndex].calcium += microData.calcium;
+                micronutrientHistory[existingMicroIndex].iron += microData.iron;
+                micronutrientHistory[existingMicroIndex].potassium += microData.potassium;
+                micronutrientHistory[existingMicroIndex].sodium += microData.sodium;
+              }
+              
+              if (existingMacroIndex >= 0) {
+                macronutrientHistory[existingMacroIndex].protein += macroData.protein;
+                macronutrientHistory[existingMacroIndex].carbs += macroData.carbs;
+                macronutrientHistory[existingMacroIndex].fat += macroData.fat;
+                macronutrientHistory[existingMacroIndex].fiber += macroData.fiber;
+              }
+            } else {
+              micronutrientHistory.push(microData);
+              macronutrientHistory.push(macroData);
+              processedDates.set(dateStr, [recipe.id]);
+            }
+            
+            // Also add individual meal records for history viewing
+            const formattedDate = new Date(recipe.created_at).toLocaleString();
+            micronutrientHistory.push({...microData, date: formattedDate});
+            macronutrientHistory.push({...macroData, date: formattedDate});
           }
         });
       }
@@ -435,6 +488,153 @@ export default function MicronutrientTracking() {
     navigate("/recipes");
   };
 
+  const handleViewMealDetails = async (date: string, recipeId?: string) => {
+    if (!recipeId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', recipeId)
+        .single();
+        
+      if (error) throw error;
+      
+      if (data) {
+        // Parse micronutrients and macronutrients from steps
+        const micronutrients: any = {
+          vitamin_a: { value: 0, unit: 'mcg', percentage: 0 },
+          vitamin_c: { value: 0, unit: 'mg', percentage: 0 },
+          calcium: { value: 0, unit: 'mg', percentage: 0 },
+          iron: { value: 0, unit: 'mg', percentage: 0 },
+          potassium: { value: 0, unit: 'mg', percentage: 0 },
+          sodium: { value: 0, unit: 'mg', percentage: 0 },
+        };
+        
+        const macronutrients: any = {
+          protein: { value: 0, unit: 'g', percentage: 0 },
+          carbs: { value: 0, unit: 'g', percentage: 0 },
+          fat: { value: 0, unit: 'g', percentage: 0 },
+          fiber: { value: 0, unit: 'g', percentage: 0 },
+        };
+        
+        if (data.steps && Array.isArray(data.steps)) {
+          data.steps.forEach(step => {
+            // Extract micronutrients
+            const vitaminAMatch = step.match(/Vitamin A:?\s*(\d+\.?\d*)\s*mcg\s*\((\d+\.?\d*)%\)/i);
+            if (vitaminAMatch) {
+              micronutrients.vitamin_a = { 
+                value: parseFloat(vitaminAMatch[1]), 
+                unit: 'mcg', 
+                percentage: parseFloat(vitaminAMatch[2])
+              };
+            }
+            
+            const vitaminCMatch = step.match(/Vitamin C:?\s*(\d+\.?\d*)\s*mg\s*\((\d+\.?\d*)%\)/i);
+            if (vitaminCMatch) {
+              micronutrients.vitamin_c = { 
+                value: parseFloat(vitaminCMatch[1]), 
+                unit: 'mg', 
+                percentage: parseFloat(vitaminCMatch[2])
+              };
+            }
+            
+            const calciumMatch = step.match(/Calcium:?\s*(\d+\.?\d*)\s*mg\s*\((\d+\.?\d*)%\)/i);
+            if (calciumMatch) {
+              micronutrients.calcium = { 
+                value: parseFloat(calciumMatch[1]), 
+                unit: 'mg', 
+                percentage: parseFloat(calciumMatch[2])
+              };
+            }
+            
+            const ironMatch = step.match(/Iron:?\s*(\d+\.?\d*)\s*mg\s*\((\d+\.?\d*)%\)/i);
+            if (ironMatch) {
+              micronutrients.iron = { 
+                value: parseFloat(ironMatch[1]), 
+                unit: 'mg', 
+                percentage: parseFloat(ironMatch[2])
+              };
+            }
+            
+            const potassiumMatch = step.match(/Potassium:?\s*(\d+\.?\d*)\s*mg\s*\((\d+\.?\d*)%\)/i);
+            if (potassiumMatch) {
+              micronutrients.potassium = { 
+                value: parseFloat(potassiumMatch[1]), 
+                unit: 'mg', 
+                percentage: parseFloat(potassiumMatch[2])
+              };
+            }
+            
+            const sodiumMatch = step.match(/Sodium:?\s*(\d+\.?\d*)\s*mg\s*\((\d+\.?\d*)%\)/i);
+            if (sodiumMatch) {
+              micronutrients.sodium = { 
+                value: parseFloat(sodiumMatch[1]), 
+                unit: 'mg', 
+                percentage: parseFloat(sodiumMatch[2])
+              };
+            }
+            
+            // Extract macronutrients
+            const proteinMatch = step.match(/Protein:?\s*(\d+\.?\d*)\s*g\s*\((\d+\.?\d*)%\)/i);
+            if (proteinMatch) {
+              macronutrients.protein = { 
+                value: parseFloat(proteinMatch[1]), 
+                unit: 'g', 
+                percentage: parseFloat(proteinMatch[2])
+              };
+            }
+            
+            const carbsMatch = step.match(/Carbs:?\s*(\d+\.?\d*)\s*g\s*\((\d+\.?\d*)%\)/i);
+            if (carbsMatch) {
+              macronutrients.carbs = { 
+                value: parseFloat(carbsMatch[1]), 
+                unit: 'g', 
+                percentage: parseFloat(carbsMatch[2])
+              };
+            }
+            
+            const fatMatch = step.match(/Fat:?\s*(\d+\.?\d*)\s*g\s*\((\d+\.?\d*)%\)/i);
+            if (fatMatch) {
+              macronutrients.fat = { 
+                value: parseFloat(fatMatch[1]), 
+                unit: 'g', 
+                percentage: parseFloat(fatMatch[2])
+              };
+            }
+            
+            const fiberMatch = step.match(/Fiber:?\s*(\d+\.?\d*)\s*g\s*\((\d+\.?\d*)%\)/i);
+            if (fiberMatch) {
+              macronutrients.fiber = { 
+                value: parseFloat(fiberMatch[1]), 
+                unit: 'g', 
+                percentage: parseFloat(fiberMatch[2])
+              };
+            }
+          });
+        }
+        
+        setSelectedRecipe({
+          id: data.id,
+          title: data.title,
+          image_url: data.image_url,
+          created_at: new Date(data.created_at).toLocaleString(),
+          micronutrients,
+          macronutrients
+        });
+        
+        setDetailsDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching meal details:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load meal details",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -554,22 +754,34 @@ export default function MicronutrientTracking() {
                         <TableHead>Carbs (g)</TableHead>
                         <TableHead>Fat (g)</TableHead>
                         <TableHead>Fiber (g)</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {macroHistoryData.length > 0 ? (
-                        macroHistoryData.map((day) => (
-                          <TableRow key={day.date}>
+                        macroHistoryData.filter(day => !day.date.includes(":")).map((day) => (
+                          <TableRow key={day.date + (day.recipe_id || "")}>
                             <TableCell className="font-medium">{day.date}</TableCell>
                             <TableCell>{day.protein}</TableCell>
                             <TableCell>{day.carbs}</TableCell>
                             <TableCell>{day.fat}</TableCell>
                             <TableCell>{day.fiber}</TableCell>
+                            <TableCell>
+                              {day.recipe_id && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleViewMealDetails(day.date, day.recipe_id)}
+                                >
+                                  View
+                                </Button>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-6">
+                          <TableCell colSpan={6} className="text-center py-6">
                             No nutrition data available
                           </TableCell>
                         </TableRow>
@@ -694,12 +906,13 @@ export default function MicronutrientTracking() {
                         <TableHead>Iron (mg)</TableHead>
                         <TableHead>Potassium (mg)</TableHead>
                         <TableHead>Sodium (mg)</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {microHistoryData.length > 0 ? (
-                        microHistoryData.map((day) => (
-                          <TableRow key={day.date}>
+                        microHistoryData.filter(day => !day.date.includes(":")).map((day) => (
+                          <TableRow key={day.date + (day.recipe_id || "")}>
                             <TableCell className="font-medium">{day.date}</TableCell>
                             <TableCell>{day.vitamin_a}</TableCell>
                             <TableCell>{day.vitamin_c}</TableCell>
@@ -707,11 +920,22 @@ export default function MicronutrientTracking() {
                             <TableCell>{day.iron}</TableCell>
                             <TableCell>{day.potassium}</TableCell>
                             <TableCell>{day.sodium}</TableCell>
+                            <TableCell>
+                              {day.recipe_id && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleViewMealDetails(day.date, day.recipe_id)}
+                                >
+                                  View
+                                </Button>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-6">
+                          <TableCell colSpan={8} className="text-center py-6">
                             No nutrition data available
                           </TableCell>
                         </TableRow>
@@ -761,6 +985,67 @@ export default function MicronutrientTracking() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedRecipe?.title || 'Meal Details'}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {selectedRecipe?.image_url && (
+              <div className="w-full h-48 overflow-hidden rounded-md">
+                <img src={selectedRecipe.image_url} alt="Food" className="w-full h-full object-cover" />
+              </div>
+            )}
+            
+            <div className="text-sm">
+              <p className="text-muted-foreground">Date: {selectedRecipe?.created_at}</p>
+            </div>
+            
+            {selectedRecipe?.macronutrients && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle>Macronutrients</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {Object.entries(selectedRecipe.macronutrients).map(([key, value]) => (
+                      <div key={key} className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="capitalize">{key}</span>
+                          <span>
+                            {value.value}{value.unit} ({value.percentage}%)
+                          </span>
+                        </div>
+                        <Progress 
+                          value={value.percentage} 
+                          className="h-2"
+                          indicatorStyle={{ 
+                            backgroundColor: 
+                              key === "protein" ? "#4ade80" : 
+                              key === "carbs" ? "#facc15" : 
+                              key === "fat" ? "#60a5fa" : 
+                              "#f59e0b" // fiber
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {selectedRecipe?.micronutrients && (
+              <MicronutrientRadarChart 
+                data={selectedRecipe.micronutrients} 
+                showScanButton={false}
+                scanDate={selectedRecipe.created_at}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <NavigationBar />
     </div>
