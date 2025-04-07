@@ -10,27 +10,14 @@ interface FeatureCardProps {
   onClick?: () => void;
   route?: string;
   routeState?: Record<string, any>;
-  activeTab?: string; // Added for tab selection
 }
 
-export function FeatureCard({ 
-  title, 
-  icon: Icon, 
-  onClick, 
-  route, 
-  routeState,
-  activeTab 
-}: FeatureCardProps) {
+export function FeatureCard({ title, icon: Icon, onClick, route, routeState }: FeatureCardProps) {
   const navigate = useNavigate();
   
   const handleClick = () => {
     if (route) {
-      // If there's an active tab specified, include it in the state
-      const state = activeTab 
-        ? { ...routeState, activeTab } 
-        : routeState;
-        
-      navigate(route, { state });
+      navigate(route, { state: routeState });
     } else if (onClick) {
       onClick();
     }

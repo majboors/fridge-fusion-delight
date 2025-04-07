@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,9 +13,7 @@ import {
   Utensils, 
   CalendarCheck, 
   Plus, 
-  Loader2,
-  UtensilsCrossed,
-  Dna
+  Loader2
 } from "lucide-react";
 
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
@@ -190,6 +189,8 @@ export default function Dashboard() {
     fetchNutritionData();
     fetchMicronutrientData();
     
+    // Add a small delay to fetch notifications after initial data load
+    // This ensures we have checked for meal plans and goals first
     const timer = setTimeout(() => {
       fetchNotifications();
     }, 500);
@@ -346,24 +347,28 @@ export default function Dashboard() {
       </div>
 
       <div className="px-6 mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FeatureCard 
-            title="Daily Meal Suggestions" 
-            icon={UtensilsCrossed} 
-            route="/goals"
-            routeState={{ view: "saved" }}
+            title="Calorie Count" 
+            icon={BarChart3} 
+            onClick={handleOpenCalorieCounter}
+          />
+          <FeatureCard 
+            title="Macronutrient Details" 
+            icon={PieChart} 
+            route="/micronutrients"
+            routeState={{ activeTab: "macronutrients" }}
           />
           <FeatureCard 
             title="Micronutrient Tracking" 
-            icon={Dna} 
-            route="/micronutrient-tracking"
-            activeTab="micro"
+            icon={Pill} 
+            route="/micronutrients"
+            routeState={{ activeTab: "micronutrients" }}
           />
           <FeatureCard 
-            title="Macronutrient Balance" 
-            icon={PieChart} 
-            route="/micronutrient-tracking"
-            activeTab="macro"
+            title="Daily Meal Suggestions" 
+            icon={Utensils} 
+            route="/goals"
           />
         </div>
       </div>

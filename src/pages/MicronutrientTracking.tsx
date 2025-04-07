@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -60,21 +60,14 @@ interface NutrientData {
 export default function MicronutrientTracking() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
   const [nutrientHistory, setNutrientHistory] = useState<NutrientData[]>([]);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState('history');
   const mealsEndRef = useRef<HTMLDivElement>(null);
-
-  const [activeTab, setActiveTab] = useState(() => {
-    if (location.state && location.state.activeTab) {
-      return location.state.activeTab;
-    }
-    return 'history';
-  });
 
   const handleScanSuccess = useCallback(() => {
     console.log("Scan successful, refreshing nutrient data");
@@ -359,10 +352,6 @@ export default function MicronutrientTracking() {
     
     fetchNutrientData();
     
-    if (location.state && location.state.activeTab) {
-      navigate(location.pathname, { replace: true });
-    }
-    
     const channel = supabase
       .channel('recipes_changes')
       .on(
@@ -382,7 +371,7 @@ export default function MicronutrientTracking() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, navigate, fetchNutrientData, location.state, location.pathname]);
+  }, [user, navigate, fetchNutrientData]);
 
   const renderNoDataMessage = () => (
     <div className="flex flex-col items-center justify-center py-8">
