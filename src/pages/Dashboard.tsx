@@ -259,22 +259,22 @@ export default function Dashboard() {
           <FeatureCard 
             title="Calorie Count" 
             icon={BarChart3} 
-            onClick={() => toast({ title: "Coming Soon!" })}
+            route="/dashboard"
           />
           <FeatureCard 
             title="Macronutrient Details" 
             icon={PieChart} 
-            onClick={() => toast({ title: "Coming Soon!" })}
+            route="/micronutrients"
           />
           <FeatureCard 
             title="Micronutrient Tracking" 
             icon={Pill} 
-            onClick={() => toast({ title: "Coming Soon!" })}
+            route="/micronutrients"
           />
           <FeatureCard 
             title="Daily Meal Suggestions" 
             icon={Utensils} 
-            onClick={() => toast({ title: "Coming Soon!" })}
+            route="/goals"
           />
         </div>
       </div>
