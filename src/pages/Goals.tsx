@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Target, Check, ChevronRight, ArrowRight } from "lucide-react";
+import { Loader2, Target, Check, ChevronRight, ArrowRight, RefreshCw } from "lucide-react";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -90,7 +89,6 @@ export default function Goals() {
       return;
     }
     
-    // Check if user has existing goals
     const fetchExistingGoal = async () => {
       try {
         const { data, error } = await supabase
@@ -152,14 +150,11 @@ export default function Goals() {
     try {
       setCalculating(true);
       
-      // Prepare the goal description
       const goalDescription = `I currently weigh ${userGoal.currentWeight}kg and want to ${userGoal.goalType === 'gain' ? 'gain' : userGoal.goalType === 'lose' ? 'lose' : 'maintain'} ${userGoal.goalType !== 'maintain' ? `${Math.abs(Number(userGoal.targetWeight) - Number(userGoal.currentWeight))}kg` : ''} ${userGoal.goalType !== 'maintain' ? `in ${userGoal.timeframe} months` : ''}. I am ${userGoal.age} years old and ${userGoal.height}cm tall. My activity level is ${userGoal.activityLevel} and I prefer ${userGoal.mealsPerDay} meals per day.${userGoal.dietaryRestrictions ? ` My dietary restrictions are: ${userGoal.dietaryRestrictions}` : ''}`;
       
-      // Call the API to calculate calorie intake
       const result = await calculateCalorieIntake(goalDescription);
       setCalorieResults(result);
       
-      // Save the goal and results to the database
       if (user) {
         const { data, error } = await supabase.from('nutrition_data')
           .update({
@@ -201,15 +196,10 @@ export default function Goals() {
     try {
       setGeneratingMealPlan(true);
       
-      // Prepare the requirements description
       const requirements = `I need a ${calorieResults?.daily_calories} calorie meal plan with ${userGoal.mealsPerDay} meals throughout the day. ${userGoal.goalType === 'gain' ? 'I am trying to gain weight and build muscle.' : userGoal.goalType === 'lose' ? 'I am trying to lose weight.' : 'I want to maintain my current weight.'} ${userGoal.dietaryRestrictions ? `My dietary restrictions are: ${userGoal.dietaryRestrictions}` : ''}`;
       
-      // Call the API to generate a meal plan
       const result = await generateMealPlan(requirements, true);
       setMealPlan(result);
-      
-      // Save the meal plan to the database (in a real app)
-      // This would typically involve creating a new table for meal plans
       
       setCurrentStep("meal-plan");
       
@@ -227,6 +217,18 @@ export default function Goals() {
     } finally {
       setGeneratingMealPlan(false);
     }
+  };
+
+  const handleGenerateGoalsAgain = () => {
+    setMealPlan(null);
+    setCalorieResults(null);
+    
+    setCurrentStep("goal-selection");
+    
+    toast({
+      title: "Ready",
+      description: "Let's create new goals",
+    });
   };
 
   const renderStepIndicator = () => {
@@ -449,7 +451,7 @@ export default function Goals() {
             </CardFooter>
           </Card>
         )}
-
+        
         {currentStep === "activity-details" && (
           <Card className="mb-6">
             <CardHeader>
@@ -563,7 +565,7 @@ export default function Goals() {
             </CardFooter>
           </Card>
         )}
-
+        
         {currentStep === "results" && calorieResults && (
           <Card className="mb-6">
             <CardHeader>
@@ -654,88 +656,135 @@ export default function Goals() {
         )}
         
         {currentStep === "meal-plan" && mealPlan && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-primary" />
-                Your Personalized Meal Plan
-              </CardTitle>
-              <CardDescription>
-                {mealPlan.total_daily_calories} calories per day
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {mealPlan.meals.map((meal) => (
-                <div key={meal.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-semibold">{meal.name}</h4>
-                      <div className="text-sm text-muted-foreground">{meal.time}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{meal.calories} cal</div>
-                    </div>
+          <div>
+            {calorieResults && (
+              <Card className="mb-6">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Check className="h-5 w-5 text-primary" />
+                    Nutrition Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 pt-0">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm font-medium">Daily Calories:</div>
+                    <div className="font-bold text-primary">{calorieResults.daily_calories} calories</div>
                   </div>
                   
-                  {meal.image_url && (
-                    <div className="mb-3">
-                      <img 
-                        src={meal.image_url} 
-                        alt={meal.name} 
-                        className="w-full h-48 object-cover rounded-md"
-                      />
+                  <div className="flex justify-between text-sm">
+                    <div>Protein: <span className="font-medium">{calorieResults.macronutrient_split.protein.grams}g</span></div>
+                    <div>Carbs: <span className="font-medium">{calorieResults.macronutrient_split.carbs.grams}g</span></div>
+                    <div>Fat: <span className="font-medium">{calorieResults.macronutrient_split.fat.grams}g</span></div>
+                  </div>
+                  
+                  {calorieResults.weight_change_projection && (
+                    <div className="text-sm text-muted-foreground">
+                      Expected change: {calorieResults.weight_change_projection.monthly_change > 0 ? '+' : ''}
+                      {calorieResults.weight_change_projection.monthly_change} {calorieResults.weight_change_projection.unit}/month
                     </div>
                   )}
-                  
-                  <p className="text-sm mb-3">{meal.description}</p>
-                  
-                  <div className="mb-3">
-                    <div className="text-sm font-medium mb-1">Ingredients:</div>
-                    <ul className="text-sm list-disc pl-5">
-                      {meal.foods.map((food, index) => (
-                        <li key={index}>{food}</li>
-                      ))}
-                    </ul>
+                </CardContent>
+              </Card>
+            )}
+            
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-primary" />
+                  Your Personalized Meal Plan
+                </CardTitle>
+                <CardDescription>
+                  {mealPlan.total_daily_calories} calories per day
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {mealPlan.meals.map((meal) => (
+                  <div key={meal.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-semibold">{meal.name}</h4>
+                        <div className="text-sm text-muted-foreground">{meal.time}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium">{meal.calories} cal</div>
+                      </div>
+                    </div>
+                    
+                    {meal.image_url && (
+                      <div className="mb-3">
+                        <img 
+                          src={meal.image_url} 
+                          alt={meal.name} 
+                          className="w-full h-48 object-cover rounded-md"
+                        />
+                      </div>
+                    )}
+                    
+                    <p className="text-sm mb-3">{meal.description}</p>
+                    
+                    <div className="mb-3">
+                      <div className="text-sm font-medium mb-1">Ingredients:</div>
+                      <ul className="text-sm list-disc pl-5">
+                        {meal.foods.map((food, index) => (
+                          <li key={index}>{food}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="bg-secondary rounded p-2 text-center">
+                        <div>Protein</div>
+                        <div className="font-semibold">{meal.macros.protein}g</div>
+                      </div>
+                      <div className="bg-secondary rounded p-2 text-center">
+                        <div>Carbs</div>
+                        <div className="font-semibold">{meal.macros.carbs}g</div>
+                      </div>
+                      <div className="bg-secondary rounded p-2 text-center">
+                        <div>Fat</div>
+                        <div className="font-semibold">{meal.macros.fat}g</div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="bg-secondary rounded p-2 text-center">
-                      <div>Protein</div>
-                      <div className="font-semibold">{meal.macros.protein}g</div>
-                    </div>
-                    <div className="bg-secondary rounded p-2 text-center">
-                      <div>Carbs</div>
-                      <div className="font-semibold">{meal.macros.carbs}g</div>
-                    </div>
-                    <div className="bg-secondary rounded p-2 text-center">
-                      <div>Fat</div>
-                      <div className="font-semibold">{meal.macros.fat}g</div>
-                    </div>
+                ))}
+                
+                {mealPlan.notes && (
+                  <div className="bg-muted p-4 rounded-lg text-sm">
+                    <strong>Notes:</strong> {mealPlan.notes}
                   </div>
-                </div>
-              ))}
-              
-              {mealPlan.notes && (
-                <div className="bg-muted p-4 rounded-lg text-sm">
-                  <strong>Notes:</strong> {mealPlan.notes}
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep("results")}>
-                Back to Results
-              </Button>
-              <Button onClick={() => {
-                toast({
-                  title: "Success",
-                  description: "Your meal plan has been saved",
-                });
-                setCurrentStep("goal-selection");
-              }}>
-                Save Plan
-              </Button>
-            </CardFooter>
-          </Card>
+                )}
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep("results")}>
+                  Back to Results
+                </Button>
+                <Button 
+                  variant="default" 
+                  onClick={handleGenerateGoalsAgain}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Generate New Goals
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card className="mb-6 border-primary/20">
+              <CardContent className="pt-6">
+                <Button 
+                  onClick={() => {
+                    toast({
+                      title: "Success",
+                      description: "Your meal plan has been saved",
+                    });
+                  }}
+                  className="w-full"
+                >
+                  Save Plan to My Profile
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
