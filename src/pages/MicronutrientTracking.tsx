@@ -17,6 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MacroChart } from "@/components/dashboard/MacroChart";
 
 interface NutrientData {
   day: string;
@@ -102,6 +103,7 @@ export default function MicronutrientTracking() {
   }, [scrollToMealsEnd]);
 
   const viewDailyBreakdown = useCallback((day: string) => {
+    console.log("Viewing daily breakdown for day:", day);
     setActiveTab('history');
     setExpandedDays(prev => ({
       ...prev,
@@ -111,14 +113,17 @@ export default function MicronutrientTracking() {
     setTimeout(() => {
       const dayElement = document.querySelector(`[data-day="${day}"]`);
       if (dayElement) {
+        console.log("Scrolling to day element:", dayElement);
         dayElement.scrollIntoView({ 
           behavior: 'smooth',
           block: 'start'
         });
         
         scrollToMealsEnd();
+      } else {
+        console.log("Day element not found for day:", day);
       }
-    }, 100);
+    }, 200);
   }, [scrollToMealsEnd]);
 
   const fetchNutrientData = useCallback(async () => {
@@ -471,6 +476,13 @@ export default function MicronutrientTracking() {
                     <div>{meal.macronutrients.fiber.value}{meal.macronutrients.fiber.unit}</div>
                   </div>
                 </div>
+                <div className="pt-2 flex justify-center">
+                  <MacroChart 
+                    protein={meal.macronutrients.protein.value} 
+                    carbs={meal.macronutrients.carbs.value} 
+                    fat={meal.macronutrients.fat.value} 
+                  />
+                </div>
               </div>
             </TabsContent>
             
@@ -481,12 +493,12 @@ export default function MicronutrientTracking() {
             </TabsContent>
             
             <TabsContent value="charts" className="mt-2">
-              <ScrollArea className="h-[280px]">
+              <ScrollArea className="h-[320px]">
                 <div className="grid gap-4 pb-4">
-                  <div className="h-[250px]">
+                  <div className="h-[300px]">
                     <MacronutrientPieChart data={meal.macronutrients} />
                   </div>
-                  <div className="h-[250px] pt-2">
+                  <div className="h-[300px] pt-2">
                     <MicronutrientRadarChart 
                       data={meal.micronutrients}
                       showScanButton={false}
@@ -498,15 +510,15 @@ export default function MicronutrientTracking() {
           </Tabs>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-[280px]">
+            <div className="h-[350px]">
+              <MacronutrientPieChart data={meal.macronutrients} />
+            </div>
+            <div className="h-[350px]">
               <MicronutrientRadarChart 
                 data={meal.micronutrients}
                 showScanButton={false}
                 clickable={true}
               />
-            </div>
-            <div className="h-[280px]">
-              <MacronutrientPieChart data={meal.macronutrients} />
             </div>
           </div>
         )}
@@ -528,13 +540,13 @@ export default function MicronutrientTracking() {
         
         <CardContent className="pt-4 pb-2">
           <div className="grid md:grid-cols-2 gap-6 relative">
-            <div className="h-[320px]">
+            <div className="h-[350px]">
               <MacronutrientPieChart 
                 data={day.averageData.macronutrients} 
                 containerClassName="h-full"
               />
             </div>
-            <div className="h-[320px]">
+            <div className="h-[350px]">
               <MicronutrientRadarChart 
                 data={day.averageData.micronutrients}
                 showScanButton={false}
@@ -560,7 +572,7 @@ export default function MicronutrientTracking() {
             {isExpanded && (
               <div className="space-y-2 pt-2">
                 <h4 className="font-medium text-sm mb-3">Individual Meals</h4>
-                <ScrollArea className="max-h-[600px]">
+                <ScrollArea className="max-h-[800px]">
                   <div className="space-y-4 pb-4 pr-2">
                     {day.meals.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
                     <div ref={mealsEndRef} className="py-1" />
