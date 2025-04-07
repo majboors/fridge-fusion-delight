@@ -10,22 +10,29 @@ interface NotificationCardProps {
   message?: string;
   showViewAll?: boolean;
   maxItems?: number;
+  filterType?: string;
 }
 
 export function NotificationCard({ 
   message, 
   showViewAll = true, 
-  maxItems = 3 
+  maxItems = 3,
+  filterType
 }: NotificationCardProps) {
   const { notifications, markAsRead } = useNotifications();
   
-  // Show all notifications up to maxItems, not just unread ones
-  const displayNotifications = notifications.slice(0, maxItems);
+  // Filter notifications if filterType is provided (e.g., "meal")
+  const filteredNotifications = filterType 
+    ? notifications.filter(n => n.type === filterType)
+    : notifications;
+  
+  // Show filtered notifications up to maxItems
+  const displayNotifications = filteredNotifications.slice(0, maxItems);
     
   // If no notifications but a message was provided, show that
   const displayMessage = displayNotifications.length > 0 
     ? null
-    : (message || "No notifications");
+    : (message || `No ${filterType ? filterType : ''} notifications`);
     
   const formatNotificationTime = (timestamp: string) => {
     try {
@@ -80,13 +87,13 @@ export function NotificationCard({
           </ScrollArea>
         )}
         
-        {showViewAll && notifications.length > maxItems && (
+        {showViewAll && filteredNotifications.length > maxItems && (
           <Button 
             variant="ghost"
             className="w-full text-xs mt-2"
             size="sm"
           >
-            View All Notifications
+            View All {filterType ? filterType.charAt(0).toUpperCase() + filterType.slice(1) : ''} Notifications
           </Button>
         )}
       </CardContent>
