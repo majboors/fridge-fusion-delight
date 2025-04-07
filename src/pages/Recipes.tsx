@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { CameraOptionsDialog } from "@/components/dashboard/CameraOptionsDialog";
 import { TextRecipeDialog } from "@/components/dashboard/TextRecipeDialog";
 import { RecipeDetailsDialog } from "@/components/dashboard/RecipeDetailsDialog";
+import { RecipeSharingButtons } from "@/components/dashboard/RecipeSharingButtons";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Recipe {
@@ -179,6 +180,12 @@ export default function Recipes() {
                   <Button variant="outline" size="sm" onClick={() => handleViewRecipe(recipe)}>
                     View Recipe
                   </Button>
+                  <RecipeSharingButtons 
+                    recipeId={recipe.id} 
+                    recipeTitle={recipe.title} 
+                    size="icon"
+                    variant="ghost"
+                  />
                 </CardFooter>
               </Card>
             ))}

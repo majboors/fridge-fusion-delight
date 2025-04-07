@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Clock, CheckCircle, AlertCircle, Crown, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
+import { AchievementBadges } from "@/components/dashboard/AchievementBadges";
 
 export default function Settings() {
   const { user, hasActiveSubscription, signOut } = useAuth();
@@ -123,7 +124,14 @@ export default function Settings() {
           <Button onClick={() => navigate("/dashboard")} variant="outline">Back to Dashboard</Button>
         </div>
 
+        {/* Achievements Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Your Achievements</h2>
+          <AchievementBadges />
+        </div>
+
         <div className="grid md:grid-cols-2 gap-8">
+          {/* Subscription Card */}
           <Card className={hasActiveSubscription ? "border-primary/20 bg-accent" : ""}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>Subscription Status</CardTitle>
@@ -169,6 +177,7 @@ export default function Settings() {
             </CardFooter>
           </Card>
 
+          {/* Usage Statistics Card */}
           <Card>
             <CardHeader>
               <CardTitle>Usage Statistics</CardTitle>

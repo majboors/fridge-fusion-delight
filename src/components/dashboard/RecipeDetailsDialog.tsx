@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
 import { RecipeFlashCards } from "./RecipeFlashCards";
+import { RecipeSharingButtons } from "./RecipeSharingButtons";
 
 interface Recipe {
   id: string;
@@ -24,7 +25,7 @@ interface RecipeDetailsDialogProps {
 export function RecipeDetailsDialog({ recipe, open, onOpenChange }: RecipeDetailsDialogProps) {
   if (!recipe) return null;
   
-  const [currentTab, setCurrentTab] = useState<"ingredients" | "instructions" | "flashcards">("ingredients");
+  const [currentTab, setCurrentTab] = useState<"ingredients" | "instructions" | "tutorial">("ingredients");
   
   // Reset to ingredients view when a new recipe is opened
   useEffect(() => {
@@ -33,7 +34,7 @@ export function RecipeDetailsDialog({ recipe, open, onOpenChange }: RecipeDetail
     }
   }, [open, recipe?.id]);
   
-  // Prepare data for flash cards format
+  // Prepare data for tutorial format
   const flashCardData = recipe ? [
     { card: 1, content: recipe.title },
     ...recipe.steps.map((step, index) => ({
@@ -68,7 +69,7 @@ export function RecipeDetailsDialog({ recipe, open, onOpenChange }: RecipeDetail
             <TabsList className="grid grid-cols-3 w-full rounded-none">
               <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
               <TabsTrigger value="instructions">Instructions</TabsTrigger>
-              <TabsTrigger value="flashcards">Flash Cards</TabsTrigger>
+              <TabsTrigger value="tutorial">Tutorial</TabsTrigger>
             </TabsList>
           </div>
           
@@ -97,7 +98,7 @@ export function RecipeDetailsDialog({ recipe, open, onOpenChange }: RecipeDetail
               </ScrollArea>
             </TabsContent>
             
-            <TabsContent value="flashcards" className="m-0 p-0 h-full flex flex-col">
+            <TabsContent value="tutorial" className="m-0 p-0 h-full flex flex-col">
               <div className="h-[300px] p-4">
                 <RecipeFlashCards 
                   recipeCards={flashCardData} 
@@ -109,7 +110,12 @@ export function RecipeDetailsDialog({ recipe, open, onOpenChange }: RecipeDetail
           </div>
         </Tabs>
         
-        <div className="p-4 border-t mt-auto">
+        <div className="p-4 border-t mt-auto flex justify-between items-center">
+          <RecipeSharingButtons 
+            recipeId={recipe.id} 
+            recipeTitle={recipe.title} 
+            variant="ghost"
+          />
           <Button onClick={() => onOpenChange(false)}>
             Close
           </Button>
