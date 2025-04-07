@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,6 +68,12 @@ interface NutritionResponseData {
   serving_size: string;
 }
 
+interface MicronutrientData {
+  vitamin_c: number;
+  iron: number;
+  calcium: number;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -76,6 +83,11 @@ export default function Dashboard() {
   const [nutritionAnalysis, setNutritionAnalysis] = useState<NutritionResponseData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [featureDialogOpen, setFeatureDialogOpen] = useState(false);
+  const [micronutrientData, setMicronutrientData] = useState<MicronutrientData>({
+    vitamin_c: 0,
+    iron: 0,
+    calcium: 0
+  });
 
   const fetchNutritionData = async () => {
     if (!user) return;
@@ -102,6 +114,73 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+  
+  const fetchMicronutrientData = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch the most recent recipe entry that has micronutrient data
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('steps')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+        
+      if (error) {
+        console.error('Error fetching micronutrient data:', error);
+        return;
+      }
+      
+      // Process the recipe data to extract micronutrient values
+      let vitaminC = 0;
+      let iron = 0;
+      let calcium = 0;
+      let foundMicronutrients = false;
+      
+      if (data && data.length > 0) {
+        for (const recipe of data) {
+          if (recipe.steps && Array.isArray(recipe.steps)) {
+            for (const step of recipe.steps) {
+              // Extract micronutrients percentages
+              const vitaminCMatch = step.match(/Vitamin C:?\s*\d+\.?\d*\s*mg\s*\((\d+)%\)/i);
+              if (vitaminCMatch && !vitaminC) {
+                vitaminC = parseInt(vitaminCMatch[1]);
+                foundMicronutrients = true;
+              }
+              
+              const ironMatch = step.match(/Iron:?\s*\d+\.?\d*\s*mg\s*\((\d+)%\)/i);
+              if (ironMatch && !iron) {
+                iron = parseInt(ironMatch[1]);
+                foundMicronutrients = true;
+              }
+              
+              const calciumMatch = step.match(/Calcium:?\s*\d+\.?\d*\s*mg\s*\((\d+)%\)/i);
+              if (calciumMatch && !calcium) {
+                calcium = parseInt(calciumMatch[1]);
+                foundMicronutrients = true;
+              }
+            }
+          }
+          
+          // If we found all micronutrients, break the loop
+          if (vitaminC && iron && calcium) {
+            break;
+          }
+        }
+      }
+      
+      if (foundMicronutrients) {
+        setMicronutrientData({
+          vitamin_c: vitaminC,
+          iron: iron,
+          calcium: calcium
+        });
+      }
+    } catch (error) {
+      console.error('Error in fetchMicronutrientData:', error);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -110,6 +189,7 @@ export default function Dashboard() {
     }
     
     fetchNutritionData();
+    fetchMicronutrientData();
   }, [user, navigate, toast]);
 
   const handleAddMeal = () => {
@@ -227,7 +307,7 @@ export default function Dashboard() {
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Vitamin C</span>
                 <p className="text-sm font-bold text-green-600">
-                  {nutritionAnalysis?.micronutrients.vitamin_c.percentage || 0}%
+                  {micronutrientData.vitamin_c}%
                 </p>
               </CardContent>
             </Card>
@@ -235,7 +315,7 @@ export default function Dashboard() {
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Iron</span>
                 <p className="text-sm font-bold text-amber-600">
-                  {nutritionAnalysis?.micronutrients.iron.percentage || 0}%
+                  {micronutrientData.iron}%
                 </p>
               </CardContent>
             </Card>
@@ -243,7 +323,7 @@ export default function Dashboard() {
               <CardContent className="p-2 text-center">
                 <span className="text-xs">Calcium</span>
                 <p className="text-sm font-bold text-red-600">
-                  {nutritionAnalysis?.micronutrients.calcium.percentage || 0}%
+                  {micronutrientData.calcium}%
                 </p>
               </CardContent>
             </Card>
