@@ -63,7 +63,6 @@ export function NavigationBar() {
       <FeatureSelectionDialog 
         open={featureDialogOpen} 
         onOpenChange={setFeatureDialogOpen}
-        featureType="calorie"
       />
     </>
   );
