@@ -27,6 +27,7 @@ import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { NutritionDialog } from "@/components/dashboard/NutritionDialog";
 import { FeatureSelectionDialog } from "@/components/dashboard/FeatureSelectionDialog";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { CalorieGauge } from "@/components/dashboard/CalorieGauge";
 
 interface NutritionData {
   id: string;
@@ -347,6 +348,10 @@ export default function Dashboard() {
 
       <div className="px-6 mb-8">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <CalorieGauge 
+            calories={dailyData.calories.consumed} 
+            dailyGoal={dailyData.calories.goal}
+          />
           <FeatureCard 
             title="Daily Meal Suggestions" 
             icon={UtensilsCrossed} 
