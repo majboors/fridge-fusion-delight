@@ -27,6 +27,9 @@ export function FeatureCard({
   
   const handleClick = () => {
     if (route) {
+      // Check if this is the micronutrient route and fix it
+      const finalRoute = route === "/micronutrient-tracking" ? "/micronutrients" : route;
+      
       // Combine all navigation state parameters
       const state = {
         ...routeState
@@ -42,7 +45,7 @@ export function FeatureCard({
         state.view = view;
       }
         
-      navigate(route, { state });
+      navigate(finalRoute, { state });
     } else if (onClick) {
       onClick();
     }

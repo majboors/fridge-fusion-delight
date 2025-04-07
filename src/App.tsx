@@ -13,6 +13,7 @@ import Recipes from "@/pages/Recipes";
 import Goals from "@/pages/Goals";
 import Settings from "@/pages/Settings";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import NotFound from "@/pages/NotFound";
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
     element: <MicronutrientTracking />,
   },
   {
+    path: "/micronutrient-tracking",
+    element: <MicronutrientTracking />,
+  },
+  {
     path: "/recipes",
     element: <Recipes />,
   },
@@ -42,6 +47,10 @@ const router = createBrowserRouter([
   {
     path: "/settings",
     element: <Settings />,
+  },
+  {
+    path: "*",
+    element: <NotFound />
   }
 ]);
 
