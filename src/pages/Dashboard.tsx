@@ -233,6 +233,10 @@ export default function Dashboard() {
     setFeatureDialogOpen(true);
   };
 
+  const handleViewMealPlan = () => {
+    navigate("/goals", { state: { view: "saved" } });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -392,7 +396,7 @@ export default function Dashboard() {
               <Button 
                 variant="outline" 
                 className="w-full flex items-center justify-center gap-2"
-                onClick={() => toast({ title: "Coming Soon!" })}
+                onClick={handleViewMealPlan}
               >
                 <CalendarCheck className="h-4 w-4" />
                 View Meal Plan
