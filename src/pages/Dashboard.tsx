@@ -234,7 +234,7 @@ export default function Dashboard() {
   };
 
   const handleViewMealPlan = () => {
-    navigate("/goals", { state: { view: "saved" } });
+    navigate("/goals", { state: { activeTab: "saved" } });
   };
 
   if (loading) {
@@ -362,7 +362,7 @@ export default function Dashboard() {
             title="Daily Meal Suggestions" 
             icon={UtensilsCrossed} 
             route="/goals"
-            routeState={{ view: "saved" }}
+            routeState={{ activeTab: "saved" }}
           />
           <FeatureCard 
             title="Micronutrient Tracking" 
