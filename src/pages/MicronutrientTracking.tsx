@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface NutrientData {
   day: string;
@@ -429,21 +430,23 @@ export default function MicronutrientTracking() {
               </div>
             </TabsContent>
             
-            <TabsContent value="table" className="mt-2">
-              {renderMealNutrientTable(meal)}
+            <TabsContent value="table" className="mt-2 max-h-[300px] overflow-y-auto">
+              <ScrollArea className="h-full">
+                {renderMealNutrientTable(meal)}
+              </ScrollArea>
             </TabsContent>
             
             <TabsContent value="charts" className="mt-2">
               <div className="grid gap-3">
                 <div>
                   <h5 className="text-xs font-medium mb-1">Macronutrients</h5>
-                  <div className="h-[150px]">
+                  <div className="h-[200px] w-full mb-4">
                     <MacronutrientPieChart data={meal.macronutrients} />
                   </div>
                 </div>
                 <div>
                   <h5 className="text-xs font-medium mb-1">Micronutrients</h5>
-                  <div className="h-[150px]">
+                  <div className="h-[200px] w-full mb-4">
                     <MicronutrientRadarChart 
                       data={meal.micronutrients}
                       showScanButton={false}
@@ -455,12 +458,16 @@ export default function MicronutrientTracking() {
           </Tabs>
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
-            <MicronutrientRadarChart 
-              data={meal.micronutrients}
-              showScanButton={false}
-              clickable={true}
-            />
-            <MacronutrientPieChart data={meal.macronutrients} />
+            <div className="h-[250px] w-full">
+              <MicronutrientRadarChart 
+                data={meal.micronutrients}
+                showScanButton={false}
+                clickable={true}
+              />
+            </div>
+            <div className="h-[250px] w-full">
+              <MacronutrientPieChart data={meal.macronutrients} />
+            </div>
           </div>
         )}
       </CardContent>
@@ -481,12 +488,10 @@ export default function MicronutrientTracking() {
         
         <CardContent className="pt-4">
           <div className="grid md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <h4 className="font-medium text-sm mb-3">Macronutrients Summary</h4>
+            <div className="h-[250px] w-full">
               <MacronutrientPieChart data={day.averageData.macronutrients} />
             </div>
-            <div>
-              <h4 className="font-medium text-sm mb-3">Micronutrients Summary</h4>
+            <div className="h-[250px] w-full">
               <MicronutrientRadarChart 
                 data={day.averageData.micronutrients}
                 showScanButton={false}
@@ -531,7 +536,7 @@ export default function MicronutrientTracking() {
             <TabsTrigger value="macro">Macronutrients</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="history" className="space-y-4">
+          <TabsContent value="history" className="space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-medium">Nutrition History</h2>
               <Button onClick={() => setCameraDialogOpen(true)}>
@@ -550,7 +555,7 @@ export default function MicronutrientTracking() {
             ) : renderNoDataMessage()}
           </TabsContent>
           
-          <TabsContent value="micro" className="mt-2 pt-2">
+          <TabsContent value="micro" className="mt-2 pt-2 overflow-y-auto max-h-[calc(100vh-200px)]">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-medium">Micronutrient History</h2>
               <Button onClick={() => setCameraDialogOpen(true)}>
@@ -570,7 +575,7 @@ export default function MicronutrientTracking() {
                       <CardTitle className="text-lg">{day.day}</CardTitle>
                     </CardHeader>
                     <CardContent className="pb-6">
-                      <div className="h-[250px] flex items-center justify-center">
+                      <div className="h-[250px] w-full">
                         <MicronutrientRadarChart 
                           data={day.averageData.micronutrients}
                           showScanButton={false}
@@ -585,7 +590,7 @@ export default function MicronutrientTracking() {
             ) : renderNoDataMessage()}
           </TabsContent>
           
-          <TabsContent value="macro" className="mt-2 pt-2">
+          <TabsContent value="macro" className="mt-2 pt-2 overflow-y-auto max-h-[calc(100vh-200px)]">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-medium">Macronutrient History</h2>
               <Button onClick={() => setCameraDialogOpen(true)}>
@@ -605,7 +610,7 @@ export default function MicronutrientTracking() {
                       <CardTitle className="text-lg">{day.day}</CardTitle>
                     </CardHeader>
                     <CardContent className="pb-4">
-                      <div className="h-[250px] flex items-center justify-center">
+                      <div className="h-[250px] w-full">
                         <MacronutrientPieChart data={day.averageData.macronutrients} />
                       </div>
                     </CardContent>

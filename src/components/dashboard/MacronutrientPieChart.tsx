@@ -1,6 +1,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MacronutrientData {
   name: string;
@@ -42,7 +43,7 @@ export function MacronutrientPieChart({ data }: MacronutrientPieChartProps) {
       <CardContent>
         <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie
                 data={chartData}
                 cx="50%"
@@ -62,7 +63,7 @@ export function MacronutrientPieChart({ data }: MacronutrientPieChartProps) {
                 formatter={(value, name) => [`${value}g`, name]}
                 labelFormatter={() => ""} 
               />
-              <Legend />
+              <Legend layout="horizontal" verticalAlign="bottom" align="center" />
             </PieChart>
           </ResponsiveContainer>
         </div>
