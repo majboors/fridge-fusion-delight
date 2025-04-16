@@ -25,6 +25,7 @@ import { PricingSection } from "@/components/PricingSection";
 import { supabase } from "@/integrations/supabase/client";
 import KeyFeatures from "@/components/KeyFeatures";
 import FeaturedFeature from "@/components/FeaturedFeature";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface RecipeCard {
   card: number;
@@ -570,7 +571,7 @@ const Index = () => {
       <FeaturedFeature
         title="Snap & Cook: From Fridge to Feast in Seconds"
         description="Simply upload a photo of your ingredients, and our AI instantly identifies what you have and generates personalized recipes that maximize what's already in your kitchen. No more food waste or recipe hunting."
-        image="https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=1974&auto=format&fit=crop"
+        image="https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=1974&auto=format&fit=crop"
         imageAlt="Phone taking picture of food ingredients"
       />
 
@@ -585,7 +586,7 @@ const Index = () => {
       <FeaturedFeature
         title="Turn Healthy Eating into a Fun Game"
         description="Earn badges, complete challenges, and track your progress as you explore new ingredients and recipes. Compete with friends and climb the leaderboards while developing healthier eating habits."
-        image="https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=1974&auto=format&fit=crop"
+        image="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1974&auto=format&fit=crop"
         imageAlt="App gamification features"
       />
 
@@ -647,7 +648,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="py-24 bg-green-50">
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -680,7 +681,7 @@ const Index = () => {
               },
               {
                 title: "Veggie Stir Fry",
-                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=580",
+                image: "https://images.unsplash.com/photo-1512171427422-2228b022b32f?q=80&w=580",
                 ingredients: "Broccoli, carrots, bell peppers, soy sauce"
               },
               {
